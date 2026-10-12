@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+
+/* Paleta corporativa MESENERGIA (+Energía), muestreada del logo */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Poppins', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Azul marino: sidebar, cabeceras, texto de marca */
+  --color-navy-50: #eef2f9;
+  --color-navy-100: #d9e1f0;
+  --color-navy-200: #b4c3e0;
+  --color-navy-300: #8299c7;
+  --color-navy-400: #5571ab;
+  --color-navy-500: #36538f;
+  --color-navy-600: #284177;
+  --color-navy-700: #1b3263;
+  --color-navy-800: #142652;
+  --color-navy-900: #0f1e43;
+  --color-navy-950: #0b1a3a;
+
+  /* Verde del "+": acciones principales y éxito */
+  --color-brand-50: #f2f8ec;
+  --color-brand-100: #e1f0d3;
+  --color-brand-200: #c4e2a9;
+  --color-brand-300: #a0cf76;
+  --color-brand-400: #82bd4f;
+  --color-brand-500: #6ca83c;
+  --color-brand-600: #568a2e;
+  --color-brand-700: #436c25;
+  --color-brand-800: #375621;
+  --color-brand-900: #2f481f;
+
+  /* Amarillo del rayo: acentos y destacados */
+  --color-sun-50: #fffaeb;
+  --color-sun-100: #fef1c7;
+  --color-sun-200: #fde28a;
+  --color-sun-300: #fbd04d;
+  --color-sun-400: #f5c030;
+  --color-sun-500: #e8a817;
+  --color-sun-600: #cc8410;
+  --color-sun-700: #a95f0f;
+
+  --color-surface: #f4f6fa;
+
+  --shadow-card: 0 1px 2px rgb(15 30 67 / 0.04), 0 4px 16px -4px rgb(15 30 67 / 0.08);
+  --shadow-pop: 0 12px 40px -8px rgb(15 30 67 / 0.25);
+
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-slide-up: slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-surface font-sans text-slate-800 antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display text-navy-900;
+  }
+  ::selection {
+    @apply bg-sun-200 text-navy-950;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white shadow-card ring-1 ring-slate-200/70;
+  }
+  .input-base {
+    @apply block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[15px] text-slate-900 shadow-xs
+      placeholder:text-slate-400 transition
+      focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15
+      disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500;
+  }
+  .input-error {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-500/15;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
