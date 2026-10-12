@@ -1,6 +1,11 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+/** URL absoluta de una ruta de la app, respetando la base del despliegue. */
+export function urlApp(ruta = ''): string {
+  return `${window.location.origin}${import.meta.env.BASE_URL}${ruta.replace(/^\//, '')}`;
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

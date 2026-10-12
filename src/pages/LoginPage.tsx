@@ -7,7 +7,7 @@ import { Field, Input } from '@/components/ui/Field';
 import { Logo } from '@/components/ui/Misc';
 import { supabase } from '@/lib/supabase';
 import { esEmailValido } from '@/lib/validators';
-import { mensajeError } from '@/lib/utils';
+import { mensajeError, urlApp } from '@/lib/utils';
 
 /** Fondo corporativo a pantalla partida, reutilizado por login y contraseñas. */
 export function PantallaAuth({ children }: { children: ReactNode }) {
@@ -92,7 +92,7 @@ export function LoginPage() {
     if (!esEmailValido(email)) return setError('Introduce un email válido.');
     setEnviando(true);
     const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/restablecer`,
+      redirectTo: urlApp('restablecer'),
     });
     setEnviando(false);
     if (err) return setError(mensajeError(err));

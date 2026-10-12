@@ -1,5 +1,5 @@
 -- =============================================================================
--- MESENERGIA CRM · 05 · Storage (PDF de ofertas) y Realtime
+-- MESENERGIA CRM · 06 · Storage (PDF de ofertas) y Realtime
 -- =============================================================================
 
 -- Bucket privado: solo PDF, máximo 10 MB. Ruta: {contrato_id}/{archivo}.pdf

@@ -12,7 +12,7 @@ import { useCrearUsuario, useEditarUsuario, useGuardarEquipo, useResetPassword }
 import { ROLES } from '@/lib/constants';
 import { nombreCompleto } from '@/lib/format';
 import type { Equipo, Perfil, Rol } from '@/lib/types';
-import { copiarAlPortapapeles, mensajeError } from '@/lib/utils';
+import { copiarAlPortapapeles, mensajeError, urlApp } from '@/lib/utils';
 import { esEmailValido, esTelefonoValido, generarPasswordTemporal, normalizarTelefono } from '@/lib/validators';
 
 export interface Credenciales {
@@ -281,7 +281,7 @@ export function ResetPasswordModal({
 // -----------------------------------------------------------------------------
 export function CredencialesModal({ credenciales, onClose }: { credenciales: Credenciales | null; onClose: () => void }) {
   if (!credenciales) return null;
-  const texto = `Acceso a MESENERGIA CRM\n${window.location.origin}\nUsuario: ${credenciales.email}\nContraseña temporal: ${credenciales.password}`;
+  const texto = `Acceso a MESENERGIA CRM\n${urlApp()}\nUsuario: ${credenciales.email}\nContraseña temporal: ${credenciales.password}`;
 
   return (
     <Modal

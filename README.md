@@ -43,7 +43,7 @@ npx supabase link --project-ref TU_PROJECT_REF
 npx supabase db push
 ```
 
-Opción B: copia y ejecuta cada archivo de `supabase/migrations/` (del `…0001` al `…0005`) en **SQL Editor**.
+Opción B: copia y ejecuta cada archivo de `supabase/migrations/`, en orden de nombre, en **SQL Editor**.
 
 ### 2. Datos de ejemplo (opcional)
 
@@ -93,6 +93,8 @@ npm run dev                  # http://localhost:5173
 ```
 
 Para producción, `npm run build` genera `dist/`, que se despliega en cualquier hosting estático (Vercel, Netlify, Cloudflare Pages…). El repo ya incluye `vercel.json` y `public/_redirects` para que las rutas de la SPA funcionen al recargar.
+
+**GitHub Pages (incluido):** el workflow `.github/workflows/pages.yml` compila y publica la app en `https://<usuario>.github.io/<repo>/` en cada push. Solo hay que activarlo una vez en **Settings → Pages → Source: GitHub Actions**. La URL y la clave publicable de Supabase se pueden cambiar con las variables del repositorio `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Si publicas en GitHub Pages, añade también `https://<usuario>.github.io/<repo>/restablecer` a las *Redirect URLs* de Supabase.
 
 ### Desarrollo local con Supabase
 

@@ -7,7 +7,7 @@ import { Button } from './Button';
 export function Logo({ variante = 'claro', className }: { variante?: 'claro' | 'oscuro'; className?: string }) {
   return (
     <img
-      src={variante === 'oscuro' ? '/logo-dark.png' : '/logo.png'}
+      src={`${import.meta.env.BASE_URL}${variante === 'oscuro' ? 'logo-dark.png' : 'logo.png'}`}
       alt="+Energía · Nos importa tu ahorro"
       className={cn('h-auto select-none', className)}
       draggable={false}
