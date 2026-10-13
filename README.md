@@ -2,7 +2,7 @@
 
 CRM interno para gestionar los contratos de fibra/WiFi del call center: el comercial sube la venta con la oferta en PDF, backoffice la tramita con la operadora y los jefes de equipo siguen en tiempo real cómo va su equipo.
 
-**Stack:** React 19 + TypeScript + Vite + Tailwind CSS 4 · Supabase (Auth, Postgres con RLS, Storage, Realtime y una Edge Function) · TanStack Query · React Hook Form + Zod · Recharts · dnd-kit.
+**Stack:** React 19 + TypeScript + Vite + Tailwind CSS 4 · Supabase (Auth, Postgres con RLS, Storage, Realtime y Edge Functions) · TanStack Query · React Hook Form + Zod · Recharts · dnd-kit · **Messy**, el agente de IA en WhatsApp (Claude + Whapi.cloud).
 
 ## Qué incluye
 
@@ -100,6 +100,52 @@ Para producción, `npm run build` genera `dist/`, que se despliega en cualquier 
 
 Con Docker instalado, `npx supabase start` levanta Supabase en local con la configuración de `supabase/config.toml`, aplica las migraciones y carga el seed. Para probar la Edge Function: `npx supabase functions serve admin-users`.
 
+## Messy · el agente de IA en WhatsApp
+
+Messy vive en la Edge Function `messy` y usa un número de WhatsApp conectado a [Whapi.cloud](https://whapi.cloud).
+
+**En el grupo del equipo**
+
+- 🔥 **Cada venta**: en cuanto se sube un contrato al CRM, «*Mario ha vendido 1* · Fibra 600 Mb · Avatel», cuántas lleva hoy y este mes, y una frase para animar al resto.
+- ☀️ **Buenos días** (9:00) con el resumen del último día con ventas y el acumulado del mes.
+- 🌙 **Cierre del día** (20:00) con el total, el podio 🥇🥈🥉 y cómo va el mes.
+- Horas y días configurables (por defecto de lunes a sábado), hora de Madrid. En el grupo Messy no lee nada más: solo reacciona a «messy activar».
+
+**Por privado**
+
+Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo que quiera: «¿cuántas ventas llevo este mes?», «ranking de la semana», «¿qué pendientes tengo sin firmar?», «ficha del contrato 125»… Messy consulta el CRM **con los permisos de esa persona** (el comercial solo ve lo suyo, el jefe su equipo, backoffice y admin todo), nunca muestra DNI, teléfonos, emails ni direcciones de clientes y no puede modificar nada. Los admins además pueden pedirle que cambie las horas de los avisos, que los pause o que publique algo en el grupo. «salir» cierra la sesión; 5 intentos fallidos bloquean el chat 15 minutos.
+
+**Modelos de Claude** (cambiables sin tocar código, con secretos de la Edge Function):
+
+| Uso | Variable | Por defecto |
+|---|---|---|
+| Chat privado | `MESSY_MODELO_CHAT` | `claude-sonnet-5-5` |
+| Informes (buenos días y cierre) | `MESSY_MODELO_INFORMES` | `claude-sonnet-5-5` |
+| Avisos de venta | `MESSY_MODELO_AVISOS` | `claude-haiku-5-5` |
+
+Con Sonnet se activa el *fallback* en el servidor de la API (si el modelo declina una petición, se reintenta con el alternativo recomendado); Haiku 5.5 no lo tiene. Si Claude no responde, los avisos salen igualmente con una plantilla.
+
+### Puesta en marcha
+
+1. Aplica la migración `…_messy.sql` (activa `pg_net` y `pg_cron`) y despliega la función: `npx supabase functions deploy messy --no-verify-jwt`.
+2. Indica a Messy su propia URL:
+   ```sql
+   update public.messy_config set funcion_url = 'https://TU_PROJECT_REF.supabase.co/functions/v1/messy';
+   ```
+3. En [Whapi.cloud](https://whapi.cloud) crea un canal y vincula el número de Messy escaneando el QR desde WhatsApp → *Dispositivos vinculados*. Copia el **token** del canal.
+4. En Supabase → **Edge Functions → Secrets** añade `WHAPI_TOKEN` y `ANTHROPIC_API_KEY` (de [console.anthropic.com](https://console.anthropic.com)).
+5. Apunta el webhook de Whapi a Messy (lo hace la propia función):
+   ```sql
+   select net.http_post(
+     url     := (select funcion_url from public.messy_config),
+     headers := jsonb_build_object('Content-Type', 'application/json', 'x-messy-clave', (select clave from public.messy_config)),
+     body    := '{"accion": "configurar_webhook"}'
+   );
+   ```
+6. Añade el número de Messy al grupo de WhatsApp del equipo. Una persona **admin** inicia sesión con Messy por privado y escribe en el grupo **«messy activar»**.
+
+> Whapi.cloud es una pasarela no oficial (vincula el número como un WhatsApp Web). Es lo más rápido para tener grupos funcionando, pero usa un número dedicado a Messy, no uno personal.
+
 ## Seguridad
 
 - **RLS en todas las tablas.** El comercial solo ve sus filas, el jefe las de su equipo, backoffice y admin todo. Un usuario desactivado no ve nada aunque su sesión siga abierta.
@@ -112,8 +158,8 @@ Con Docker instalado, `npx supabase start` levanta Supabase en local con la conf
 
 ```
 supabase/
-  migrations/      Esquema, triggers, RLS, vistas/RPC y Storage/Realtime
-  functions/       Edge Function admin-users (Deno)
+  migrations/      Esquema, triggers, RLS, vistas/RPC, Storage/Realtime y Messy
+  functions/       Edge Functions admin-users y messy (Deno)
   seed.sql         Datos de ejemplo
   config.toml      Configuración para `supabase start`
 src/
