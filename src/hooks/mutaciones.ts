@@ -82,18 +82,71 @@ interface GuardarContratoInput {
   pdf?: File | null;
 }
 
+/**
+ * Plan B mientras la función `guardar_contrato` no esté creada en la base de
+ * datos: los mismos pasos directamente sobre las tablas. Se aplican las mismas
+ * políticas RLS y triggers, aunque sin una única transacción.
+ */
+async function guardarSinRpc(
+  id: string | undefined,
+  datos: DatosContrato,
+  telefonos: TelefonoNuevo[],
+  observacion: string | null,
+): Promise<string> {
+  let contratoId: string;
+  if (!id) {
+    const { data, error } = await supabase.from('contratos').insert(datos).select('id').single();
+    if (error) throw error;
+    contratoId = data.id as string;
+  } else {
+    const { data, error } = await supabase.from('contratos').update(datos).eq('id', id).select('id');
+    if (error) throw error;
+    if (!data?.length) {
+      throw new Error('No puedes editar este contrato: solo se puede modificar mientras esté Pendiente y sin firmar');
+    }
+    contratoId = id;
+    const { error: errBorrar } = await supabase.from('telefonos_portabilidad').delete().eq('contrato_id', id);
+    if (errBorrar) throw errBorrar;
+  }
+
+  const filas = telefonos
+    .filter((t) => t.numero.trim())
+    .map((t, i) => ({
+      contrato_id: contratoId,
+      numero: t.numero,
+      tipo: t.tipo || 'movil',
+      operador_donante: t.operador_donante,
+      orden: i + 1,
+    }));
+  if (filas.length) {
+    const { error } = await supabase.from('telefonos_portabilidad').insert(filas);
+    if (error) throw error;
+  }
+
+  if (!id && observacion) {
+    const { data: sesion } = await supabase.auth.getSession();
+    const { error } = await supabase
+      .from('observaciones')
+      .insert({ contrato_id: contratoId, autor_id: sesion.session?.user.id, texto: observacion });
+    if (error) throw error;
+  }
+  return contratoId;
+}
+
 export function useGuardarContrato() {
   const refrescar = useRefrescarContrato();
   return useMutation({
     mutationFn: async ({ id, datos, telefonos, observacion, pdf }: GuardarContratoInput) => {
+      const obs = observacion?.trim() || null;
       const { data, error } = await supabase.rpc('guardar_contrato', {
         p_id: id ?? null,
         p_datos: datos,
         p_telefonos: telefonos,
-        p_observacion: observacion?.trim() || null,
+        p_observacion: obs,
       });
-      if (error) throw error;
-      const contratoId = data as string;
+      // PGRST202: la función todavía no existe en la base de datos
+      if (error && error.code !== 'PGRST202') throw error;
+      const contratoId = error ? await guardarSinRpc(id, datos, telefonos, obs) : (data as string);
       let errorPdf: unknown = null;
       if (pdf) {
         try {
