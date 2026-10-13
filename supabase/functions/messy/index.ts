@@ -10,11 +10,11 @@
 //   · { accion: 'saludar_grupo' }       → presenta a Messy en el grupo
 //
 // Despliegue: verify_jwt = false (Whapi no envía JWT; se valida la clave).
-// Secretos: ANTHROPIC_API_KEY y WHAPI_TOKEN.
+// Claves: ANTHROPIC_API_KEY y WHAPI_TOKEN (secretos de la función o Supabase Vault).
 // =============================================================================
 import { responder, saludoGrupo } from './agente.ts';
 import { procesarEventos } from './avisos.ts';
-import { admin, clavesIguales, clienteUsuario, env, leerConfig, leerPerfil, mensajeDeError } from './entorno.ts';
+import { admin, claveAnthropic, clavesIguales, clienteUsuario, env, leerConfig, leerPerfil, mensajeDeError } from './entorno.ts';
 import { cerrarSesion, leerSesion, pasoLogin, tokenVigente } from './sesion.ts';
 import { configurarWebhook, enviarTexto, estadoCanal, listarGrupos, type MensajeWhapi } from './whapi.ts';
 
@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
           canal: await estadoCanal(),
           grupos: await listarGrupos(),
           grupo_configurado: cfg.grupo_chat_id ? { id: cfg.grupo_chat_id, nombre: cfg.grupo_nombre } : null,
-          claude: Boolean(env.anthropicKey),
+          claude: Boolean(await claveAnthropic()),
         });
 
       case 'saludar_grupo':

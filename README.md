@@ -127,13 +127,17 @@ Con Sonnet se activa el *fallback* en el servidor de la API (si el modelo declin
 
 ### Puesta en marcha
 
-1. Aplica la migración `…_messy.sql` (activa `pg_net` y `pg_cron`) y despliega la función: `npx supabase functions deploy messy --no-verify-jwt`.
+1. Aplica las migraciones `…_messy.sql` (activa `pg_net` y `pg_cron`) y `…_messy_secretos.sql` y despliega la función: `npx supabase functions deploy messy --no-verify-jwt`.
 2. Indica a Messy su propia URL:
    ```sql
    update public.messy_config set funcion_url = 'https://TU_PROJECT_REF.supabase.co/functions/v1/messy';
    ```
 3. En [Whapi.cloud](https://whapi.cloud) crea un canal y vincula el número de Messy escaneando el QR desde WhatsApp → *Dispositivos vinculados*. Copia el **token** del canal.
-4. En Supabase → **Edge Functions → Secrets** añade `WHAPI_TOKEN` y `ANTHROPIC_API_KEY` (de [console.anthropic.com](https://console.anthropic.com)).
+4. Guarda las dos claves: en Supabase → **Edge Functions → Secrets** como `WHAPI_TOKEN` y `ANTHROPIC_API_KEY` (de [console.anthropic.com](https://console.anthropic.com)), o cifradas en Vault desde el SQL Editor:
+   ```sql
+   select public.messy_guardar_secreto('messy_whapi_token', 'TOKEN_DE_WHAPI');
+   select public.messy_guardar_secreto('messy_anthropic_api_key', 'sk-ant-...');
+   ```
 5. Apunta el webhook de Whapi a Messy (lo hace la propia función):
    ```sql
    select net.http_post(

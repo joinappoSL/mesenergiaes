@@ -11,9 +11,7 @@ export const env = {
   supabaseUrl: variable('SUPABASE_URL').replace(/\/$/, ''),
   anonKey: variable('SUPABASE_ANON_KEY'),
   serviceKey: variable('SUPABASE_SERVICE_ROLE_KEY'),
-  whapiToken: Deno.env.get('WHAPI_TOKEN') ?? '',
   whapiUrl: (Deno.env.get('WHAPI_URL') || 'https://gate.whapi.cloud').replace(/\/$/, ''),
-  anthropicKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
   anthropicBaseUrl: Deno.env.get('ANTHROPIC_BASE_URL') || undefined,
   modelos: {
     /** Chat privado (agente con herramientas). */
@@ -43,6 +41,27 @@ export function clienteUsuario(accessToken: string): SupabaseClient {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
   });
 }
+
+// -----------------------------------------------------------------------------
+// Claves: secretos de la Edge Function o, si no están, Supabase Vault
+// -----------------------------------------------------------------------------
+const cacheSecretos = new Map<string, { valor: string; hasta: number }>();
+
+async function secreto(variableEntorno: string, nombreVault: string): Promise<string> {
+  const deEntorno = Deno.env.get(variableEntorno);
+  if (deEntorno) return deEntorno;
+  const enCache = cacheSecretos.get(nombreVault);
+  if (enCache && enCache.hasta > Date.now()) return enCache.valor;
+  const { data, error } = await admin.rpc('messy_secreto', { p_nombre: nombreVault });
+  if (error) console.error(`Messy: no se puede leer ${nombreVault} del Vault`, error.message);
+  const valor = typeof data === 'string' ? data.trim() : '';
+  // Si aún no está configurada, se vuelve a mirar en 30 s; si está, cada 5 min
+  cacheSecretos.set(nombreVault, { valor, hasta: Date.now() + (valor ? 5 * 60_000 : 30_000) });
+  return valor;
+}
+
+export const claveWhapi = () => secreto('WHAPI_TOKEN', 'messy_whapi_token');
+export const claveAnthropic = () => secreto('ANTHROPIC_API_KEY', 'messy_anthropic_api_key');
 
 export type Rol = 'admin' | 'backoffice' | 'jefe_equipo' | 'comercial';
 

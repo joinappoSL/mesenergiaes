@@ -1,6 +1,6 @@
 // Cliente mínimo de Whapi.cloud (pasarela de WhatsApp).
 // Docs: https://whapi.readme.io/reference
-import { env } from './entorno.ts';
+import { claveWhapi, env } from './entorno.ts';
 
 /** Mensaje entrante tal y como lo envía el webhook de Whapi (campos que usamos). */
 export interface MensajeWhapi {
@@ -23,13 +23,14 @@ export async function whapi<T = unknown>(
   ruta: string,
   opciones: { method?: 'GET' | 'POST' | 'PATCH' | 'PUT'; body?: unknown; query?: Record<string, string> } = {},
 ): Promise<T> {
-  if (!env.whapiToken) throw new Error('Falta el secreto WHAPI_TOKEN en Supabase');
+  const token = await claveWhapi();
+  if (!token) throw new Error('Falta el token de Whapi (WHAPI_TOKEN)');
   const url = new URL(`${env.whapiUrl}/${ruta.replace(/^\//, '')}`);
   for (const [k, v] of Object.entries(opciones.query ?? {})) url.searchParams.set(k, v);
   const res = await fetch(url, {
     method: opciones.method ?? 'POST',
     headers: {
-      Authorization: `Bearer ${env.whapiToken}`,
+      Authorization: `Bearer ${token}`,
       Accept: 'application/json',
       ...(opciones.body === undefined ? {} : { 'Content-Type': 'application/json' }),
     },

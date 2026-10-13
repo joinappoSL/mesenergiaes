@@ -5,23 +5,24 @@
 // reintenta con el modelo alternativo recomendado. Haiku 5.5 no tiene fallback
 // en el servidor, así que a sus peticiones no se les envía.
 import Anthropic from 'npm:@anthropic-ai/sdk@0.129.0';
-import { env } from './entorno.ts';
+import { claveAnthropic, env } from './entorno.ts';
 
 export { Anthropic };
 
 type Esfuerzo = 'low' | 'medium' | 'high';
 
-let cliente: Anthropic | null = null;
+let cliente: { clave: string; api: Anthropic } | null = null;
 
-function claude(): Anthropic {
-  if (!env.anthropicKey) throw new Error('Falta el secreto ANTHROPIC_API_KEY en Supabase');
-  cliente ??= new Anthropic({
-    apiKey: env.anthropicKey,
-    baseURL: env.anthropicBaseUrl,
-    maxRetries: 2,
-    timeout: 90_000,
-  });
-  return cliente;
+async function claude(): Promise<Anthropic> {
+  const clave = await claveAnthropic();
+  if (!clave) throw new Error('Falta la clave de la API de Claude (ANTHROPIC_API_KEY)');
+  if (cliente?.clave !== clave) {
+    cliente = {
+      clave,
+      api: new Anthropic({ apiKey: clave, baseURL: env.anthropicBaseUrl, maxRetries: 2, timeout: 90_000 }),
+    };
+  }
+  return cliente.api;
 }
 
 function admiteFallback(modelo: string): boolean {
@@ -30,8 +31,8 @@ function admiteFallback(modelo: string): boolean {
 
 type Parametros = Omit<Anthropic.Beta.Messages.MessageCreateParamsNonStreaming, 'model' | 'betas' | 'fallbacks'>;
 
-export function preguntar(modelo: string, params: Parametros): Promise<Anthropic.Beta.Messages.BetaMessage> {
-  return claude().beta.messages.create({
+export async function preguntar(modelo: string, params: Parametros): Promise<Anthropic.Beta.Messages.BetaMessage> {
+  return (await claude()).beta.messages.create({
     model: modelo,
     ...(admiteFallback(modelo) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
     ...params,
@@ -54,7 +55,7 @@ export async function redactar(
   peticion: string,
   { maxTokens = 3000, esfuerzo = 'low' }: { maxTokens?: number; esfuerzo?: Esfuerzo } = {},
 ): Promise<string | null> {
-  if (!env.anthropicKey) return null;
+  if (!(await claveAnthropic())) return null;
   try {
     const r = await preguntar(modelo, {
       max_tokens: maxTokens,
