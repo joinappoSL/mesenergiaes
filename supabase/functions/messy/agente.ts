@@ -8,6 +8,7 @@ import {
   ahoraMadrid,
   env,
   leerConfig,
+  leerProgreso,
   mensajeDeError,
   NOMBRE_ROL,
   type Perfil,
@@ -128,10 +129,11 @@ const HERRAMIENTAS: Herramienta[] = [
   {
     name: 'estadisticas',
     description:
-      'KPIs del CRM en un periodo (por fecha de subida del contrato): ventas/contratos subidos por estado, firmados, ' +
-      'pendientes sin firmar, cuota mensual de los activos, ventas por día, ranking de comerciales (subidos, activos, ' +
+      'KPIs del CRM en un periodo (por fecha de subida del contrato): reservas de plaza (contratos subidos) por estado, firmados, ' +
+      'pendientes sin firmar, cuota mensual de los activos, reservas por día, ranking de comerciales (subidos, activos, ' +
       'pendientes, perdidos, % activación) y citas de instalación de hoy y los próximos 7 días. Solo incluye lo que el ' +
-      'usuario puede ver. Sin fechas: últimos 30 días. Para «hoy» usa desde = hasta = fecha de hoy.',
+      'usuario puede ver. Sin fechas: últimos 30 días. Para «hoy» usa desde = hasta = fecha de hoy. Incluye siempre ' +
+      'objetivo_mes_equipo: el objetivo del mes con todas las reservas del equipo en conjunto (llevamos, objetivo, quedan, %).',
     input_schema: {
       type: 'object',
       properties: {
@@ -207,7 +209,7 @@ const HERRAMIENTAS_ADMIN: Herramienta[] = [
   {
     name: 'grupo_whatsapp',
     description:
-      'Gestiona el grupo de WhatsApp donde Messy anuncia las ventas y manda los buenos días y el cierre. ' +
+      'Gestiona el grupo de WhatsApp donde Messy anuncia las reservas de plaza y manda los buenos días y el cierre. ' +
       'accion=estado: configuración actual. accion=listar: grupos en los que está el número de Messy. ' +
       'accion=activar: usa ese grupo (chat_id de «listar») para los avisos.',
     input_schema: {
@@ -224,7 +226,8 @@ const HERRAMIENTAS_ADMIN: Herramienta[] = [
     name: 'ajustes_messy',
     description:
       'Cambia los avisos automáticos de Messy: activarlos o pausarlos, la hora de los buenos días y del cierre ' +
-      '(hora de Madrid, 0-23) y los días de la semana (1 = lunes … 7 = domingo).',
+      '(hora de Madrid, 0-23), los días de la semana (1 = lunes … 7 = domingo), el objetivo mensual de reservas de ' +
+      'plaza del equipo y corregir cuántas llevamos este mes en total (si hay reservas que no están en el CRM).',
     input_schema: {
       type: 'object',
       properties: {
@@ -232,6 +235,11 @@ const HERRAMIENTAS_ADMIN: Herramienta[] = [
         hora_buenos_dias: { type: 'integer' },
         hora_cierre: { type: 'integer' },
         dias_activos: { type: 'array', items: { type: 'integer' } },
+        objetivo_mes: { type: 'integer', description: 'Reservas de plaza que el equipo quiere hacer este mes' },
+        llevamos_este_mes: {
+          type: 'integer',
+          description: 'Total real de reservas del equipo este mes (incluidas las que no están en el CRM)',
+        },
       },
       additionalProperties: false,
     },
@@ -285,9 +293,10 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
         citas: { numero: number; cliente: string; poblacion: string; fecha: string; franja: string | null; estado: string; firmado: boolean; comercial: string | null }[];
       };
       return {
+        objetivo_mes_equipo: await leerProgreso(),
         periodo: { desde: d.desde, hasta: d.hasta },
         kpis: d.kpis,
-        ventas_por_dia: d.por_dia.filter((x) => x.total > 0),
+        reservas_por_dia: d.por_dia.filter((x) => x.total > 0),
         ranking: d.ranking.slice(0, 25),
         citas_instalacion_7_dias: {
           total: d.citas.length,
@@ -465,15 +474,25 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
         const dias = [...new Set(e.dias_activos.map((d) => entero(d, 'dias_activos', 1, 7, 1)))].sort();
         cambios.dias_activos = dias;
       }
+      if (e.objetivo_mes !== undefined) cambios.objetivo_mes = entero(e.objetivo_mes, 'objetivo_mes', 1, 100000, 50);
+      if (e.llevamos_este_mes !== undefined) {
+        const llevamos = entero(e.llevamos_este_mes, 'llevamos_este_mes', 0, 100000, 0);
+        const p = await leerProgreso();
+        if (llevamos < p.en_crm) {
+          throw new ErrorHerramienta(`En el CRM ya hay ${p.en_crm} reservas este mes: el total no puede ser menor.`);
+        }
+        cambios.ajuste_mes = llevamos - p.en_crm;
+        cambios.ajuste_mes_inicio = `${p.mes}-01`;
+      }
       if (!Object.keys(cambios).length) throw new ErrorHerramienta('No hay nada que cambiar');
       const { data, error } = await admin
         .from('messy_config')
         .update({ ...cambios, updated_at: new Date().toISOString() })
         .eq('id', 1)
-        .select('activo, hora_buenos_dias, hora_cierre, dias_activos')
+        .select('activo, hora_buenos_dias, hora_cierre, dias_activos, objetivo_mes')
         .single();
       if (error) throw error;
-      return { ok: true, ajustes: data };
+      return { ok: true, ajustes: data, objetivo_mes_equipo: await leerProgreso() };
     }
 
     case 'enviar_al_grupo': {
@@ -494,7 +513,7 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
 export function saludoGrupo(): string {
   return (
     `👋 ¡Hola, equipo! Soy *Messy*, el asistente de IA de MESENERGIA ⚡\n\n` +
-    `A partir de ahora os aviso aquí de cada venta que entre en el CRM 🔥, os doy los buenos días con energía ☀️ ` +
+    `A partir de ahora os aviso aquí de cada reserva de plaza que entre en el CRM 🔥, os doy los buenos días con energía ☀️ ` +
     `y hacemos juntos el cierre del día 🌙\n\n` +
     `¿Quieres saber cómo vas? Escríbeme por privado e inicia sesión con tu usuario del CRM 💬`
   );
@@ -527,7 +546,8 @@ Cómo trabajas:
 - Formato de WhatsApp: *negrita* con UN asterisco, _cursiva_, listas con • o 1. 2. 3. Nunca uses tablas, títulos con #, ni **dobles asteriscos**. Algún emoji está bien, sin pasarse.
 - Cualquier dato del CRM sale de tus herramientas: consúltalas siempre antes de dar cifras y no inventes ni estimes nada. Si no tienes el dato, dilo.
 - ${p.nombre} solo puede ver ${alcance}; tus herramientas ya aplican esos permisos. Si pide algo fuera de su alcance, explícale con amabilidad que con su rol no puedes enseñárselo.
-- «Ventas» = contratos subidos al CRM. Estados: 🟡 Pendiente, 🟢 Activo, 🟠 Riesgos, 🔴 Cancelado. El % de activación es activos / subidos. «Perdidos» = riesgos + cancelados.
+- En MESENERGIA cada contrato subido al CRM se llama «reserva de plaza»: habla siempre de reservas de plaza (o «reservas»), nunca de ventas; si alguien pregunta por «ventas», se refiere a lo mismo. Estados: 🟡 Pendiente, 🟢 Activo, 🟠 Riesgos, 🔴 Cancelado. El % de activación es activos / subidos. «Perdidos» = riesgos + cancelados.
+- El equipo tiene un objetivo mensual de reservas de plaza, contando todas en conjunto (no por persona). Cuando hables de cómo va el mes, da «llevamos X/Y, quedan Z (W %)» con los datos de objetivo_mes_equipo.
 - Fechas en formato humano (13/10, «ayer», «el lunes»). Importes en euros con coma decimal (39,90 €).
 - Nunca muestres DNI, teléfonos, emails ni direcciones de clientes (tus herramientas no los devuelven) y no los pidas.
 - No puedes crear ni modificar contratos: eso se hace en el CRM (${env.crmUrl}).${gestion}
@@ -568,7 +588,7 @@ export async function responder(
     });
 
     if (r.stop_reason === 'refusal') {
-      return 'Uy, con eso no te puedo ayudar 🙏 ¿Te echo una mano con tus ventas o contratos?';
+      return 'Uy, con eso no te puedo ayudar 🙏 ¿Te echo una mano con tus reservas de plaza o contratos?';
     }
 
     if (r.stop_reason === 'pause_turn') {

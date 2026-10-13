@@ -1,6 +1,6 @@
 // Cliente de Claude para Messy.
 // Modelos configurables (ver entorno.ts): Sonnet 5.5 para el chat y los
-// informes, Haiku 5.5 para los avisos de venta. Donde el modelo lo admite se
+// informes, Haiku 5.5 para los avisos de reservas de plaza. Donde el modelo lo admite se
 // activa el fallback en el servidor: si declina una petición, la API la
 // reintenta con el modelo alternativo recomendado. Haiku 5.5 no tiene fallback
 // en el servidor, así que a sus peticiones no se les envía.

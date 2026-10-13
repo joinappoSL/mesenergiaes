@@ -8,12 +8,13 @@
 //   · { accion: 'configurar_webhook' }  → apunta el webhook de Whapi aquí
 //   · { accion: 'estado' }              → estado del canal y grupos
 //   · { accion: 'saludar_grupo' }       → presenta a Messy en el grupo
+//   · { accion: 'anunciar_progreso' }   → manda al grupo cómo va el objetivo del mes
 //
 // Despliegue: verify_jwt = false (Whapi no envía JWT; se valida la clave).
 // Claves: ANTHROPIC_API_KEY y WHAPI_TOKEN (secretos de la función o Supabase Vault).
 // =============================================================================
 import { responder, saludoGrupo } from './agente.ts';
-import { procesarEventos } from './avisos.ts';
+import { procesarEventos, textoProgreso } from './avisos.ts';
 import { admin, claveAnthropic, clavesIguales, clienteUsuario, env, leerConfig, leerPerfil, mensajeDeError } from './entorno.ts';
 import { cerrarSesion, leerSesion, pasoLogin, tokenVigente } from './sesion.ts';
 import { configurarWebhook, enviarTexto, estadoCanal, listarGrupos, type MensajeWhapi } from './whapi.ts';
@@ -226,6 +227,13 @@ Deno.serve(async (req) => {
         if (!cfg.grupo_chat_id) return json({ error: 'No hay grupo configurado' }, 409);
         await enviarTexto(cfg.grupo_chat_id, saludoGrupo());
         return json({ ok: true });
+
+      case 'anunciar_progreso': {
+        if (!cfg.grupo_chat_id) return json({ error: 'No hay grupo configurado' }, 409);
+        const texto = await textoProgreso();
+        await enviarTexto(cfg.grupo_chat_id, texto);
+        return json({ ok: true, texto });
+      }
     }
     // Otros eventos de Whapi (estados, etc.): se ignoran
     return json({ ok: true, ignorado: true });

@@ -175,7 +175,7 @@ async function intentarLogin(s: Sesion, email: string, password: string): Promis
   const nombre = perfil.nombre || 'crack';
   const ejemplos =
     perfil.rol === 'comercial'
-      ? '• ¿Cuántas ventas llevo este mes?\n• ¿Qué contratos tengo pendientes de firmar?\n• ¿Cómo voy en el ranking de hoy?'
+      ? '• ¿Cuántas reservas de plaza llevo este mes?\n• ¿Qué contratos tengo pendientes de firmar?\n• ¿Cómo voy en el ranking de hoy?'
       : perfil.rol === 'jefe_equipo'
         ? '• ¿Cómo va mi equipo hoy?\n• Ranking de la semana\n• ¿Qué contratos de mi equipo están en riesgos?'
         : '• Resumen de hoy\n• Ranking del mes por comercial\n• ¿Cuántos pendientes sin firmar hay en la cola?';

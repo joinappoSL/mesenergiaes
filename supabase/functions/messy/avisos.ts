@@ -1,8 +1,9 @@
-// Avisos de Messy en el grupo de WhatsApp: ventas, buenos días y cierre del día.
+// Avisos de Messy en el grupo de WhatsApp: reservas de plaza, buenos días y cierre del día.
+// (Internamente se siguen llamando «venta»; hacia fuera, siempre «reserva de plaza».)
 // Los datos salen de funciones SQL internas y nunca incluyen datos personales
 // de los clientes; Claude solo pone la chispa motivacional.
 import { redactar } from './claude.ts';
-import { admin, ahoraMadrid, env, fechaLarga, leerConfig, mensajeDeError } from './entorno.ts';
+import { admin, ahoraMadrid, env, fechaLarga, leerConfig, leerProgreso, mensajeDeError, type Progreso } from './entorno.ts';
 import { enviarTexto } from './whapi.ts';
 
 interface Evento {
@@ -19,7 +20,9 @@ const PERSONA =
   'Escribes en el grupo de WhatsApp del equipo comercial: tono cercano, positivo, con energía y algo de humor sano, ' +
   'como un compañero que motiva (nunca un jefe que presiona). Español de España. Formato de WhatsApp: *negrita* ' +
   'con un asterisco, _cursiva_; nada de títulos con #, tablas ni **dobles asteriscos**. ' +
-  'Usa solo los datos que te doy, sin inventar cifras ni nombres. Nunca señales a nadie por vender poco. ' +
+  'En el equipo cada contrato subido al CRM se llama «reserva de plaza»: di siempre «reservas de plaza» ' +
+  '(o «reservas»), nunca «ventas». ' +
+  'Usa solo los datos que te doy, sin inventar cifras ni nombres. Nunca señales a nadie por conseguir pocas. ' +
   'Devuelve únicamente el texto del mensaje, sin comillas ni explicaciones.';
 
 const FRASES_VENTA = [
@@ -37,6 +40,35 @@ function azar<T>(lista: T[]): T {
 
 function plural(n: number, uno: string, varios: string) {
   return `${n} ${n === 1 ? uno : varios}`;
+}
+
+const reservas = (n: number) => plural(n, 'reserva de plaza', 'reservas de plaza');
+
+/** 🎯 Objetivo del mes: 11/50 · quedan 39 (78 %) */
+export function lineaObjetivo(p: Progreso): string {
+  if (p.quedan === 0) return `🏆 *¡Objetivo del mes conseguido!* Llevamos *${p.llevamos}/${p.objetivo}* 🎉`;
+  return `🎯 Objetivo del mes: *${p.llevamos}/${p.objetivo}* · quedan *${p.quedan}* (${p.pct_quedan} %)`;
+}
+
+const INSTRUCCION_OBJETIVO =
+  'Incluye una línea con el objetivo del mes del equipo (todas las reservas en conjunto): cuántas llevamos de ' +
+  'cuántas, cuántas quedan y el porcentaje que queda, con los datos de «objetivo_mes». ';
+
+/** Los datos van a Claude con el vocabulario del equipo (reservas, no ventas). */
+function paraClaude(valor: unknown): string {
+  const renombrar = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(renombrar);
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(
+        Object.entries(v).map(([k, x]) => [
+          k.replace('facturacion_mensual_vendida', 'cuota_mensual_reservada').replace(/ventas?/g, 'reservas').replace('vendedor', 'comercial'),
+          renombrar(x),
+        ]),
+      );
+    }
+    return v;
+  };
+  return JSON.stringify(renombrar(valor));
 }
 
 // -----------------------------------------------------------------------------
@@ -67,22 +99,24 @@ async function textoVenta(contratoId: string | null): Promise<string | null> {
   const d = data as DatosVenta;
 
   const oferta = [d.producto, d.operadora].filter(Boolean).join(' · ');
-  const lineas = [`🔥 *${d.vendedor} ha vendido 1*${oferta ? ` · ${oferta}` : ''}`];
+  const lineas = [`🔥 *${d.vendedor} ha conseguido 1 reserva de plaza*${oferta ? ` · ${oferta}` : ''}`];
   const marcador = [`lleva *${d.ventas_hoy_vendedor}* hoy`, `*${d.ventas_mes_vendedor}* este mes`];
   lineas.push(`📈 ${d.vendedor} ${marcador.join(' y ')}`);
   lineas.push(
     d.primera_venta_del_dia
-      ? '🥇 ¡Primera venta del día! Arrancamos 🚀'
-      : `🏢 Hoy llevamos *${plural(d.ventas_hoy_total, 'venta', 'ventas')}* entre todos`,
+      ? '🥇 ¡Primera reserva de plaza del día! Arrancamos 🚀'
+      : `🏢 Hoy llevamos *${reservas(d.ventas_hoy_total)}* entre todos`,
   );
+  const objetivo = await leerProgreso();
+  lineas.push(lineaObjetivo(objetivo));
 
   const chispa = await redactar(
     env.modelos.avisos,
     PERSONA,
-    `Acaba de entrar una venta. Datos:\n${JSON.stringify(d)}\n\n` +
+    `Acaba de entrar una reserva de plaza. Datos:\n${paraClaude({ ...d, objetivo_mes: objetivo })}\n\n` +
       'Escribe UNA sola frase corta (máx. 20 palabras, 1-2 emojis) para celebrarla y animar al resto. ' +
       'Puedes jugar con la racha, el liderato del día o la hora, pero no repitas el mensaje base que ya dice ' +
-      `«${d.vendedor} ha vendido 1» y sus contadores. Varía el estilo cada vez.`,
+      `«${d.vendedor} ha conseguido 1 reserva de plaza» y sus contadores. Varía el estilo cada vez.`,
     { maxTokens: 1500, esfuerzo: 'low' },
   );
   lineas.push('', chispa ?? azar(FRASES_VENTA));
@@ -124,19 +158,22 @@ async function textoBuenosDias(): Promise<string> {
   const { data: ultimoDia } = await admin.rpc('messy_ultimo_dia_con_ventas', { p_antes: f.hoy });
   const anterior = ultimoDia ? await resumen(ultimoDia as string) : null;
   const mes = (await resumen(f.hoy)).mes;
+  const objetivo = await leerProgreso();
 
   const datos = {
     hoy: f.larga,
     ultimo_dia_con_ventas: anterior ? { ...anterior, fecha_larga: fechaLarga(anterior.fecha) } : null,
-    acumulado_mes: mes,
+    acumulado_mes: { ...mes, ventas: objetivo.llevamos },
+    objetivo_mes: objetivo,
   };
   const texto = await redactar(
     env.modelos.informes,
     PERSONA,
-    `Son las ${f.hora} y toca dar los buenos días al equipo. Datos:\n${JSON.stringify(datos)}\n\n` +
+    `Son las ${f.hora} y toca dar los buenos días al equipo. Datos:\n${paraClaude(datos)}\n\n` +
       'Escribe el mensaje de buenos días (5-8 líneas): empieza con «☀️ *¡Buenos días, equipo!*», resume en 1-2 líneas ' +
-      'cómo fue el último día con ventas (total y quién lideró, con sus ventas), cómo va el mes y termina con una ' +
-      'frase motivadora original para arrancar la jornada. Si no hay datos, simplemente anima a estrenar el marcador.',
+      'cómo fue el último día con reservas de plaza (total y quién lideró, con sus reservas), cómo va el mes y termina con una ' +
+      'frase motivadora original para arrancar la jornada. Si no hay datos, simplemente anima a estrenar el marcador. ' +
+      INSTRUCCION_OBJETIVO,
     { esfuerzo: 'medium', maxTokens: 6000 },
   );
   if (texto) return texto;
@@ -144,36 +181,58 @@ async function textoBuenosDias(): Promise<string> {
   const lineas = ['☀️ *¡Buenos días, equipo!*', ''];
   if (anterior && anterior.ventas > 0) {
     const cuando = anterior.fecha === f.ayer ? 'Ayer' : `El ${fechaLarga(anterior.fecha).replace(/ de \d{4}$/, '')}`;
-    lineas.push(`${cuando} cerramos con *${plural(anterior.ventas, 'venta', 'ventas')}* 💪`);
+    lineas.push(`${cuando} cerramos con *${reservas(anterior.ventas)}* 💪`);
     if (anterior.ranking.length) lineas.push(podio(anterior.ranking));
   }
-  if (mes.ventas > 0) lineas.push('', `📊 Este mes llevamos *${plural(mes.ventas, 'venta', 'ventas')}*.`);
-  lineas.push('', '¡A por un gran día! El primero que venda abre el marcador 🔥');
-  return lineas.join('\n');
+  lineas.push('', lineaObjetivo(objetivo));
+  lineas.push('', '¡A por un gran día! La primera reserva de plaza abre el marcador 🔥');
+  return lineas.join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
 async function textoCierre(): Promise<string> {
   const f = ahoraMadrid();
   const r = await resumen(f.hoy);
+  const objetivo = await leerProgreso();
   const texto = await redactar(
     env.modelos.informes,
     PERSONA,
-    `Son las ${f.hora}: cierre del día (${f.larga}). Datos de hoy:\n${JSON.stringify(r)}\n\n` +
-      'Escribe el cierre del día (6-10 líneas): empieza con «🌙 *Cierre del día*», da el total de ventas de hoy, ' +
-      'el podio con medallas 🥇🥈🥉 (nombre y ventas) si hay ventas, compáralo con el mismo día de la semana pasada ' +
-      'si suma, menciona cómo va el mes y despide la jornada agradeciendo el esfuerzo con una frase motivadora para mañana.',
+    `Son las ${f.hora}: cierre del día (${f.larga}). Datos de hoy:\n${paraClaude({ ...r, mes: { ...r.mes, ventas: objetivo.llevamos }, objetivo_mes: objetivo })}\n\n` +
+      'Escribe el cierre del día (6-10 líneas): empieza con «🌙 *Cierre del día*», da el total de reservas de plaza de hoy, ' +
+      'el podio con medallas 🥇🥈🥉 (nombre y reservas) si hay reservas, compáralo con el mismo día de la semana pasada ' +
+      'si suma, menciona cómo va el mes y despide la jornada agradeciendo el esfuerzo con una frase motivadora para mañana. ' +
+      INSTRUCCION_OBJETIVO,
     { esfuerzo: 'medium', maxTokens: 6000 },
   );
   if (texto) return texto;
 
   const lineas = ['🌙 *Cierre del día*', ''];
   if (r.ventas > 0) {
-    lineas.push(`Hoy hemos hecho *${plural(r.ventas, 'venta', 'ventas')}* 🎉`);
+    lineas.push(`Hoy hemos conseguido *${reservas(r.ventas)}* 🎉`);
     if (r.ranking.length) lineas.push('', podio(r.ranking));
   } else {
     lineas.push('Hoy el marcador se ha quedado a cero, ¡mañana lo reventamos! 💪');
   }
-  lineas.push('', `📊 Mes: *${plural(r.mes.ventas, 'venta', 'ventas')}* · ${r.mes.activos} activas`, '', '¡Gracias por el esfuerzo, equipo! A descansar 💚');
+  lineas.push('', lineaObjetivo(objetivo), '', '¡Gracias por el esfuerzo, equipo! A descansar 💚');
+  return lineas.join('\n');
+}
+
+/** Mensaje suelto con cómo va el objetivo del mes (lo puede pedir un admin). */
+export async function textoProgreso(): Promise<string> {
+  const p = await leerProgreso();
+  const lineas = ['📊 *Así vamos este mes, equipo*', '', lineaObjetivo(p)];
+  if (p.quedan > 0 && p.dias_restantes > 0) {
+    const porDia = Math.ceil(p.quedan / p.dias_restantes);
+    lineas.push(`📅 Quedan ${plural(p.dias_restantes, 'día', 'días')}: a ${plural(porDia, 'reserva', 'reservas')} por día lo tenemos`);
+  }
+  const chispa = await redactar(
+    env.modelos.avisos,
+    PERSONA,
+    `Datos del objetivo del mes del equipo:\n${paraClaude(p)}\n\n` +
+      'Escribe UNA sola frase corta (máx. 20 palabras, 1-2 emojis) para animar al equipo a llegar al objetivo. ' +
+      'No repitas las cifras, ya van en el mensaje.',
+    { maxTokens: 1500, esfuerzo: 'low' },
+  );
+  lineas.push('', chispa ?? '¡Vamos a por ello, que este mes lo petamos! 💪');
   return lineas.join('\n');
 }
 

@@ -18,7 +18,7 @@ export const env = {
     chat: Deno.env.get('MESSY_MODELO_CHAT') || 'claude-sonnet-5-5',
     /** Informes del grupo: buenos días y cierre del día. */
     informes: Deno.env.get('MESSY_MODELO_INFORMES') || 'claude-sonnet-5-5',
-    /** Avisos de venta en el grupo (frase corta tras cada venta). */
+    /** Avisos de reserva de plaza en el grupo (frase corta tras cada una). */
     avisos: Deno.env.get('MESSY_MODELO_AVISOS') || 'claude-haiku-5-5',
   },
   crmUrl: Deno.env.get('CRM_URL') || 'https://joinapposl.github.io/mesenergiaes/',
@@ -99,6 +99,25 @@ export async function leerConfig(): Promise<ConfigMessy> {
   const { data, error } = await admin.from('messy_config').select('*').eq('id', 1).single();
   if (error) throw error;
   return data as ConfigMessy;
+}
+
+/** Objetivo mensual del equipo: todas las reservas de plaza en conjunto. */
+export interface Progreso {
+  mes: string;
+  objetivo: number;
+  llevamos: number;
+  en_crm: number;
+  ajuste: number;
+  quedan: number;
+  pct_hecho: number;
+  pct_quedan: number;
+  dias_restantes: number;
+}
+
+export async function leerProgreso(): Promise<Progreso> {
+  const { data, error } = await admin.rpc('messy_progreso_mes', { p_fecha: null });
+  if (error) throw error;
+  return data as Progreso;
 }
 
 export async function leerPerfil(userId: string): Promise<Perfil | null> {

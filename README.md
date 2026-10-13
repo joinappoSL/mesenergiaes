@@ -106,14 +106,23 @@ Messy vive en la Edge Function `messy` y usa un número de WhatsApp conectado a 
 
 **En el grupo del equipo**
 
-- 🔥 **Cada venta**: en cuanto se sube un contrato al CRM, «*Mario ha vendido 1* · Fibra 600 Mb · Avatel», cuántas lleva hoy y este mes, y una frase para animar al resto.
-- ☀️ **Buenos días** (9:00) con el resumen del último día con ventas y el acumulado del mes.
+- 🔥 **Cada reserva de plaza**: en cuanto se sube un contrato al CRM, «*Mario ha conseguido 1 reserva de plaza* · Fibra 600 Mb · Avatel», cuántas lleva hoy y este mes, el objetivo del equipo y una frase para animar al resto.
+- 🎯 **Objetivo del mes del equipo**, sumando las reservas de todos: «Objetivo del mes: *11/50* · quedan *39* (78 %)». Sale en cada aviso, en los buenos días y en el cierre.
+- ☀️ **Buenos días** (9:00) con el resumen del último día con reservas y el acumulado del mes.
 - 🌙 **Cierre del día** (20:00) con el total, el podio 🥇🥈🥉 y cómo va el mes.
 - Horas y días configurables (por defecto de lunes a sábado), hora de Madrid. En el grupo Messy no lee nada más: solo reacciona a «messy activar».
 
+El objetivo cuenta los contratos subidos al CRM en el mes (hora de Madrid) más un ajuste opcional para las reservas que no están en el CRM; el ajuste solo vale para el mes en el que se pone. Un admin puede pedirle a Messy por privado «el objetivo de este mes es 60» o «llevamos 14 este mes», o hacerlo en SQL:
+
+```sql
+update public.messy_config set objetivo_mes = 50, ajuste_mes = 6, ajuste_mes_inicio = date '2026-10-01';
+```
+
+Para que Messy publique en el grupo ahora mismo cómo va el objetivo, llama a la acción `anunciar_progreso` como en el paso 5 de la puesta en marcha.
+
 **Por privado**
 
-Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo que quiera: «¿cuántas ventas llevo este mes?», «ranking de la semana», «¿qué pendientes tengo sin firmar?», «ficha del contrato 125»… Messy consulta el CRM **con los permisos de esa persona** (el comercial solo ve lo suyo, el jefe su equipo, backoffice y admin todo), nunca muestra DNI, teléfonos, emails ni direcciones de clientes y no puede modificar nada. Los admins además pueden pedirle que cambie las horas de los avisos, que los pause o que publique algo en el grupo. «salir» cierra la sesión; 5 intentos fallidos bloquean el chat 15 minutos.
+Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo que quiera: «¿cuántas reservas de plaza llevo este mes?», «¿cómo vamos con el objetivo?», «ranking de la semana», «¿qué pendientes tengo sin firmar?», «ficha del contrato 125»… Messy consulta el CRM **con los permisos de esa persona** (el comercial solo ve lo suyo, el jefe su equipo, backoffice y admin todo), nunca muestra DNI, teléfonos, emails ni direcciones de clientes y no puede modificar nada. Los admins además pueden pedirle que cambie las horas de los avisos, que los pause o que publique algo en el grupo. «salir» cierra la sesión; 5 intentos fallidos bloquean el chat 15 minutos.
 
 **Modelos de Claude** (cambiables sin tocar código, con secretos de la Edge Function):
 
@@ -121,13 +130,13 @@ Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo 
 |---|---|---|
 | Chat privado | `MESSY_MODELO_CHAT` | `claude-sonnet-5-5` |
 | Informes (buenos días y cierre) | `MESSY_MODELO_INFORMES` | `claude-sonnet-5-5` |
-| Avisos de venta | `MESSY_MODELO_AVISOS` | `claude-haiku-5-5` |
+| Avisos de reserva de plaza | `MESSY_MODELO_AVISOS` | `claude-haiku-5-5` |
 
 Con Sonnet se activa el *fallback* en el servidor de la API (si el modelo declina una petición, se reintenta con el alternativo recomendado); Haiku 5.5 no lo tiene. Si Claude no responde, los avisos salen igualmente con una plantilla.
 
 ### Puesta en marcha
 
-1. Aplica las migraciones `…_messy.sql` (activa `pg_net` y `pg_cron`) y `…_messy_secretos.sql` y despliega la función: `npx supabase functions deploy messy --no-verify-jwt`.
+1. Aplica las migraciones `…_messy.sql` (activa `pg_net` y `pg_cron`), `…_messy_secretos.sql` y `…_messy_objetivo.sql` y despliega la función: `npx supabase functions deploy messy --no-verify-jwt`.
 2. Indica a Messy su propia URL:
    ```sql
    update public.messy_config set funcion_url = 'https://TU_PROJECT_REF.supabase.co/functions/v1/messy';
