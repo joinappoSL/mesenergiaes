@@ -31,14 +31,14 @@ begin
       via_tipo, via_nombre, via_numero, escalera, piso, puerta, codigo_postal, poblacion, provincia,
       telefono_fijo, telefono_contacto,
       operadora, producto, precio_mensual, oferta_detalle,
-      instalacion_fecha, instalacion_franja,
+      instalacion_fecha, instalacion_franja, iban, verificacion_at,
       comercial_id
     ) values (
       r.cliente_nombre, r.cliente_apellidos, coalesce(r.documento_tipo, 'DNI'), r.documento_numero, r.cliente_email,
       r.via_tipo, r.via_nombre, r.via_numero, r.escalera, r.piso, r.puerta, r.codigo_postal, r.poblacion, r.provincia,
       r.telefono_fijo, r.telefono_contacto,
       r.operadora, r.producto, r.precio_mensual, r.oferta_detalle,
-      r.instalacion_fecha, r.instalacion_franja,
+      r.instalacion_fecha, r.instalacion_franja, r.iban, r.verificacion_at,
       r.comercial_id
     )
     returning id into v_id;
@@ -65,7 +65,9 @@ begin
       precio_mensual     = r.precio_mensual,
       oferta_detalle     = r.oferta_detalle,
       instalacion_fecha  = r.instalacion_fecha,
-      instalacion_franja = r.instalacion_franja
+      instalacion_franja = r.instalacion_franja,
+      iban               = r.iban,
+      verificacion_at    = r.verificacion_at
     where c.id = p_id
     returning c.id into v_id;
 

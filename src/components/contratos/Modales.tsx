@@ -1,12 +1,14 @@
-import { ArrowRight, RefreshCcw, UserCog } from 'lucide-react';
+import { ArrowRight, RefreshCcw, Trash2, UserCog } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EstadoBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Aviso } from '@/components/ui/Feedback';
 import { Field, Select, Textarea } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { useEquipos, usePerfiles } from '@/hooks/datos';
-import { useCambiarEstado, useReasignar } from '@/hooks/mutaciones';
+import { useCambiarEstado, useEliminarContrato, useReasignar } from '@/hooks/mutaciones';
 import { ESTADOS, LISTA_ESTADOS } from '@/lib/constants';
 import { nombreCompleto, numeroContrato } from '@/lib/format';
 import type { Contrato, EstadoContrato } from '@/lib/types';
@@ -193,6 +195,57 @@ export function ReasignarModal({
           ))}
         </Select>
       </Field>
+    </Modal>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Eliminar contrato (solo admin)
+// -----------------------------------------------------------------------------
+export function EliminarContratoModal({
+  contrato,
+  onClose,
+}: {
+  contrato: Pick<Contrato, 'id' | 'numero' | 'cliente_nombre' | 'cliente_apellidos'>;
+  onClose: () => void;
+}) {
+  const eliminar = useEliminarContrato();
+  const navigate = useNavigate();
+
+  async function confirmar() {
+    try {
+      await eliminar.mutateAsync(contrato.id);
+      toast.success(`${numeroContrato(contrato.numero)} eliminado`);
+      onClose();
+      navigate('/contratos', { replace: true });
+    } catch (e) {
+      toast.error(mensajeError(e));
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Eliminar contrato"
+      description={`${numeroContrato(contrato.numero)} · ${contrato.cliente_nombre} ${contrato.cliente_apellidos}`}
+      icon={<Trash2 className="h-5 w-5" />}
+      size="sm"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={confirmar} loading={eliminar.isPending} icon={<Trash2 className="h-4 w-4" />}>
+            Eliminar definitivamente
+          </Button>
+        </>
+      }
+    >
+      <Aviso tipo="danger" titulo="No se puede deshacer">
+        Se borrará el contrato con sus teléfonos, PDF, observaciones, llamadas e historial. Úsalo solo para contratos de
+        prueba o duplicados; para una venta caída, cambia el estado a Cancelado.
+      </Aviso>
     </Modal>
   );
 }

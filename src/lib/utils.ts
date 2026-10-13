@@ -24,6 +24,8 @@ export function mensajeError(e: unknown): string {
     [/contratos_motivo_obligatorio/, 'Indica el motivo para pasar a Cancelado o Riesgos.'],
     [/llamadas_recordatorio_obligatorio/, 'Indica fecha y hora para volver a llamar.'],
     [/contratos_email_valido/, 'El email del cliente no es válido.'],
+    [/contratos_iban_valido/, 'El IBAN no es válido. Revisa el número de cuenta.'],
+    [/contratos_verificacion_antes_instalacion/, 'La verificación tiene que ser antes de la cita de instalación.'],
     [/telefono_contacto|telefono_fijo|telefonos_portabilidad_numero/, 'Revisa los teléfonos: deben tener 9 dígitos.'],
     [/codigo_postal/, 'El código postal debe tener 5 dígitos.'],
     [/equipos_nombre_key/, 'Ya existe un equipo con ese nombre.'],

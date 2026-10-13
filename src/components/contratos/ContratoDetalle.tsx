@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Euro,
   History,
+  Landmark,
   Mail,
   MapPin,
   MessageSquare,
@@ -13,7 +14,9 @@ import {
   Phone,
   PhoneCall,
   RefreshCcw,
+  ShieldCheck,
   Smartphone,
+  Trash2,
   User,
   UserCog,
   XCircle,
@@ -45,8 +48,9 @@ import {
 } from '@/lib/format';
 import type { Contrato } from '@/lib/types';
 import { cn, mensajeError } from '@/lib/utils';
+import { formatearIban } from '@/lib/validators';
 import { FormularioLlamada, Historial, ListaLlamadas, Observaciones } from './Actividad';
-import { CambiarEstadoModal, ReasignarModal } from './Modales';
+import { CambiarEstadoModal, EliminarContratoModal, ReasignarModal } from './Modales';
 import { PdfVisor } from './PdfVisor';
 
 function BotonLlamar({ numero, etiqueta, icon, destacado }: { numero: string; etiqueta: ReactNode; icon: ReactNode; destacado?: boolean }) {
@@ -109,6 +113,8 @@ function Telefonos({ contrato }: { contrato: Contrato }) {
 
 function Gestion({ contrato }: { contrato: Contrato }) {
   const instalacionHoy = contrato.instalacion_fecha === hoyISO();
+  const verificacionHoy =
+    !!contrato.verificacion_at && new Date(contrato.verificacion_at).toDateString() === new Date().toDateString();
   return (
     <Card>
       <CardHeader title="Gestión" icon={<ClipboardList className="h-4 w-4" />} />
@@ -134,6 +140,22 @@ function Gestion({ contrato }: { contrato: Contrato }) {
         <div
           className={cn(
             'mt-5 flex items-center gap-3 rounded-xl px-3.5 py-3 ring-1',
+            verificacionHoy ? 'bg-sun-50 ring-sun-300' : 'bg-brand-50/60 ring-brand-100',
+          )}
+        >
+          <ShieldCheck className={cn('h-5 w-5 shrink-0', verificacionHoy ? 'text-sun-600' : 'text-brand-600')} />
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Verificación programada</p>
+            {contrato.verificacion_at ? (
+              <p className="text-sm font-semibold text-navy-900 first-letter:uppercase">{fechaHoraCorta(contrato.verificacion_at)}</p>
+            ) : (
+              <p className="text-sm text-slate-500">Sin programar</p>
+            )}
+          </div>
+        </div>
+        <div
+          className={cn(
+            'mt-3 flex items-center gap-3 rounded-xl px-3.5 py-3 ring-1',
             instalacionHoy ? 'bg-sun-50 ring-sun-300' : 'bg-navy-50/60 ring-navy-100',
           )}
         >
@@ -165,6 +187,7 @@ export function ContratoDetalle({ contrato, accionesExtra }: { contrato: Contrat
   const marcarFirma = useMarcarFirma();
   const [cambiandoEstado, setCambiandoEstado] = useState(false);
   const [reasignando, setReasignando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
   const [pestana, setPestana] = useState<'observaciones' | 'historial'>('observaciones');
   const editable = p.puedeEditarContrato(contrato);
   const dias = diasDesde(contrato.created_at);
@@ -229,6 +252,16 @@ export function ContratoDetalle({ contrato, accionesExtra }: { contrato: Contrat
                 Cambiar estado
               </Button>
             )}
+            {p.puedeEliminarContrato && (
+              <Button
+                variant="secondary"
+                icon={<Trash2 className="h-4 w-4" />}
+                onClick={() => setEliminando(true)}
+                className="text-red-600 hover:text-red-700"
+              >
+                Eliminar
+              </Button>
+            )}
           </div>
         </div>
       </Card>
@@ -254,6 +287,15 @@ export function ContratoDetalle({ contrato, accionesExtra }: { contrato: Contrat
                       >
                         <Mail className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{contrato.cliente_email}</span>
                       </a>
+                    ) : (
+                      '—'
+                    )}
+                  </Dato>
+                  <Dato label="IBAN" className="col-span-2">
+                    {contrato.iban ? (
+                      <span className="inline-flex items-center gap-1.5 font-mono text-[13px] tracking-wide">
+                        <Landmark className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {formatearIban(contrato.iban)}
+                      </span>
                     ) : (
                       '—'
                     )}
@@ -341,6 +383,7 @@ export function ContratoDetalle({ contrato, accionesExtra }: { contrato: Contrat
 
       {cambiandoEstado && <CambiarEstadoModal contrato={contrato} onClose={() => setCambiandoEstado(false)} />}
       {reasignando && <ReasignarModal contrato={contrato} onClose={() => setReasignando(false)} />}
+      {eliminando && <EliminarContratoModal contrato={contrato} onClose={() => setEliminando(false)} />}
     </div>
   );
 }

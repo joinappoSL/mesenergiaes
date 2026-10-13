@@ -14,6 +14,8 @@ export interface Permisos {
   puedeMarcarFirma: boolean;
   puedeRegistrarLlamadas: boolean;
   puedeReasignar: boolean;
+  /** solo admin: borra el contrato con sus teléfonos, PDF, observaciones e historial */
+  puedeEliminarContrato: boolean;
   puedeVerCola: boolean;
   puedeVerUsuarios: boolean;
   puedeGestionarEquipos: boolean;
@@ -45,6 +47,7 @@ export function calcularPermisos(perfil: Perfil): Permisos {
     puedeMarcarFirma: esGestor,
     puedeRegistrarLlamadas: esGestor,
     puedeReasignar: esGestor,
+    puedeEliminarContrato: esAdmin,
     puedeVerCola: esGestor,
     puedeVerUsuarios: esGestor || esJefe,
     puedeGestionarEquipos: esAdmin,

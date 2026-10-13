@@ -54,6 +54,30 @@ export function provinciaDesdeCP(cp: string): string | null {
   return PROVINCIA_POR_CP[limpio.slice(0, 2)] ?? null;
 }
 
+/** IBAN en mayúsculas y sin espacios ni guiones. */
+export function normalizarIban(valor: string): string {
+  return valor.replace(/[\s-]/g, '').toUpperCase();
+}
+
+/** IBAN válido según ISO 13616 (dígito de control mod 97). Los españoles tienen 24 caracteres. */
+export function esIbanValido(valor: string): boolean {
+  const v = normalizarIban(valor);
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(v)) return false;
+  if (v.startsWith('ES') && v.length !== 24) return false;
+  const reordenado = v.slice(4) + v.slice(0, 4);
+  let resto = 0;
+  for (const c of reordenado) {
+    const digitos = /[A-Z]/.test(c) ? String(c.charCodeAt(0) - 55) : c;
+    for (const d of digitos) resto = (resto * 10 + Number(d)) % 97;
+  }
+  return resto === 1;
+}
+
+/** ES91 2100 0418 4502 0005 1332 */
+export function formatearIban(valor: string): string {
+  return normalizarIban(valor).replace(/(.{4})(?=.)/g, '$1 ');
+}
+
 export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export function esEmailValido(valor: string): boolean {

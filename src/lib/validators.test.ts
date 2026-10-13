@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   detectarTipoDocumento,
   esCodigoPostalValido,
+  esIbanValido,
   esTelefonoValido,
+  formatearIban,
   generarPasswordTemporal,
   normalizarDocumento,
   normalizarTelefono,
@@ -72,5 +74,23 @@ describe('otros', () => {
     const p = generarPasswordTemporal();
     expect(p).toMatch(/^Mes-[A-Za-z]{4}-\d{4}$/);
     expect(p.length).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe('IBAN', () => {
+  it('acepta IBAN válidos con o sin espacios', () => {
+    expect(esIbanValido('ES91 2100 0418 4502 0005 1332')).toBe(true);
+    expect(esIbanValido('es7921000813610123456789')).toBe(true);
+    expect(esIbanValido('GB82 WEST 1234 5698 7654 32')).toBe(true);
+  });
+
+  it('rechaza dígitos de control erróneos y longitudes incorrectas', () => {
+    expect(esIbanValido('ES9121000418450200051333')).toBe(false);
+    expect(esIbanValido('ES912100041845020005133')).toBe(false);
+    expect(esIbanValido('hola')).toBe(false);
+  });
+
+  it('formatea en bloques de 4', () => {
+    expect(formatearIban('es9121000418450200051332')).toBe('ES91 2100 0418 4502 0005 1332');
   });
 });

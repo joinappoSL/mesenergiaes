@@ -67,6 +67,9 @@ export interface Contrato {
   equipo_nombre: string | null;
   num_documentos: number;
   portabilidad_resumen: string | null;
+  iban: string | null;
+  /** fecha y hora de la llamada de verificación (antes de la instalación) */
+  verificacion_at: string | null;
 }
 
 export interface TelefonoPortabilidad {

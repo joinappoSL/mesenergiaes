@@ -66,6 +66,8 @@ export interface DatosContrato {
   oferta_detalle: string | null;
   instalacion_fecha: string | null;
   instalacion_franja: string | null;
+  iban: string | null;
+  verificacion_at: string | null;
 }
 
 export interface TelefonoNuevo {
@@ -165,6 +167,23 @@ async function actualizarContrato(id: string, cambios: Record<string, unknown>) 
   const { data, error } = await supabase.from('contratos').update(cambios).eq('id', id).select('id');
   if (error) throw error;
   if (!data?.length) throw new Error('No tienes permiso para modificar este contrato.');
+}
+
+/** Solo admin (política RLS contratos_delete). Se borra con todo lo que cuelga de él. */
+export function useEliminarContrato() {
+  const refrescar = useRefrescarContrato();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.from('contratos').delete().eq('id', id).select('id');
+      if (error) throw error;
+      if (!data?.length) throw new Error('No tienes permiso para eliminar este contrato.');
+    },
+    onSuccess: (_d, id) => {
+      qc.removeQueries({ queryKey: qk.contrato(id) });
+      refrescar();
+    },
+  });
 }
 
 export function useCambiarEstado() {
@@ -292,6 +311,40 @@ export function useResetPassword() {
     mutationFn: (v: { id: string; password: string }) =>
       invocarFuncion('admin-users', { accion: 'reset_password', ...v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.perfiles }),
+  });
+}
+
+/**
+ * Solo admin y solo equipos vacíos: el equipo de un contrato se deriva de su
+ * comercial, así que borrar un equipo con contratos o miembros los dejaría
+ * apuntando a un equipo que ya no existe.
+ */
+export function useEliminarEquipo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const [miembros, contratos] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('equipo_id', id),
+        supabase.from('contratos').select('id', { count: 'exact', head: true }).eq('equipo_id', id),
+      ]);
+      if (miembros.error) throw miembros.error;
+      if (contratos.error) throw contratos.error;
+      if (miembros.count || contratos.count) {
+        throw new Error(
+          `Este equipo todavía tiene ${miembros.count ?? 0} usuario(s) y ${contratos.count ?? 0} contrato(s). ` +
+            'Pasa antes a sus comerciales a otro equipo; solo se pueden eliminar equipos vacíos.',
+        );
+      }
+      const { data, error } = await supabase.from('equipos').delete().eq('id', id).select('id');
+      if (error) throw error;
+      if (!data?.length) throw new Error('No tienes permiso para eliminar este equipo.');
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.equipos });
+      qc.invalidateQueries({ queryKey: qk.perfiles });
+      qc.invalidateQueries({ queryKey: qk.contratos });
+      qc.invalidateQueries({ queryKey: qk.dashboard });
+    },
   });
 }
 

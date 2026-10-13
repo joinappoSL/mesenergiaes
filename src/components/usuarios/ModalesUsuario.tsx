@@ -1,4 +1,4 @@
-import { Copy, KeyRound, RefreshCw, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { Copy, KeyRound, RefreshCw, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { usePerfil } from '@/auth/AuthProvider';
@@ -8,11 +8,11 @@ import { Aviso } from '@/components/ui/Feedback';
 import { Field, Input, Select } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { useEquipos, usePerfiles } from '@/hooks/datos';
-import { useCrearUsuario, useEditarUsuario, useGuardarEquipo, useResetPassword } from '@/hooks/mutaciones';
+import { useCrearUsuario, useEditarUsuario, useEliminarEquipo, useGuardarEquipo, useResetPassword } from '@/hooks/mutaciones';
 import { ROLES } from '@/lib/constants';
 import { nombreCompleto } from '@/lib/format';
 import type { Equipo, Perfil, Rol } from '@/lib/types';
-import { copiarAlPortapapeles, mensajeError, urlApp } from '@/lib/utils';
+import { cn, copiarAlPortapapeles, mensajeError, urlApp } from '@/lib/utils';
 import { esEmailValido, esTelefonoValido, generarPasswordTemporal, normalizarTelefono } from '@/lib/validators';
 
 export interface Credenciales {
@@ -327,16 +327,32 @@ export function CredencialesModal({ credenciales, onClose }: { credenciales: Cre
 export function EquipoModal({ abierto, equipo, onClose }: { abierto: boolean; equipo: Equipo | null; onClose: () => void }) {
   const perfiles = usePerfiles();
   const guardar = useGuardarEquipo();
+  const eliminar = useEliminarEquipo();
   const [nombre, setNombre] = useState('');
   const [jefeId, setJefeId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [confirmandoBorrado, setConfirmandoBorrado] = useState(false);
 
   useEffect(() => {
     if (!abierto) return;
     setNombre(equipo?.nombre ?? '');
     setJefeId(equipo?.jefe_id ?? '');
     setError(null);
+    setConfirmandoBorrado(false);
   }, [abierto, equipo]);
+
+  async function borrar() {
+    if (!equipo) return;
+    if (!confirmandoBorrado) return setConfirmandoBorrado(true);
+    try {
+      await eliminar.mutateAsync(equipo.id);
+      toast.success(`${equipo.nombre} eliminado`);
+      onClose();
+    } catch (err) {
+      setError(mensajeError(err));
+      setConfirmandoBorrado(false);
+    }
+  }
 
   const jefes = (perfiles.data ?? []).filter((u) => u.rol === 'jefe_equipo' && u.activo);
 
@@ -361,6 +377,17 @@ export function EquipoModal({ abierto, equipo, onClose }: { abierto: boolean; eq
       size="sm"
       footer={
         <>
+          {equipo && (
+            <Button
+              variant={confirmandoBorrado ? 'danger' : 'ghost'}
+              icon={<Trash2 className="h-4 w-4" />}
+              onClick={borrar}
+              loading={eliminar.isPending}
+              className={cn('mr-auto', !confirmandoBorrado && 'text-red-600 hover:bg-red-50 hover:text-red-700')}
+            >
+              {confirmandoBorrado ? 'Sí, eliminar' : 'Eliminar'}
+            </Button>
+          )}
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>

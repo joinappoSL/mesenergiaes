@@ -4,6 +4,7 @@ import {
   CalendarClock,
   CheckCircle2,
   FileText,
+  Landmark,
   Home,
   MessageSquare,
   Phone,
@@ -35,8 +36,11 @@ import {
   detectarTipoDocumento,
   esCodigoPostalValido,
   esEmailValido,
+  esIbanValido,
   esTelefonoValido,
+  formatearIban,
   normalizarDocumento,
+  normalizarIban,
   normalizarTelefono,
   parsearPrecio,
   provinciaDesdeCP,
@@ -52,6 +56,7 @@ const esquema = z
     documento_tipo: z.enum(['DNI', 'NIE']),
     documento_numero: z.string().trim().min(1, obligatorio),
     cliente_email: z.string().refine((v) => v.trim() === '' || esEmailValido(v), 'Email no válido'),
+    iban: z.string().refine((v) => v.trim() === '' || esIbanValido(v), 'IBAN no válido: revisa el número de cuenta'),
 
     via_tipo: z.string().min(1, obligatorio),
     via_nombre: z.string().trim().min(1, obligatorio),
@@ -78,6 +83,7 @@ const esquema = z
     precio_mensual: z.string().refine((v) => !Number.isNaN(parsearPrecio(v)), 'Importe no válido (ej: 35,90)'),
     oferta_detalle: z.string(),
 
+    verificacion: z.string(),
     instalacion_fecha: z.string(),
     instalacion_franja: z.string(),
 
@@ -91,6 +97,14 @@ const esquema = z
         message: d.documento_tipo === 'DNI' ? 'DNI no válido: revisa números y letra' : 'NIE no válido: revisa números y letra',
       });
     }
+    // La verificación tiene que hacerse como tarde el día de la instalación
+    if (d.verificacion && d.instalacion_fecha && d.verificacion.slice(0, 10) > d.instalacion_fecha) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['verificacion'],
+        message: 'Tiene que ser antes de la cita de instalación',
+      });
+    }
   });
 
 type Valores = z.infer<typeof esquema>;
@@ -101,6 +115,7 @@ const VACIO: Valores = {
   documento_tipo: 'DNI',
   documento_numero: '',
   cliente_email: '',
+  iban: '',
   via_tipo: 'Calle',
   via_nombre: '',
   via_numero: '',
@@ -117,10 +132,19 @@ const VACIO: Valores = {
   producto: '',
   precio_mensual: '',
   oferta_detalle: '',
+  verificacion: '',
   instalacion_fecha: '',
   instalacion_franja: '',
   observacion_inicial: '',
 };
+
+/** ISO → valor de un <input type="datetime-local"> en la hora del navegador. */
+function aFechaHoraLocal(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const dos = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}T${dos(d.getHours())}:${dos(d.getMinutes())}`;
+}
 
 function valoresDesde(c: Contrato, tels: TelefonoPortabilidad[]): Valores {
   return {
@@ -130,6 +154,7 @@ function valoresDesde(c: Contrato, tels: TelefonoPortabilidad[]): Valores {
     documento_tipo: c.documento_tipo,
     documento_numero: c.documento_numero,
     cliente_email: c.cliente_email ?? '',
+    iban: c.iban ? formatearIban(c.iban) : '',
     via_tipo: c.via_tipo,
     via_nombre: c.via_nombre,
     via_numero: c.via_numero,
@@ -146,6 +171,7 @@ function valoresDesde(c: Contrato, tels: TelefonoPortabilidad[]): Valores {
     producto: c.producto ?? '',
     precio_mensual: c.precio_mensual !== null ? String(c.precio_mensual).replace('.', ',') : '',
     oferta_detalle: c.oferta_detalle ?? '',
+    verificacion: aFechaHoraLocal(c.verificacion_at),
     instalacion_fecha: c.instalacion_fecha ?? '',
     instalacion_franja: c.instalacion_franja ?? '',
   };
@@ -177,6 +203,8 @@ function aDatos(v: Valores): DatosContrato {
     oferta_detalle: nulo(v.oferta_detalle),
     instalacion_fecha: nulo(v.instalacion_fecha),
     instalacion_franja: nulo(v.instalacion_franja),
+    iban: nulo(normalizarIban(v.iban)),
+    verificacion_at: v.verificacion ? new Date(v.verificacion).toISOString() : null,
   };
 }
 
@@ -357,6 +385,26 @@ function Formulario({ contrato, telefonos, numDocumentos }: { contrato?: Contrat
             invalid={!!errors.cliente_email}
             aria-invalid={!!errors.cliente_email}
             {...register('cliente_email')}
+          />
+        </Field>
+        <Field
+          label="Cuenta bancaria (IBAN)"
+          error={err('iban')}
+          hint="Para domiciliar los recibos"
+          className="col-span-6 sm:col-span-4"
+        >
+          <Input
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="ES00 0000 0000 0000 0000 0000"
+            icon={<Landmark className="h-4 w-4" />}
+            className="font-mono tracking-wide"
+            invalid={!!errors.iban}
+            aria-invalid={!!errors.iban}
+            {...register('iban', {
+              onBlur: (e) =>
+                setValue('iban', e.target.value.trim() ? formatearIban(e.target.value) : '', { shouldValidate: true }),
+            })}
           />
         </Field>
       </Seccion>
@@ -573,12 +621,25 @@ function Formulario({ contrato, telefonos, numDocumentos }: { contrato?: Contrat
         </Field>
       </Seccion>
 
-      {/* 5. Instalación */}
-      <Seccion numero={5} titulo="Cita de instalación" icon={<CalendarClock className="h-4 w-4" />}>
-        <Field label="Fecha de la cita" className="col-span-6 sm:col-span-2">
-          <Input type="date" {...register('instalacion_fecha')} />
+      {/* 5. Verificación e instalación */}
+      <Seccion numero={5} titulo="Verificación e instalación" icon={<CalendarClock className="h-4 w-4" />}>
+        <Field
+          label="Verificación programada"
+          error={err('verificacion')}
+          hint="Día y hora de la llamada de verificación, antes de la instalación"
+          className="col-span-6 sm:col-span-3"
+        >
+          <Input
+            type="datetime-local"
+            invalid={!!errors.verificacion}
+            aria-invalid={!!errors.verificacion}
+            {...register('verificacion', { deps: ['instalacion_fecha'] })}
+          />
         </Field>
-        <Field label="Franja horaria" className="col-span-6 sm:col-span-4">
+        <Field label="Fecha de la cita de instalación" className="col-span-6 sm:col-span-3">
+          <Input type="date" {...register('instalacion_fecha', { deps: ['verificacion'] })} />
+        </Field>
+        <Field label="Franja horaria" className="col-span-6">
           <Input list="lista-franjas" placeholder="Ej: mañana 9-14h" {...register('instalacion_franja')} />
           <datalist id="lista-franjas">
             {FRANJAS.map((f) => (
