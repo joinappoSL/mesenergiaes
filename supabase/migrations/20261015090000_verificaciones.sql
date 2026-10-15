@@ -9,9 +9,11 @@
 -- · Cada cambio deja una nota de sistema en las observaciones del contrato.
 -- =============================================================================
 
+-- verificacion_hecha_por va sin clave foránea: si algún día se borra ese
+-- usuario, el nombre simplemente sale vacío (nombre_perfil devuelve null).
 alter table public.contratos
   add column verificacion_hecha_at  timestamptz,
-  add column verificacion_hecha_por uuid references public.profiles (id) on delete set null;
+  add column verificacion_hecha_por uuid;
 
 create index contratos_verificacion_at_idx
   on public.contratos (verificacion_at)
