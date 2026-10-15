@@ -21,7 +21,13 @@ export interface MensajeWhapi {
 
 export async function whapi<T = unknown>(
   ruta: string,
-  opciones: { method?: 'GET' | 'POST' | 'PATCH' | 'PUT'; body?: unknown; query?: Record<string, string> } = {},
+  opciones: {
+    method?: 'GET' | 'POST' | 'PATCH' | 'PUT';
+    body?: unknown;
+    /** multipart (imágenes): el navegador pone el Content-Type con el boundary */
+    form?: FormData;
+    query?: Record<string, string>;
+  } = {},
 ): Promise<T> {
   const token = await claveWhapi();
   if (!token) throw new Error('Falta el token de Whapi (WHAPI_TOKEN)');
@@ -32,10 +38,10 @@ export async function whapi<T = unknown>(
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json',
-      ...(opciones.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...(opciones.body === undefined || opciones.form ? {} : { 'Content-Type': 'application/json' }),
     },
-    body: opciones.body === undefined ? undefined : JSON.stringify(opciones.body),
-    signal: AbortSignal.timeout(20_000),
+    body: opciones.form ?? (opciones.body === undefined ? undefined : JSON.stringify(opciones.body)),
+    signal: AbortSignal.timeout(opciones.form ? 60_000 : 20_000),
   });
   const texto = await res.text();
   if (!res.ok) throw new Error(`Whapi ${res.status}: ${texto.slice(0, 300)}`);
@@ -67,6 +73,15 @@ export async function enviarTexto(chatId: string, texto: string): Promise<void> 
   for (const trozo of trocear(texto.trim())) {
     await whapi('messages/text', { body: { to: chatId, body: trozo } });
   }
+}
+
+/** Imagen PNG con texto debajo (el texto admite el formato de WhatsApp). */
+export async function enviarImagen(chatId: string, png: Uint8Array, texto: string): Promise<void> {
+  const form = new FormData();
+  form.append('to', chatId);
+  form.append('caption', texto.trim().slice(0, 1000));
+  form.append('media', new Blob([png], { type: 'image/png' }), 'messy.png');
+  await whapi('messages/image', { form });
 }
 
 export interface GrupoWhapi {

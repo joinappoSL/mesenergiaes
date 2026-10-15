@@ -10,6 +10,7 @@
 //   · { accion: 'estado' }              → estado del canal y grupos
 //   · { accion: 'saludar_grupo' }       → presenta a Messy en el grupo
 //   · { accion: 'anunciar_progreso' }   → manda al grupo cómo va el objetivo del mes
+//   · { accion: 'anunciar_comida', probar? } → «¡Hora de comer!» con la gráfica del mes
 //   · { accion: 'anunciar_verificaciones', probar? } → última llamada y verificaciones
 //                                          pendientes (sin nombres de clientes)
 //
@@ -18,10 +19,11 @@
 // =============================================================================
 import { responder, saludoGrupo } from './agente.ts';
 import { procesarEventos, textoProgreso } from './avisos.ts';
+import { informeComida, procesarInformes } from './comida.ts';
 import { procesarVerificaciones, textoPendientesGrupo } from './verificaciones.ts';
 import { admin, claveAnthropic, clavesIguales, clienteUsuario, env, leerConfig, leerPerfil, mensajeDeError } from './entorno.ts';
 import { cerrarSesion, leerSesion, pasoLogin, tokenVigente } from './sesion.ts';
-import { configurarWebhook, enviarTexto, estadoCanal, listarGrupos, type MensajeWhapi } from './whapi.ts';
+import { configurarWebhook, enviarImagen, enviarTexto, estadoCanal, listarGrupos, type MensajeWhapi } from './whapi.ts';
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 
@@ -39,10 +41,10 @@ async function enSegundoPlano(tarea: () => Promise<unknown>): Promise<void> {
   else await p;
 }
 
-/** Avisos al grupo y recordatorios privados de verificaciones (uno no frena al otro). */
+/** Avisos al grupo, verificaciones y gráfica de la comida (uno no frena a los demás). */
 async function procesarColas(): Promise<void> {
-  const [grupo, privados] = await Promise.allSettled([procesarEventos(), procesarVerificaciones()]);
-  for (const r of [grupo, privados]) {
+  const resultados = await Promise.allSettled([procesarEventos(), procesarVerificaciones(), procesarInformes()]);
+  for (const r of resultados) {
     if (r.status === 'rejected') console.error('Messy:', mensajeDeError(r.reason));
   }
 }
@@ -245,6 +247,14 @@ Deno.serve(async (req) => {
         const texto = await textoProgreso();
         await enviarTexto(cfg.grupo_chat_id, texto);
         return json({ ok: true, texto });
+      }
+
+      case 'anunciar_comida': {
+        if (!cfg.grupo_chat_id) return json({ error: 'No hay grupo configurado' }, 409);
+        const inicio = Date.now();
+        const { texto, png } = await informeComida();
+        if (body.probar !== true) await enviarImagen(cfg.grupo_chat_id, png, texto);
+        return json({ ok: true, enviado: body.probar !== true, texto, png_bytes: png.length, ms: Date.now() - inicio });
       }
 
       case 'anunciar_verificaciones': {

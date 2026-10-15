@@ -139,6 +139,16 @@ Por privado a las personas de `messy_config.verificaciones_para` (admin/backoffi
 
 El reloj de Messy (`pg_cron`, `messy-reloj`) corre cada minuto. Todo queda registrado en `verificaciones_log` y la cola en `messy_cola_verificaciones`.
 
+**🍽️ Hora de comer (15:00)**
+
+Cada día activo, a las 15:00 (hora de Madrid), Messy manda al grupo «¡Hora de comer, equipo!» con una **gráfica del mes** en imagen (1080×1350, colores y tipografía de MESENERGIA):
+
+- Arriba, el **acumulado** de reservas de plaza del mes frente al **ritmo del objetivo** y la **proyección** a fin de mes; abajo, las **barras de cada día** (hoy en amarillo) con su fecha.
+- Tarjetas con lo que llevamos sobre el objetivo, lo que queda, las firmadas del mes y la **hora punta** de reservas.
+- Debajo de la imagen, el texto con el objetivo, las reservas de hoy, la proyección y las firmadas. Sin datos de clientes.
+
+Se cambia con `update public.messy_config set hora_comida = 14;` (o `informe_comida = false` para quitarlo). Acción `anunciar_comida` para mandarla ahora (`"probar": true` genera la imagen y devuelve el texto sin enviarla). La imagen se dibuja en la Edge Function (SVG → PNG con resvg); la fuente Poppins, el WASM y el logo se descargan al vuelo y se pueden cambiar con `MESSY_FUENTES_URL`, `MESSY_RESVG_WASM_URL` y `MESSY_LOGO_URL`. Cola en `messy_informes`.
+
 **Por privado**
 
 Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo que quiera: «¿cuántas reservas de plaza llevo este mes?», «¿cómo vamos con el objetivo?», «¿qué verificaciones tengo hoy?», «ranking de la semana», «¿qué pendientes tengo sin firmar?», «ficha del contrato 125»… Messy consulta el CRM **con los permisos de esa persona** (el comercial solo ve lo suyo, el jefe su equipo, backoffice y admin todo), nunca muestra DNI, teléfonos, emails ni direcciones de clientes y no puede modificar nada. Los admins además pueden pedirle que cambie las horas de los avisos, que los pause o que publique algo en el grupo. «salir» cierra la sesión; 5 intentos fallidos bloquean el chat 15 minutos.
