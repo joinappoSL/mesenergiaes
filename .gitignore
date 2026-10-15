@@ -10,3 +10,4 @@ dist-ssr
 supabase/.branches
 supabase/.temp
 supabase/.env
+__pycache__
