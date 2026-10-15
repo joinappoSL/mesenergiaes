@@ -289,6 +289,77 @@ export function useCola(soloSinFirmar: boolean, activo = true) {
 }
 
 // -----------------------------------------------------------------------------
+// Calendario de verificaciones (backoffice). Cuelgan de qk.contratos para que
+// Realtime los refresque en cuanto alguien toca un contrato.
+// -----------------------------------------------------------------------------
+const LIMITE_VERIFICACIONES = 500;
+
+/** Verificaciones programadas entre dos instantes (hechas o no), por hora. */
+export function useVerificaciones(desde: Date, hasta: Date, activo = true) {
+  return useQuery({
+    queryKey: [...qk.contratos, 'verificaciones', desde.toISOString(), hasta.toISOString()],
+    enabled: activo,
+    placeholderData: keepPreviousData,
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_contratos')
+        .select('*')
+        .gte('verificacion_at', desde.toISOString())
+        .lt('verificacion_at', hasta.toISOString())
+        .neq('estado', 'cancelado')
+        .order('verificacion_at', { ascending: true })
+        .order('numero', { ascending: true })
+        .limit(LIMITE_VERIFICACIONES);
+      if (error) throw error;
+      return (data ?? []) as Contrato[];
+    },
+  });
+}
+
+/** Sin hacer de días anteriores (solo contratos que siguen en Pendiente). */
+export function useVerificacionesAtrasadas(antesDe: Date, activo = true) {
+  return useQuery({
+    queryKey: [...qk.contratos, 'verificaciones', 'atrasadas', antesDe.toISOString()],
+    enabled: activo,
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_contratos')
+        .select('*')
+        .lt('verificacion_at', antesDe.toISOString())
+        .is('verificacion_hecha_at', null)
+        .eq('estado', 'pendiente')
+        .order('verificacion_at', { ascending: true })
+        .order('numero', { ascending: true })
+        .limit(LIMITE_VERIFICACIONES);
+      if (error) throw error;
+      return (data ?? []) as Contrato[];
+    },
+  });
+}
+
+/** Contador del menú: verificaciones sin hacer de hoy y atrasadas. */
+export function useVerificacionesPorHacer(inicioHoy: Date, finHoy: Date, activo: boolean) {
+  return useQuery({
+    queryKey: [...qk.contratos, 'verificaciones', 'por-hacer', inicioHoy.toISOString()],
+    enabled: activo,
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('contratos')
+        .select('id', { count: 'exact', head: true })
+        .lt('verificacion_at', finHoy.toISOString())
+        .is('verificacion_hecha_at', null)
+        .neq('estado', 'cancelado')
+        .or(`estado.eq.pendiente,verificacion_at.gte."${inicioHoy.toISOString()}"`);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}
+
+// -----------------------------------------------------------------------------
 // Usuarios y equipos (RLS: cada rol ve lo que le corresponde)
 // -----------------------------------------------------------------------------
 export function usePerfiles() {

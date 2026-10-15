@@ -70,6 +70,9 @@ export interface Contrato {
   iban: string | null;
   /** fecha y hora de la llamada de verificación (antes de la instalación) */
   verificacion_at: string | null;
+  /** cuándo hizo backoffice la llamada de verificación (null = pendiente) */
+  verificacion_hecha_at: string | null;
+  verificacion_hecha_por_nombre: string | null;
 }
 
 export interface TelefonoPortabilidad {

@@ -1,4 +1,4 @@
-import { FileText, LayoutDashboard, LogOut, PhoneCall, Plus, Users, Zap } from 'lucide-react';
+import { CalendarCheck, FileText, LayoutDashboard, LogOut, PhoneCall, Plus, Users, Zap } from 'lucide-react';
 import { createContext, Suspense, useContext, useState, type ComponentType } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usePerfil, useAuth } from '@/auth/AuthProvider';
@@ -6,7 +6,8 @@ import { usePermisos } from '@/auth/permisos';
 import { RolBadge } from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/Feedback';
 import { Avatar, Logo } from '@/components/ui/Misc';
-import { useCola } from '@/hooks/datos';
+import { useCola, useVerificacionesPorHacer } from '@/hooks/datos';
+import { useHoy } from '@/hooks/useAhora';
 import { useRealtime } from '@/hooks/useRealtime';
 import { nombreCompleto } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -26,12 +27,23 @@ interface ItemNav {
 function useNavegacion(): ItemNav[] {
   const p = usePermisos();
   const cola = useCola(false, p.puedeVerCola);
+  const hoy = useHoy();
+  const verificaciones = useVerificacionesPorHacer(hoy.inicio, hoy.fin, p.puedeVerVerificaciones);
   const items: ItemNav[] = [
     { to: '/', label: p.esComercial ? 'Mi resumen' : 'Dashboard', corto: 'Inicio', icon: LayoutDashboard, end: true },
     { to: '/contratos', label: p.esComercial ? 'Mis contratos' : 'Contratos', corto: 'Contratos', icon: FileText },
   ];
   if (p.puedeVerCola) {
     items.push({ to: '/cola', label: 'Cola de llamadas', corto: 'Cola', icon: PhoneCall, contador: cola.data?.length });
+  }
+  if (p.puedeVerVerificaciones) {
+    items.push({
+      to: '/verificaciones',
+      label: 'Verificaciones',
+      corto: 'Verificar',
+      icon: CalendarCheck,
+      contador: verificaciones.data,
+    });
   }
   if (p.puedeVerUsuarios) {
     items.push({
@@ -130,7 +142,7 @@ function Sidebar({ items, enDirecto }: { items: ItemNav[]; enDirecto: boolean })
   );
 }
 
-function CabeceraMovil() {
+function CabeceraMovil({ extra }: { extra: ItemNav[] }) {
   const perfil = usePerfil();
   const { cerrarSesion } = useAuth();
   const [menu, setMenu] = useState(false);
@@ -153,6 +165,20 @@ function CabeceraMovil() {
               <div className="mt-2">
                 <RolBadge rol={perfil.rol} />
               </div>
+              {extra.length > 0 && (
+                <div className="mt-3 border-t border-slate-100 pt-2">
+                  {extra.map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMenu(false)}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-navy-900 hover:bg-slate-50"
+                    >
+                      <item.icon className="h-4 w-4 text-slate-500" /> {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={cerrarSesion}
@@ -230,7 +256,7 @@ export function AppLayout() {
     <RealtimeContext.Provider value={enDirecto}>
       <div className="min-h-dvh">
         <Sidebar items={items} enDirecto={enDirecto} />
-        <CabeceraMovil />
+        <CabeceraMovil extra={items.slice(4)} />
         <main className="lg:pl-64">
           <div key={location.pathname} className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-5 animate-fade-in sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
             <Suspense fallback={<PageLoader />}>

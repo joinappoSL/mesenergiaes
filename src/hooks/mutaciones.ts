@@ -212,6 +212,26 @@ export function useReasignar() {
   });
 }
 
+/** Marca la llamada de verificación como hecha (la hora y la persona las pone el servidor) o la deshace. */
+export function useMarcarVerificacion() {
+  const refrescar = useRefrescarContrato();
+  return useMutation({
+    mutationFn: ({ id, hecha }: { id: string; hecha: boolean }) =>
+      actualizarContrato(id, { verificacion_hecha_at: hecha ? new Date().toISOString() : null }),
+    onSuccess: (_d, v) => refrescar(v.id),
+  });
+}
+
+/** Cambia la hora de la verificación; vuelve a quedar pendiente. */
+export function useReprogramarVerificacion() {
+  const refrescar = useRefrescarContrato();
+  return useMutation({
+    mutationFn: ({ id, verificacionAt }: { id: string; verificacionAt: string }) =>
+      actualizarContrato(id, { verificacion_at: verificacionAt }),
+    onSuccess: (_d, v) => refrescar(v.id),
+  });
+}
+
 export function useSubirPdf() {
   const qc = useQueryClient();
   return useMutation({

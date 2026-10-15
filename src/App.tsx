@@ -20,6 +20,12 @@ const ContratoDetallePage = lazy(() =>
 );
 const ColaPage = lazy(() => import('@/pages/ColaPage').then((m) => ({ default: m.ColaPage })));
 const ColaTrabajoPage = lazy(() => import('@/pages/ColaPage').then((m) => ({ default: m.ColaTrabajoPage })));
+const VerificacionesPage = lazy(() =>
+  import('@/pages/VerificacionesPage').then((m) => ({ default: m.VerificacionesPage })),
+);
+const VerificacionTrabajoPage = lazy(() =>
+  import('@/pages/VerificacionesPage').then((m) => ({ default: m.VerificacionTrabajoPage })),
+);
 const UsuariosPage = lazy(() => import('@/pages/UsuariosPage').then((m) => ({ default: m.UsuariosPage })));
 
 function CargandoApp() {
@@ -133,6 +139,22 @@ export default function App() {
           element={
             <SoloSi permiso="puedeVerCola">
               <ColaTrabajoPage />
+            </SoloSi>
+          }
+        />
+        <Route
+          path="verificaciones"
+          element={
+            <SoloSi permiso="puedeVerVerificaciones">
+              <VerificacionesPage />
+            </SoloSi>
+          }
+        />
+        <Route
+          path="verificaciones/:id"
+          element={
+            <SoloSi permiso="puedeVerVerificaciones">
+              <VerificacionTrabajoPage />
             </SoloSi>
           }
         />

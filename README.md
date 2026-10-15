@@ -14,6 +14,7 @@ CRM interno para gestionar los contratos de fibra/WiFi del call center: el comer
 | **Nuevo / editar contrato** | Comercial, backoffice, admin | Formulario por secciones con validación en vivo: letra del DNI/NIE, teléfonos de 9 dígitos, CP que rellena la provincia, lista dinámica de portabilidades, PDF de la oferta (máx. 10 MB), cita de instalación y observación inicial. **Aviso de duplicados** por DNI/NIE o teléfono (no bloquea). Botón de guardar fijo abajo en móvil. |
 | **Ficha del contrato** | Todos | Todos los datos, botón de llamada (`tel:`) en cada teléfono, visor del PDF con versiones, cambio de estado, firma y reasignación (backoffice), registro de llamadas, hilo de observaciones (solo se añaden) e historial de estados. |
 | **Cola de llamadas** | Backoffice, admin | Pendientes ordenados por antigüedad con contador de días; primero los recordatorios de «volver a llamar» vencidos. Modo llamada con **Anterior / Siguiente** sin volver al listado. |
+| **Calendario de verificaciones** | Backoffice, admin | Las llamadas de verificación programadas en orden de hora, en **agenda** (hoy y los próximos 13 días, con las atrasadas arriba y una línea de «ahora») o **semana** (lunes a domingo). Tarjeta con la siguiente llamada y cuenta atrás, avisos en pantalla 5 minutos antes y a la hora, botón **Hecha** (con deshacer), **Reprogramar** y modo llamada con **Anterior / Siguiente**. Se actualiza en tiempo real; el menú muestra cuántas quedan hoy. |
 | **Usuarios y equipos** | Admin, backoffice, jefes | Alta, edición, desactivación y reseteo de contraseña (con contraseña temporal). Equipos y jefes (solo admin). |
 
 ### Roles
@@ -24,6 +25,7 @@ CRM interno para gestionar los contratos de fibra/WiFi del call center: el comer
 | Crea contratos | ✅ | ✅ | — | ✅ |
 | Edita contratos | ✅ | ✅ | — | Los suyos, en Pendiente y sin firmar |
 | Cambia estado / firma / reasigna / registra llamadas | ✅ | ✅ | — | — |
+| Marca verificaciones hechas / reprograma | ✅ | ✅ | — | Solo cambia la hora de los suyos al editarlos |
 | Añade observaciones | ✅ | ✅ | ✅ | ✅ |
 | Gestiona usuarios | Todos los roles | Comerciales | Comerciales de su equipo | — |
 | Gestiona equipos | ✅ | — | — | — |

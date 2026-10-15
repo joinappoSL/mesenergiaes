@@ -17,6 +17,8 @@ export interface Permisos {
   /** solo admin: borra el contrato con sus teléfonos, PDF, observaciones e historial */
   puedeEliminarContrato: boolean;
   puedeVerCola: boolean;
+  /** calendario de verificaciones: marcar hechas y reprogramar */
+  puedeVerVerificaciones: boolean;
   puedeVerUsuarios: boolean;
   puedeGestionarEquipos: boolean;
   puedeArrastrarKanban: boolean;
@@ -49,6 +51,7 @@ export function calcularPermisos(perfil: Perfil): Permisos {
     puedeReasignar: esGestor,
     puedeEliminarContrato: esAdmin,
     puedeVerCola: esGestor,
+    puedeVerVerificaciones: esGestor,
     puedeVerUsuarios: esGestor || esJefe,
     puedeGestionarEquipos: esAdmin,
     puedeArrastrarKanban: esGestor,

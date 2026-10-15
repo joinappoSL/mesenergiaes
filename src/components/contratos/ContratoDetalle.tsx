@@ -49,9 +49,11 @@ import {
 import type { Contrato } from '@/lib/types';
 import { cn, mensajeError } from '@/lib/utils';
 import { formatearIban } from '@/lib/validators';
+import { estadoVerificacion, type EstadoVerificacion } from '@/lib/verificaciones';
 import { FormularioLlamada, Historial, ListaLlamadas, Observaciones } from './Actividad';
 import { CambiarEstadoModal, EliminarContratoModal, ReasignarModal } from './Modales';
 import { PdfVisor } from './PdfVisor';
+import { AccionesVerificacion, EstadoVerificacionBadge, TextoVerificada } from './Verificacion';
 
 function BotonLlamar({ numero, etiqueta, icon, destacado }: { numero: string; etiqueta: ReactNode; icon: ReactNode; destacado?: boolean }) {
   return (
@@ -111,10 +113,18 @@ function Telefonos({ contrato }: { contrato: Contrato }) {
   );
 }
 
-function Gestion({ contrato }: { contrato: Contrato }) {
+const TONO_VERIFICACION: Record<EstadoVerificacion, { caja: string; icono: string }> = {
+  hecha: { caja: 'bg-brand-50/60 ring-brand-200', icono: 'text-brand-600' },
+  ahora: { caja: 'bg-sun-50 ring-sun-300', icono: 'text-sun-600' },
+  retrasada: { caja: 'bg-red-50/70 ring-red-200', icono: 'text-red-600' },
+  proxima: { caja: 'bg-navy-50/60 ring-navy-100', icono: 'text-navy-600' },
+};
+
+function Gestion({ contrato, sinAccionesVerificacion }: { contrato: Contrato; sinAccionesVerificacion?: boolean }) {
+  const p = usePermisos();
   const instalacionHoy = contrato.instalacion_fecha === hoyISO();
-  const verificacionHoy =
-    !!contrato.verificacion_at && new Date(contrato.verificacion_at).toDateString() === new Date().toDateString();
+  const estadoVerif = contrato.verificacion_at ? estadoVerificacion(contrato, new Date()) : null;
+  const tono = estadoVerif ? TONO_VERIFICACION[estadoVerif] : { caja: 'bg-slate-50 ring-slate-200', icono: 'text-slate-400' };
   return (
     <Card>
       <CardHeader title="Gestión" icon={<ClipboardList className="h-4 w-4" />} />
@@ -137,21 +147,21 @@ function Gestion({ contrato }: { contrato: Contrato }) {
           <Dato label="Fecha de alta">{fechaHora(contrato.created_at)}</Dato>
           <Dato label="Última modificación">{fechaHoraCorta(contrato.updated_at)}</Dato>
         </dl>
-        <div
-          className={cn(
-            'mt-5 flex items-center gap-3 rounded-xl px-3.5 py-3 ring-1',
-            verificacionHoy ? 'bg-sun-50 ring-sun-300' : 'bg-brand-50/60 ring-brand-100',
-          )}
-        >
-          <ShieldCheck className={cn('h-5 w-5 shrink-0', verificacionHoy ? 'text-sun-600' : 'text-brand-600')} />
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Verificación programada</p>
-            {contrato.verificacion_at ? (
-              <p className="text-sm font-semibold text-navy-900 first-letter:uppercase">{fechaHoraCorta(contrato.verificacion_at)}</p>
-            ) : (
-              <p className="text-sm text-slate-500">Sin programar</p>
-            )}
+        <div className={cn('mt-5 rounded-xl px-3.5 py-3 ring-1', tono.caja)}>
+          <div className="flex items-center gap-3">
+            <ShieldCheck className={cn('h-5 w-5 shrink-0', tono.icono)} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Verificación programada</p>
+              {contrato.verificacion_at ? (
+                <p className="text-sm font-semibold text-navy-900 first-letter:uppercase">{fechaHoraCorta(contrato.verificacion_at)}</p>
+              ) : (
+                <p className="text-sm text-slate-500">Sin programar</p>
+              )}
+            </div>
+            {estadoVerif && <EstadoVerificacionBadge estado={estadoVerif} />}
           </div>
+          <TextoVerificada contrato={contrato} className="mt-2" />
+          {p.puedeVerVerificaciones && !sinAccionesVerificacion && <AccionesVerificacion contrato={contrato} className="mt-3" />}
         </div>
         <div
           className={cn(
@@ -182,7 +192,16 @@ function Gestion({ contrato }: { contrato: Contrato }) {
   );
 }
 
-export function ContratoDetalle({ contrato, accionesExtra }: { contrato: Contrato; accionesExtra?: ReactNode }) {
+export function ContratoDetalle({
+  contrato,
+  accionesExtra,
+  sinAccionesVerificacion,
+}: {
+  contrato: Contrato;
+  accionesExtra?: ReactNode;
+  /** en el modo llamada de verificaciones las acciones van arriba */
+  sinAccionesVerificacion?: boolean;
+}) {
   const p = usePermisos();
   const marcarFirma = useMarcarFirma();
   const [cambiandoEstado, setCambiandoEstado] = useState(false);
@@ -349,7 +368,7 @@ export function ContratoDetalle({ contrato, accionesExtra }: { contrato: Contrat
         </div>
 
         <div className="space-y-5">
-          <Gestion contrato={contrato} />
+          <Gestion contrato={contrato} sinAccionesVerificacion={sinAccionesVerificacion} />
 
           {(p.puedeRegistrarLlamadas || contrato.ultima_llamada_at) && (
             <Card>

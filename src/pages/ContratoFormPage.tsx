@@ -32,6 +32,7 @@ import { FRANJAS, OPERADORES, PROVINCIAS, TIPOS_VIA } from '@/lib/constants';
 import { nombreCliente, numeroContrato } from '@/lib/format';
 import type { Contrato, TelefonoPortabilidad } from '@/lib/types';
 import { cn, mensajeError } from '@/lib/utils';
+import { aFechaHoraLocal } from '@/lib/verificaciones';
 import {
   detectarTipoDocumento,
   esCodigoPostalValido,
@@ -139,13 +140,6 @@ const VACIO: Valores = {
 };
 
 /** ISO → valor de un <input type="datetime-local"> en la hora del navegador. */
-function aFechaHoraLocal(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const dos = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}T${dos(d.getHours())}:${dos(d.getMinutes())}`;
-}
-
 function valoresDesde(c: Contrato, tels: TelefonoPortabilidad[]): Valores {
   return {
     ...VACIO,
