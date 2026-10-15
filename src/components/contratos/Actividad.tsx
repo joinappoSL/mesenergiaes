@@ -1,3 +1,4 @@
+import { addMinutes } from 'date-fns';
 import { AlarmClock, ArrowRight, Bot, MessageSquare, PhoneCall, Send } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'sonner';
@@ -8,11 +9,12 @@ import { EmptyState, Spinner } from '@/components/ui/Feedback';
 import { Field, Input, Textarea } from '@/components/ui/Field';
 import { Avatar } from '@/components/ui/Misc';
 import { useHistorial, useLlamadas, useObservaciones } from '@/hooks/datos';
-import { useAnadirObservacion, useRegistrarLlamada } from '@/hooks/mutaciones';
+import { useAnadirObservacion, useRegistrarLlamada, useReprogramarVerificacion } from '@/hooks/mutaciones';
 import { ESTADOS, LISTA_RESULTADOS, RESULTADOS_LLAMADA, ROLES } from '@/lib/constants';
 import { fechaHora, fechaHoraCorta } from '@/lib/format';
-import type { ResultadoLlamada } from '@/lib/types';
+import type { Contrato, ResultadoLlamada } from '@/lib/types';
 import { cn, mensajeError } from '@/lib/utils';
+import { aFechaHoraLocal } from '@/lib/verificaciones';
 
 // -----------------------------------------------------------------------------
 // Observaciones: hilo cronológico tipo chat. Solo se añaden.
@@ -185,15 +187,37 @@ function manana10(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function FormularioLlamada({ contratoId, onRegistrada }: { contratoId: string; onRegistrada?: (r: ResultadoLlamada) => void }) {
+function enUnaHora(): string {
+  return aFechaHoraLocal(addMinutes(new Date(), 60));
+}
+
+export function FormularioLlamada({
+  contratoId,
+  contrato,
+  onRegistrada,
+}: {
+  contratoId: string;
+  /** si tiene la verificación pendiente, «No contesta» permite reprogramarla en el mismo paso */
+  contrato?: Pick<Contrato, 'verificacion_at' | 'verificacion_hecha_at' | 'instalacion_fecha'>;
+  onRegistrada?: (r: ResultadoLlamada) => void;
+}) {
   const registrar = useRegistrarLlamada();
+  const reprogramar = useReprogramarVerificacion();
   const [resultado, setResultado] = useState<ResultadoLlamada | null>(null);
   const [nota, setNota] = useState('');
   const [volverAt, setVolverAt] = useState(manana10());
+  const verificacionPendiente = !!contrato?.verificacion_at && !contrato.verificacion_hecha_at;
+  const [moverVerificacion, setMoverVerificacion] = useState(true);
+  const [verificacionAt, setVerificacionAt] = useState(enUnaHora());
+  const conReprogramar = verificacionPendiente && resultado === 'no_contesta' && moverVerificacion;
+  const fueraDePlazo =
+    conReprogramar && !!contrato?.instalacion_fecha && !!verificacionAt && verificacionAt.slice(0, 10) > contrato.instalacion_fecha;
 
   async function guardar() {
     if (!resultado) return toast.error('Elige el resultado de la llamada');
     if (resultado === 'volver_a_llamar' && !volverAt) return toast.error('Indica cuándo volver a llamar');
+    if (conReprogramar && !verificacionAt) return toast.error('Indica la nueva hora de la verificación');
+    if (fueraDePlazo) return toast.error('La verificación tiene que ser antes de la cita de instalación.');
     try {
       await registrar.mutateAsync({
         contratoId,
@@ -201,13 +225,27 @@ export function FormularioLlamada({ contratoId, onRegistrada }: { contratoId: st
         nota,
         volverALlamarAt: resultado === 'volver_a_llamar' ? new Date(volverAt).toISOString() : null,
       });
+      let reprogramada = false;
+      if (conReprogramar) {
+        try {
+          await reprogramar.mutateAsync({ id: contratoId, verificacionAt: new Date(verificacionAt).toISOString() });
+          reprogramada = true;
+        } catch (e) {
+          toast.error(`Llamada registrada, pero no se ha podido reprogramar: ${mensajeError(e)}`);
+        }
+      }
       toast.success(
-        resultado === 'firmado' ? 'Llamada registrada y contrato marcado como firmado' : 'Llamada registrada',
+        resultado === 'firmado'
+          ? 'Llamada registrada y contrato marcado como firmado'
+          : reprogramada
+            ? `No contesta · verificación reprogramada para ${fechaHoraCorta(new Date(verificacionAt))}`
+            : 'Llamada registrada',
       );
       onRegistrada?.(resultado);
       setResultado(null);
       setNota('');
       setVolverAt(manana10());
+      setVerificacionAt(enUnaHora());
     } catch (e) {
       toast.error(mensajeError(e));
     }
@@ -235,9 +273,61 @@ export function FormularioLlamada({ contratoId, onRegistrada }: { contratoId: st
           <Input type="datetime-local" value={volverAt} onChange={(e) => setVolverAt(e.target.value)} />
         </Field>
       )}
+      {verificacionPendiente && resultado === 'no_contesta' && (
+        <div className="space-y-2.5 rounded-xl bg-sun-50/70 p-3 ring-1 ring-sun-200">
+          <label className="flex items-center gap-2 text-sm font-semibold text-navy-900">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 accent-brand-600"
+              checked={moverVerificacion}
+              onChange={(e) => setMoverVerificacion(e.target.checked)}
+            />
+            Reprogramar también la verificación
+          </label>
+          {moverVerificacion && (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { etiqueta: '+15 min', fecha: addMinutes(new Date(), 15) },
+                  { etiqueta: '+1 hora', fecha: addMinutes(new Date(), 60) },
+                  { etiqueta: 'Mañana 10:00', fecha: new Date(manana10()) },
+                ].map((a) => (
+                  <button
+                    key={a.etiqueta}
+                    type="button"
+                    onClick={() => setVerificacionAt(aFechaHoraLocal(a.fecha))}
+                    className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-navy-50"
+                  >
+                    {a.etiqueta}
+                  </button>
+                ))}
+              </div>
+              <Field
+                label="Nueva hora de la verificación"
+                required
+                error={fueraDePlazo ? 'Tiene que ser como tarde el día de la instalación.' : undefined}
+              >
+                <Input
+                  type="datetime-local"
+                  value={verificacionAt}
+                  onChange={(e) => setVerificacionAt(e.target.value)}
+                  invalid={fueraDePlazo}
+                  max={contrato?.instalacion_fecha ? `${contrato.instalacion_fecha}T23:59` : undefined}
+                />
+              </Field>
+            </>
+          )}
+        </div>
+      )}
       <Textarea rows={2} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Nota de la llamada (opcional)" className="min-h-[60px]" />
-      <Button className="w-full" onClick={guardar} loading={registrar.isPending} disabled={!resultado} icon={<PhoneCall className="h-4 w-4" />}>
-        Registrar llamada
+      <Button
+        className="w-full"
+        onClick={guardar}
+        loading={registrar.isPending || reprogramar.isPending}
+        disabled={!resultado || fueraDePlazo}
+        icon={<PhoneCall className="h-4 w-4" />}
+      >
+        {conReprogramar ? 'Registrar y reprogramar' : 'Registrar llamada'}
       </Button>
     </div>
   );

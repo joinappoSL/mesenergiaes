@@ -11,8 +11,10 @@ import {
   leerProgreso,
   mensajeDeError,
   NOMBRE_ROL,
+  sumarDias,
   type Perfil,
 } from './entorno.ts';
+import { paraElChat, urlCalendario, verificacionesAtrasadas, verificacionesDeDias } from './verificaciones.ts';
 import { enviarTexto, listarGrupos } from './whapi.ts';
 
 type Herramienta = Anthropic.Beta.Messages.BetaTool;
@@ -205,6 +207,21 @@ const HERRAMIENTAS: Herramienta[] = [
   },
 ];
 
+const HERRAMIENTA_VERIFICACIONES: Herramienta = {
+  name: 'verificaciones',
+  description:
+    'Calendario de verificaciones de backoffice (la llamada de verificación al cliente antes de la instalación), ' +
+    'por orden de hora de Madrid. periodo: hoy, manana, semana (hoy y los 6 días siguientes) o atrasadas (pasadas de ' +
+    'hora y sin hacer, de contratos en Pendiente). Devuelve cliente, número, día, hora, verificacion (pendiente, toca ' +
+    'ahora, retrasada o hecha, con quién la hizo), comercial, producto y cita de instalación.',
+  input_schema: {
+    type: 'object',
+    properties: { periodo: { type: 'string', enum: ['hoy', 'manana', 'semana', 'atrasadas'] } },
+    required: ['periodo'],
+    additionalProperties: false,
+  },
+};
+
 const HERRAMIENTAS_ADMIN: Herramienta[] = [
   {
     name: 'grupo_whatsapp',
@@ -227,7 +244,10 @@ const HERRAMIENTAS_ADMIN: Herramienta[] = [
     description:
       'Cambia los avisos automáticos de Messy: activarlos o pausarlos, la hora de los buenos días y del cierre ' +
       '(hora de Madrid, 0-23), los días de la semana (1 = lunes … 7 = domingo), el objetivo mensual de reservas de ' +
-      'plaza del equipo y corregir cuántas llevamos este mes en total (si hay reservas que no están en el CRM).',
+      'plaza del equipo, corregir cuántas llevamos este mes en total (si hay reservas que no están en el CRM) y los ' +
+      'recordatorios privados de verificaciones: minutos de antelación (0 = sin recordatorio), lista del día a la hora ' +
+      'de los buenos días y quién los recibe (ids de admin o backoffice de la herramienta equipo; necesitan tener la ' +
+      'sesión de Messy iniciada).',
     input_schema: {
       type: 'object',
       properties: {
@@ -239,6 +259,13 @@ const HERRAMIENTAS_ADMIN: Herramienta[] = [
         llevamos_este_mes: {
           type: 'integer',
           description: 'Total real de reservas del equipo este mes (incluidas las que no están en el CRM)',
+        },
+        aviso_verificacion_min: { type: 'integer', description: 'Minutos antes de cada verificación (0-120, 0 = no avisar)' },
+        resumen_verificaciones: { type: 'boolean', description: 'Mandar por privado la lista del día (mañana) y el balance (noche)' },
+        verificaciones_para: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Ids de las personas (admin o backoffice) que reciben los recordatorios; sustituye la lista',
         },
       },
       additionalProperties: false,
@@ -262,6 +289,7 @@ const HERRAMIENTA_ENVIAR: Herramienta = {
 
 function herramientasPara(p: Perfil): Herramienta[] {
   const lista = [...HERRAMIENTAS];
+  if (p.rol === 'admin' || p.rol === 'backoffice') lista.push(HERRAMIENTA_VERIFICACIONES);
   if (p.rol === 'admin') lista.push(...HERRAMIENTAS_ADMIN);
   if (p.rol === 'admin' || p.rol === 'jefe_equipo') lista.push(HERRAMIENTA_ENVIAR);
   return lista;
@@ -344,7 +372,10 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
       const numero = entero(e.numero, 'numero', 1, 1_000_000_000, 0);
       const { data, error } = await db
         .from('v_contratos')
-        .select(`id, ${CAMPOS_LISTA}, oferta_detalle, poblacion, provincia, fecha_firma, ultima_llamada_at, num_documentos, updated_at`)
+        .select(
+          `id, ${CAMPOS_LISTA}, oferta_detalle, poblacion, provincia, fecha_firma, ultima_llamada_at, num_documentos, updated_at, ` +
+            'verificacion_at, verificacion_hecha_at, verificacion_hecha_por_nombre',
+        )
         .eq('numero', numero)
         .maybeSingle();
       if (error) throw error;
@@ -358,6 +389,9 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
         ultima_llamada_at: string | null;
         num_documentos: number;
         updated_at: string;
+        verificacion_at: string | null;
+        verificacion_hecha_at: string | null;
+        verificacion_hecha_por_nombre: string | null;
       };
       const [obs, hist, llam] = await Promise.all([
         db.from('observaciones').select('texto, autor_nombre, sistema, created_at').eq('contrato_id', c.id)
@@ -374,6 +408,13 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
         fecha_firma: fechaHora(c.fecha_firma),
         dias_desde_subida: diasDesde(c.created_at),
         pdf_adjuntos: c.num_documentos,
+        verificacion: c.verificacion_at
+          ? {
+              programada: fechaHora(c.verificacion_at),
+              hecha: fechaHora(c.verificacion_hecha_at),
+              por: c.verificacion_hecha_por_nombre ?? undefined,
+            }
+          : null,
         observaciones: (obs.data ?? []).map((o) => ({
           fecha: fechaHora(o.created_at),
           autor: o.sistema ? 'Sistema' : o.autor_nombre,
@@ -430,6 +471,29 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
       };
     }
 
+    case 'verificaciones': {
+      if (perfil.rol !== 'admin' && perfil.rol !== 'backoffice') {
+        throw new ErrorHerramienta('El calendario de verificaciones es solo para backoffice y administración.');
+      }
+      const periodo = texto(e.periodo, 'periodo');
+      const hoy = ahoraMadrid().hoy;
+      let filas;
+      if (periodo === 'hoy') filas = await verificacionesDeDias(db, hoy, hoy);
+      else if (periodo === 'manana') filas = await verificacionesDeDias(db, sumarDias(hoy, 1), sumarDias(hoy, 1));
+      else if (periodo === 'semana') filas = await verificacionesDeDias(db, hoy, sumarDias(hoy, 6));
+      else if (periodo === 'atrasadas') filas = await verificacionesAtrasadas(db);
+      else throw new ErrorHerramienta('periodo debe ser hoy, manana, semana o atrasadas');
+      const lista = filas.map((c) => paraElChat(c, hoy));
+      return {
+        periodo,
+        total: lista.length,
+        hechas: lista.filter((c) => c.verificacion === 'hecha').length,
+        por_hacer: lista.filter((c) => c.verificacion !== 'hecha').length,
+        verificaciones: lista.slice(0, 40),
+        calendario: urlCalendario(),
+      };
+    }
+
     case 'grupo_whatsapp': {
       if (perfil.rol !== 'admin') throw new ErrorHerramienta('Solo administración puede gestionar el grupo.');
       const accion = texto(e.accion, 'accion');
@@ -441,6 +505,11 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
           hora_buenos_dias: c.hora_buenos_dias,
           hora_cierre: c.hora_cierre,
           dias_activos: c.dias_activos,
+          recordatorios_verificaciones: {
+            minutos_antes: c.aviso_verificacion_min,
+            resumenes_manana_y_noche: c.resumen_verificaciones,
+            para: c.verificaciones_para,
+          },
         };
       }
       if (accion === 'listar') return { grupos: await listarGrupos() };
@@ -484,12 +553,32 @@ async function ejecutar(nombre: string, e: Entrada, ctx: Contexto): Promise<unkn
         cambios.ajuste_mes = llevamos - p.en_crm;
         cambios.ajuste_mes_inicio = `${p.mes}-01`;
       }
+      if (e.aviso_verificacion_min !== undefined) {
+        cambios.aviso_verificacion_min = entero(e.aviso_verificacion_min, 'aviso_verificacion_min', 0, 120, 10);
+      }
+      if (e.resumen_verificaciones !== undefined) {
+        if (typeof e.resumen_verificaciones !== 'boolean') throw new ErrorHerramienta('«resumen_verificaciones» debe ser true o false');
+        cambios.resumen_verificaciones = e.resumen_verificaciones;
+      }
+      if (e.verificaciones_para !== undefined) {
+        if (!Array.isArray(e.verificaciones_para)) throw new ErrorHerramienta('«verificaciones_para» debe ser una lista de ids');
+        const ids = [...new Set(e.verificaciones_para.map((x) => uuid(x, 'verificaciones_para')).filter((x): x is string => !!x))];
+        if (ids.length) {
+          const { data: gente, error: errGente } = await admin.from('profiles').select('id, rol, activo').in('id', ids);
+          if (errGente) throw errGente;
+          const validos = (gente ?? []).filter((g) => g.activo && (g.rol === 'admin' || g.rol === 'backoffice'));
+          if (validos.length !== ids.length) {
+            throw new ErrorHerramienta('Solo pueden recibir los recordatorios personas activas de administración o backoffice.');
+          }
+        }
+        cambios.verificaciones_para = ids;
+      }
       if (!Object.keys(cambios).length) throw new ErrorHerramienta('No hay nada que cambiar');
       const { data, error } = await admin
         .from('messy_config')
         .update({ ...cambios, updated_at: new Date().toISOString() })
         .eq('id', 1)
-        .select('activo, hora_buenos_dias, hora_cierre, dias_activos, objetivo_mes')
+        .select('activo, hora_buenos_dias, hora_cierre, dias_activos, objetivo_mes, aviso_verificacion_min, resumen_verificaciones, verificaciones_para')
         .single();
       if (error) throw error;
       return { ok: true, ajustes: data, objetivo_mes_equipo: await leerProgreso() };
@@ -530,6 +619,10 @@ function promptSistema(p: Perfil): string {
       : p.rol === 'jefe_equipo'
         ? `los contratos y comerciales de su equipo${p.equipo_nombre ? ` (${p.equipo_nombre})` : ''}`
         : 'todos los contratos, equipos y comerciales';
+  const verificaciones =
+    p.rol === 'admin' || p.rol === 'backoffice'
+      ? `\n- Calendario de verificaciones de backoffice (la llamada de verificación antes de la instalación): con la herramienta verificaciones dices qué hay hoy, mañana, esta semana o qué está atrasado, en orden de hora. Messy publica en el grupo el resultado de cada llamada de verificación (solo número de contrato y comercial) con las firmadas del mes, y manda por privado a las personas configuradas un aviso unos minutos antes de cada una, la lista del día por la mañana y el balance por la noche. Las verificaciones se marcan como hechas o se reprograman en el CRM: ${urlCalendario()}`
+      : '';
   const gestion =
     p.rol === 'admin'
       ? `\n- Como es administrador/a, también puede gestionar el grupo de WhatsApp y tus avisos automáticos (grupo_whatsapp, ajustes_messy) y pedirte que publiques en el grupo (enviar_al_grupo).`
@@ -550,7 +643,7 @@ Cómo trabajas:
 - El equipo tiene un objetivo mensual de reservas de plaza, contando todas en conjunto (no por persona). Cuando hables de cómo va el mes, da «llevamos X/Y, quedan Z (W %)» con los datos de objetivo_mes_equipo.
 - Fechas en formato humano (13/10, «ayer», «el lunes»). Importes en euros con coma decimal (39,90 €).
 - Nunca muestres DNI, teléfonos, emails ni direcciones de clientes (tus herramientas no los devuelven) y no los pidas.
-- No puedes crear ni modificar contratos: eso se hace en el CRM (${env.crmUrl}).${gestion}
+- No puedes crear ni modificar contratos: eso se hace en el CRM (${env.crmUrl}).${verificaciones}${gestion}
 - Si te preguntan algo que no tiene que ver con el trabajo, responde breve y con simpatía y reconduce.
 - Para cerrar la sesión de WhatsApp basta con escribir «salir».`;
 }

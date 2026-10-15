@@ -4,6 +4,7 @@
 // de los clientes; Claude solo pone la chispa motivacional.
 import { redactar } from './claude.ts';
 import { admin, ahoraMadrid, env, fechaLarga, leerConfig, leerProgreso, mensajeDeError, type Progreso } from './entorno.ts';
+import { bloquePendientesGrupo, leerResumenVerificaciones } from './verificaciones.ts';
 import { enviarTexto } from './whapi.ts';
 
 interface Evento {
@@ -153,7 +154,23 @@ function podio(ranking: { nombre: string; ventas: number }[]): string {
     .join('\n');
 }
 
+/** Verificaciones pendientes para el grupo (sin nombres de clientes); null si falla. */
+async function pendientesGrupo(modo: 'manana' | 'noche'): Promise<string | null> {
+  try {
+    return await bloquePendientesGrupo(modo);
+  } catch (e) {
+    console.error('Messy: no se ha podido preparar el listado de verificaciones', mensajeDeError(e));
+    return null;
+  }
+}
+
 async function textoBuenosDias(): Promise<string> {
+  const texto = await textoBuenosDiasBase();
+  const pendientes = await pendientesGrupo('manana');
+  return pendientes ? `${texto}\n\n📋 *Verificaciones de hoy*\n${pendientes}` : texto;
+}
+
+async function textoBuenosDiasBase(): Promise<string> {
   const f = ahoraMadrid();
   const { data: ultimoDia } = await admin.rpc('messy_ultimo_dia_con_ventas', { p_antes: f.hoy });
   const anterior = ultimoDia ? await resumen(ultimoDia as string) : null;
@@ -189,7 +206,28 @@ async function textoBuenosDias(): Promise<string> {
   return lineas.join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
+/** Línea de verificaciones de backoffice para el cierre del grupo (sin datos de clientes). */
+async function lineaVerificaciones(): Promise<string | null> {
+  try {
+    const v = await leerResumenVerificaciones();
+    return (
+      `🛡️ Verificaciones de hoy: *${v.hechas}* ${v.hechas === 1 ? 'hecha' : 'hechas'} · *${v.no_contesta}* no contesta · ` +
+      `*${v.firmadas_hoy}* ${v.firmadas_hoy === 1 ? 'firmada' : 'firmadas'} · vamos *${v.firmadas_mes}* ` +
+      `${v.firmadas_mes === 1 ? 'firmada' : 'firmadas'} este mes`
+    );
+  } catch (e) {
+    console.error('Messy: no se han podido leer las verificaciones del día', mensajeDeError(e));
+    return null;
+  }
+}
+
 async function textoCierre(): Promise<string> {
+  const [texto, verificaciones, manana] = await Promise.all([textoCierreBase(), lineaVerificaciones(), pendientesGrupo('noche')]);
+  const bloque = [verificaciones, manana].filter(Boolean).join('\n');
+  return bloque ? `${texto}\n\n${bloque}` : texto;
+}
+
+async function textoCierreBase(): Promise<string> {
   const f = ahoraMadrid();
   const r = await resumen(f.hoy);
   const objetivo = await leerProgreso();

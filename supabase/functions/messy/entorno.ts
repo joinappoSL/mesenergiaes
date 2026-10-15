@@ -93,6 +93,11 @@ export interface ConfigMessy {
   hora_buenos_dias: number;
   hora_cierre: number;
   dias_activos: number[];
+  /** quién recibe por privado los recordatorios de verificaciones */
+  verificaciones_para: string[];
+  /** minutos de antelación del recordatorio (0 = no se manda) */
+  aviso_verificacion_min: number;
+  resumen_verificaciones: boolean;
 }
 
 export async function leerConfig(): Promise<ConfigMessy> {

@@ -122,9 +122,26 @@ update public.messy_config set objetivo_mes = 50, ajuste_mes = 6, ajuste_mes_ini
 
 Para que Messy publique en el grupo ahora mismo cómo va el objetivo, llama a la acción `anunciar_progreso` como en el paso 5 de la puesta en marcha.
 
+**Verificaciones de backoffice**
+
+En el grupo (solo número de contrato y comercial, nunca el nombre del cliente ni datos personales):
+
+- 📵📞🔁✅❌ **Resultado de cada llamada** a un contrato con verificación programada, y cuando se marca **Hecha** o se **reprograma**: «📵 Verificación #00017 (comercial Mario) · No contesta · reprogramada para hoy a las 17:00 · Vamos 4 firmadas este mes» y debajo lo que queda hoy. Lo que se hace en la misma acción (90 s) va en un solo mensaje; en la ficha, «No contesta» deja reprogramar en el mismo paso.
+- **Vamos X firmadas este mes**: todos los contratos marcados como firmados en el mes (hora de Madrid), por llamada o con el botón.
+- Con los **buenos días**, las verificaciones de hoy y las atrasadas; con el **cierre**, «🛡️ Verificaciones de hoy: hechas · no contesta · firmadas · firmadas del mes» y las de mañana.
+- Acción `anunciar_verificaciones` (`"probar": true` para ver el texto sin enviarlo): la última llamada y todo lo pendiente.
+
+Por privado a las personas de `messy_config.verificaciones_para` (admin/backoffice con la sesión de Messy iniciada):
+
+- 📞 Aviso **10 minutos antes** de cada verificación (`aviso_verificacion_min`, 0 = sin aviso).
+- ☀️ A la hora de los buenos días: las verificaciones del día por orden de hora y las atrasadas.
+- 🌙 A la hora del cierre: cuántas había, hechas, no contestaron y reprogramadas; las pendientes para mañana; firmadas hoy y del mes.
+
+El reloj de Messy (`pg_cron`, `messy-reloj`) corre cada minuto. Todo queda registrado en `verificaciones_log` y la cola en `messy_cola_verificaciones`.
+
 **Por privado**
 
-Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo que quiera: «¿cuántas reservas de plaza llevo este mes?», «¿cómo vamos con el objetivo?», «ranking de la semana», «¿qué pendientes tengo sin firmar?», «ficha del contrato 125»… Messy consulta el CRM **con los permisos de esa persona** (el comercial solo ve lo suyo, el jefe su equipo, backoffice y admin todo), nunca muestra DNI, teléfonos, emails ni direcciones de clientes y no puede modificar nada. Los admins además pueden pedirle que cambie las horas de los avisos, que los pause o que publique algo en el grupo. «salir» cierra la sesión; 5 intentos fallidos bloquean el chat 15 minutos.
+Cada persona inicia sesión con su email y contraseña del CRM y le pregunta lo que quiera: «¿cuántas reservas de plaza llevo este mes?», «¿cómo vamos con el objetivo?», «¿qué verificaciones tengo hoy?», «ranking de la semana», «¿qué pendientes tengo sin firmar?», «ficha del contrato 125»… Messy consulta el CRM **con los permisos de esa persona** (el comercial solo ve lo suyo, el jefe su equipo, backoffice y admin todo), nunca muestra DNI, teléfonos, emails ni direcciones de clientes y no puede modificar nada. Los admins además pueden pedirle que cambie las horas de los avisos, que los pause o que publique algo en el grupo. «salir» cierra la sesión; 5 intentos fallidos bloquean el chat 15 minutos.
 
 **Modelos de Claude** (cambiables sin tocar código, con secretos de la Edge Function):
 

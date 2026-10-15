@@ -5,16 +5,20 @@
 // cabecera x-messy-clave):
 //   · Webhook de Whapi.cloud  { messages: [...] }  → chats privados y grupo
 //   · { accion: 'procesar' }            → la base de datos avisa de eventos
+//                                          (grupo y recordatorios de verificaciones)
 //   · { accion: 'configurar_webhook' }  → apunta el webhook de Whapi aquí
 //   · { accion: 'estado' }              → estado del canal y grupos
 //   · { accion: 'saludar_grupo' }       → presenta a Messy en el grupo
 //   · { accion: 'anunciar_progreso' }   → manda al grupo cómo va el objetivo del mes
+//   · { accion: 'anunciar_verificaciones', probar? } → última llamada y verificaciones
+//                                          pendientes (sin nombres de clientes)
 //
 // Despliegue: verify_jwt = false (Whapi no envía JWT; se valida la clave).
 // Claves: ANTHROPIC_API_KEY y WHAPI_TOKEN (secretos de la función o Supabase Vault).
 // =============================================================================
 import { responder, saludoGrupo } from './agente.ts';
 import { procesarEventos, textoProgreso } from './avisos.ts';
+import { procesarVerificaciones, textoPendientesGrupo } from './verificaciones.ts';
 import { admin, claveAnthropic, clavesIguales, clienteUsuario, env, leerConfig, leerPerfil, mensajeDeError } from './entorno.ts';
 import { cerrarSesion, leerSesion, pasoLogin, tokenVigente } from './sesion.ts';
 import { configurarWebhook, enviarTexto, estadoCanal, listarGrupos, type MensajeWhapi } from './whapi.ts';
@@ -33,6 +37,14 @@ async function enSegundoPlano(tarea: () => Promise<unknown>): Promise<void> {
   const p = tarea().catch((e) => console.error('Messy:', mensajeDeError(e)));
   if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(p);
   else await p;
+}
+
+/** Avisos al grupo y recordatorios privados de verificaciones (uno no frena al otro). */
+async function procesarColas(): Promise<void> {
+  const [grupo, privados] = await Promise.allSettled([procesarEventos(), procesarVerificaciones()]);
+  for (const r of [grupo, privados]) {
+    if (r.status === 'rejected') console.error('Messy:', mensajeDeError(r.reason));
+  }
 }
 
 const HISTORIAL = 12;
@@ -202,7 +214,7 @@ Deno.serve(async (req) => {
   try {
     switch (body.accion) {
       case 'procesar':
-        await enSegundoPlano(procesarEventos);
+        await enSegundoPlano(procesarColas);
         return json({ ok: true }, 202);
 
       case 'configurar_webhook': {
@@ -233,6 +245,13 @@ Deno.serve(async (req) => {
         const texto = await textoProgreso();
         await enviarTexto(cfg.grupo_chat_id, texto);
         return json({ ok: true, texto });
+      }
+
+      case 'anunciar_verificaciones': {
+        if (!cfg.grupo_chat_id) return json({ error: 'No hay grupo configurado' }, 409);
+        const texto = await textoPendientesGrupo();
+        if (body.probar !== true) await enviarTexto(cfg.grupo_chat_id, texto);
+        return json({ ok: true, enviado: body.probar !== true, texto });
       }
     }
     // Otros eventos de Whapi (estados, etc.): se ignoran

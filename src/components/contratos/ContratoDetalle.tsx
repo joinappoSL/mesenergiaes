@@ -378,7 +378,7 @@ export function ContratoDetalle({
                 subtitle={contrato.ultima_llamada_at ? `Última: ${fechaHoraCorta(contrato.ultima_llamada_at)}` : 'Sin llamadas'}
               />
               <CardBody className="space-y-5">
-                {p.puedeRegistrarLlamadas && <FormularioLlamada contratoId={contrato.id} />}
+                {p.puedeRegistrarLlamadas && <FormularioLlamada contratoId={contrato.id} contrato={contrato} />}
                 <ListaLlamadas contratoId={contrato.id} />
               </CardBody>
             </Card>
