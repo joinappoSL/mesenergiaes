@@ -53,7 +53,9 @@ El formulario envía por `POST` un JSON con `nombre`, `telefono` (+1…), `estad
 
 ### Hosting
 
-`npm run build` y subir `dist/`. Opciones recomendadas con dominio propio y HTTPS gratis:
+**GitHub Pages (incluido):** si esta carpeta es la raíz de su propio repositorio, `.github/workflows/pages.yml` compila y publica la web en cada push a `main`. Solo hay que activarlo una vez en **Settings → Pages → Source: GitHub Actions**. Para el dominio propio: **Settings → Pages → Custom domain**.
+
+Otras opciones (`npm run build` y subir `dist/`), también con dominio propio y HTTPS gratis:
 
 - **Vercel / Netlify / Cloudflare Pages:** conectar el repo con *Root directory* `landing-medical-insurance-ge`, *Build command* `npm run build` y *Output* `dist`. Después se añade el dominio en el panel del hosting y se apuntan los DNS.
 
