@@ -133,16 +133,29 @@ for i, c in enumerate(cuts):
 fc_a.append("".join(f"[w{i}]" for i in range(len(cuts))) + f"amix=inputs={len(cuts)}:normalize=0,volume=0.6[s]")
 run(["ffmpeg", "-y", "-loglevel", "error", "-filter_complex", ";".join(fc_a), "-map", "[s]", "-ac", "2", "-ar", "48000", str(sfx)])
 
-# 6. Composición final.
+# 6. Composición final. El logo en color va sobre una pastilla blanca (guía de marca: nunca sobre foto sin soporte).
+from PIL import Image, ImageDraw, ImageFilter
+pill = work / "logo_pill.png"
+lg = Image.open(here / "logo_h.png").convert("RGBA")
+lw = 280; lg = lg.resize((lw, round(lg.height * lw / lg.width)), Image.LANCZOS)
+px, py = 34, 18
+cw, ch = lw + 2 * px, lg.height + 2 * py
+canvas = Image.new("RGBA", (cw + 40, ch + 40), (0, 0, 0, 0))
+sh = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+ImageDraw.Draw(sh).rounded_rectangle((20, 26, 20 + cw, 26 + ch), radius=ch // 2, fill=(14, 77, 157, 70))
+canvas = Image.alpha_composite(canvas, sh.filter(ImageFilter.GaussianBlur(10)))
+ImageDraw.Draw(canvas).rounded_rectangle((20, 20, 20 + cw, 20 + ch), radius=ch // 2, fill=(255, 255, 255, 255))
+canvas.alpha_composite(lg, (20 + px, 20 + py))
+canvas.save(pill)
 fc = (
-    f"[1:v]scale=280:-1[lg];[0:v][lg]overlay=(W-w)/2:70:enable='lt(t,{end_main:.2f})'[v1];"
+    f"[0:v][1:v]overlay=(W-w)/2:50:enable='lt(t,{end_main:.2f})'[v1];"
     f"color=c=0x26B9CC:s={W}x14:r={FPS}:d={total}[bar];[v1][bar]overlay=x='-W+W*t/{total}':y=H-14:shortest=1[v2];"
     f"[v2]ass={work / 'subs.ass'}[vo];"
     f"[2:a]adelay=200|200,aresample=48000,volume=1.0[voz];[3:a]aresample=48000[fx];"
     f"[voz][fx]amix=inputs=2:normalize=0:duration=longest,loudnorm=I=-14:TP=-1.5:LRA=11[a]"
 )
-run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(base), "-i", str(here / "logo_h.png"), "-i", str(vo), "-i", str(sfx),
+run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(base), "-i", str(pill), "-i", str(vo), "-i", str(sfx),
      "-filter_complex", fc, "-map", "[vo]", "-map", "[a]", "-t", f"{total:.3f}",
      "-c:v", "libx264", "-profile:v", "high", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-r", str(FPS),
-     "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", str(out)])
+     "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2", "-movflags", "+faststart", str(out)])
 print(f"OK {out} {total:.1f}s, {len(words)} palabras sincronizadas, cortes en {[round(c, 2) for c in cuts]}")
