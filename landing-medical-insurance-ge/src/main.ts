@@ -1,3 +1,5 @@
+import { gsap } from 'gsap';
+import { iniciarAnimaciones } from './animaciones';
 import { negocio, testimonios, type Testimonio } from './config';
 
 const ESTADOS = [
@@ -158,17 +160,36 @@ function iniciarPestanas() {
   const lista = $('#pestanas');
   if (!lista) return;
   const tabs = [...lista.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+  const indicador = $('#pestanas-indicador');
+  const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // La píldora azul se desliza bajo la pestaña activa.
+  const moverIndicador = (tab: HTMLButtonElement, animar: boolean) => {
+    if (!indicador) return;
+    const props = { x: tab.offsetLeft + 6, width: tab.offsetWidth };
+    if (animar && !sinMovimiento) gsap.to(indicador, { ...props, duration: 0.55, ease: 'expo.out' });
+    else gsap.set(indicador, props);
+  };
 
   const activar = (tab: HTMLButtonElement, enfocar = false) => {
     for (const t of tabs) {
       const activa = t === tab;
       t.setAttribute('aria-selected', String(activa));
       t.tabIndex = activa ? 0 : -1;
-      document.getElementById(t.getAttribute('aria-controls')!)!.hidden = !activa;
+      const panel = document.getElementById(t.getAttribute('aria-controls')!)!;
+      panel.hidden = !activa;
+      if (activa && !sinMovimiento) {
+        gsap.fromTo(panel.children, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7, ease: 'expo.out', stagger: 0.08 });
+      }
     }
+    moverIndicador(tab, true);
     if (enfocar) tab.focus();
-    tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
+
+  const activaInicial = () => tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[0];
+  moverIndicador(activaInicial(), false);
+  window.addEventListener('resize', () => moverIndicador(activaInicial(), false));
+  document.fonts?.ready.then(() => moverIndicador(activaInicial(), false));
 
   tabs.forEach((tab, i) => {
     tab.addEventListener('click', () => activar(tab));
@@ -266,6 +287,7 @@ function pintarTestimonios() {
 }
 
 pintarContactos();
+iniciarAnimaciones();
 iniciarFormulario();
 iniciarPestanas();
 iniciarCtaMovil();

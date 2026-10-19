@@ -1,10 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, type Plugin } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 import { negocio } from './src/config.ts';
 
+const raiz = import.meta.dirname;
+
 // Escribe en el HTML lo que depende del dominio (canonical, Open Graph, schema.org)
-// para que buscadores y redes sociales lo lean sin ejecutar JavaScript.
+// para que buscadores y redes sociales lo lean sin ejecutar JavaScript, e inserta el mapa SVG.
 function datosNegocio(): Plugin {
   return {
     name: 'datos-negocio',
@@ -35,23 +39,25 @@ function datosNegocio(): Plugin {
 
       return html
         .replace('<!-- seo-dominio -->', seo)
-        .replace(
-          '<!-- schema-org -->',
-          `<script type="application/ld+json">${JSON.stringify(schema)}</script>`,
-        );
+        .replace('<!-- schema-org -->', `<script type="application/ld+json">${JSON.stringify(schema)}</script>`)
+        .replace('<!-- mapa-usa -->', readFileSync(resolve(raiz, 'src/mapa-usa.svg'), 'utf8'));
     },
   };
 }
 
-export default defineConfig({
-  base: process.env.VITE_BASE ?? '/',
-  plugins: [tailwindcss(), datosNegocio()],
-  build: {
-    rollupOptions: {
-      input: {
-        main: resolve(import.meta.dirname, 'index.html'),
-        legal: resolve(import.meta.dirname, 'legal.html'),
+// `npm run build:archivo` genera un único index.html autocontenido para enviarlo como vista previa.
+export default defineConfig(({ mode }) => {
+  const unArchivo = mode === 'archivo';
+  return {
+    base: process.env.VITE_BASE ?? './',
+    plugins: [tailwindcss(), datosNegocio(), ...(unArchivo ? [viteSingleFile()] : [])],
+    build: {
+      outDir: unArchivo ? 'dist-archivo' : 'dist',
+      rollupOptions: {
+        input: unArchivo
+          ? resolve(raiz, 'index.html')
+          : { main: resolve(raiz, 'index.html'), legal: resolve(raiz, 'legal.html') },
       },
     },
-  },
+  };
 });

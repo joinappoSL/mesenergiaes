@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/plus-jakarta-sans/wght.css';
+@import 'lenis/dist/lenis.css';
 
 @theme {
   --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
@@ -8,21 +9,46 @@
   --color-marca-50: #eef4fa;
   --color-marca-100: #d9e7f3;
   --color-marca-200: #b3cfe6;
+  --color-marca-300: #7fadd3;
   --color-marca-600: #0a5d9c;
   --color-marca-700: #004e86;
   --color-marca-800: #0b3b63;
   --color-marca-900: #0b2a47;
+  --color-marca-950: #071d33;
 
   /* Acento: reservado solo para los botones de conversión (contraste AA con blanco). */
   --color-acento: #c2410c;
   --color-acento-hover: #9a3412;
 
   --color-fondo: #fbfaf6;
+
+  --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 6rem;
+}
+
+body {
+  @apply bg-fondo font-sans text-slate-700 antialiased;
+}
+
+::selection {
+  @apply bg-marca-700 text-white;
+}
+
+/* Estado inicial de los elementos animados: solo con JS activo y sin «reducir movimiento». */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal],
+  html.js [data-stagger] > *,
+  html.js [data-hero] {
+    opacity: 0;
+  }
+  html.js [data-split],
+  html.js #hero-titulo {
+    visibility: hidden;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -34,15 +60,12 @@ html {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 
-body {
-  @apply bg-fondo font-sans text-slate-700 antialiased;
-}
-
 @utility btn-cta {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-acento px-6 py-4 text-base font-bold text-white shadow-lg shadow-orange-900/15 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:bg-acento-hover active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-acento;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-acento px-6 py-4 text-base font-bold text-white shadow-lg shadow-orange-900/20 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:bg-acento-hover hover:shadow-xl hover:shadow-orange-900/25 active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-acento;
 }
 
 @utility btn-secundario {
@@ -54,22 +77,137 @@ body {
 }
 
 @utility eyebrow {
-  @apply text-sm font-bold tracking-widest text-marca-700 uppercase;
+  @apply inline-flex items-center gap-3 text-sm font-bold tracking-[0.18em] text-marca-700 uppercase before:h-px before:w-8 before:bg-current;
 }
 
-/* Acordeón de FAQs: animación de apertura con detalles nativos (accesibles sin JS). */
+/* Rejilla de puntos de fondo con desvanecido radial. */
+.rejilla-puntos {
+  background-image: radial-gradient(var(--color-marca-200) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, #000 30%, transparent 75%);
+}
+
+/* Subrayado tipo rotulador del titular (lo anima GSAP con background-size). */
+.resalte {
+  background-image: linear-gradient(var(--color-marca-100), var(--color-marca-100));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 100% 32%;
+  color: var(--color-marca-700);
+}
+html.js .resalte {
+  background-size: 0% 32%;
+}
+
+/* Tarjetas con foco de luz que sigue al cursor. */
+[data-spotlight] {
+  position: relative;
+  isolation: isolate;
+}
+[data-spotlight]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(0 78 134 / 0.09), transparent 45%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+[data-spotlight]:hover::before {
+  opacity: 1;
+}
+
+/* Banda infinita de coberturas. */
+@keyframes desplazar {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquesina {
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquesina-pista {
+  animation: desplazar 38s linear infinite;
+}
+.marquesina:hover .marquesina-pista {
+  animation-play-state: paused;
+}
+
+/* Mapa de EE. UU. */
+.mapa-puntos {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.2);
+  stroke-width: 4.6;
+  stroke-linecap: round;
+}
+.mapa-punto {
+  fill: var(--color-marca-200);
+  stroke: var(--color-marca-900);
+  stroke-width: 3;
+}
+.mapa-ping {
+  fill: var(--color-marca-200);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ping 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  80%,
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+.mapa-etiqueta {
+  display: none;
+  font: 700 19px var(--font-sans);
+  fill: #fff;
+  paint-order: stroke;
+  stroke: var(--color-marca-900);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+@media (min-width: 640px) {
+  .mapa-etiqueta {
+    display: block;
+  }
+}
+.mapa-ciudad {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Pasos del proceso: el número se ilumina al llegar la línea de progreso. */
+.paso-num {
+  transition:
+    background-color 0.5s var(--ease-salida),
+    color 0.5s var(--ease-salida),
+    box-shadow 0.5s var(--ease-salida);
+}
+.paso.activo .paso-num {
+  background-color: #fff;
+  color: var(--color-marca-900);
+  box-shadow: 0 0 0 8px rgb(255 255 255 / 0.08);
+}
+
+/* Acordeón de FAQs: animación de apertura con <details> nativo (accesible sin JS). */
 details summary::-webkit-details-marker {
   display: none;
 }
 details[open] .chevron {
-  transform: rotate(180deg);
+  transform: rotate(45deg);
 }
 details::details-content {
   block-size: 0;
   overflow: hidden;
   transition:
-    block-size 0.3s ease-in-out,
-    content-visibility 0.3s allow-discrete;
+    block-size 0.4s var(--ease-salida),
+    content-visibility 0.4s allow-discrete;
 }
 details[open]::details-content {
   block-size: auto;

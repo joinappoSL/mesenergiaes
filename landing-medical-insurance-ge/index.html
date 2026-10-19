@@ -9,8 +9,8 @@
       content="Obamacare, planes Oasis y seguros complementarios en todo Estados Unidos. Un asesor te explica tus opciones en español y te ayuda a elegir, sea cual sea tu situación."
     />
     <meta name="theme-color" content="#004e86" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_US" />
@@ -24,27 +24,40 @@
     <!-- seo-dominio -->
     <!-- schema-org -->
 
-    <link rel="stylesheet" href="/src/styles.css" />
-    <script type="module" src="/src/main.ts"></script>
+    <script>
+      // Oculta los elementos animados hasta que GSAP los muestre; si el JS falla, se muestran igual.
+      document.documentElement.classList.add('js');
+      setTimeout(() => {
+        if (!window.__animacionesListas) document.documentElement.classList.remove('js');
+      }, 2500);
+    </script>
+    <link rel="stylesheet" href="./src/styles.css" />
+    <script type="module" src="./src/main.ts"></script>
   </head>
   <body>
     <a
       href="#contenido"
-      class="sr-only rounded-lg bg-marca-900 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
+      class="sr-only rounded-lg bg-marca-900 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60]"
       >Saltar al contenido</a
     >
 
+    <!-- Barra de progreso de lectura -->
+    <div id="progreso" class="fixed inset-x-0 top-0 z-[55] h-[3px] origin-left scale-x-0 bg-marca-700" aria-hidden="true"></div>
+
     <!-- Cabecera: solo marca y conversión, sin menú que distraiga -->
-    <header class="sticky top-0 z-40 border-b border-marca-100/70 bg-fondo/90 backdrop-blur-md">
-      <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 lg:h-20 lg:px-8">
-        <a href="#" class="flex items-center gap-3 rounded-lg focus-visible:outline-3 focus-visible:outline-marca-700">
-          <img src="/logo-icono.webp" alt="" width="44" height="44" class="size-10 lg:size-11" />
+    <header
+      id="cabecera"
+      class="group fixed inset-x-0 top-0 z-50 border-b border-transparent transition-all duration-500 ease-in-out data-[scrolled=true]:border-marca-100 data-[scrolled=true]:bg-white/85 data-[scrolled=true]:shadow-[0_8px_30px_-12px_rgb(11_42_71/0.15)] data-[scrolled=true]:backdrop-blur-xl"
+    >
+      <div class="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-5 transition-all duration-500 ease-in-out group-data-[scrolled=true]:h-16 lg:h-22 lg:px-8 lg:group-data-[scrolled=true]:h-18">
+        <a href="#" class="flex items-center gap-3 rounded-lg focus-visible:outline-3 focus-visible:outline-marca-700" aria-label="Medical Insurance GE, inicio">
+          <img src="./src/assets/logo-icono.webp" alt="" width="44" height="44" class="size-10 mix-blend-multiply transition-all duration-500 lg:size-11" />
           <span class="leading-tight">
             <span class="block text-base font-extrabold tracking-tight text-marca-900 lg:text-lg">Medical Insurance</span>
-            <span class="block text-xs font-bold tracking-[0.2em] text-marca-700">GE LLC</span>
+            <span class="block text-[11px] font-bold tracking-[0.28em] text-marca-700">GE LLC</span>
           </span>
         </a>
-        <div class="flex items-center gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-5">
           <a
             data-contacto="telefono"
             hidden
@@ -60,9 +73,12 @@
 
     <main id="contenido">
       <!-- 1. HERO -->
-      <section id="hero" class="relative overflow-hidden">
+      <section id="hero" class="relative overflow-hidden pt-18 lg:pt-22">
+        <div class="rejilla-puntos pointer-events-none absolute inset-0" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute top-0 right-0 size-[48rem] translate-x-1/3 -translate-y-1/3 rounded-full bg-marca-100/60 blur-3xl" aria-hidden="true"></div>
         <svg
-          class="pointer-events-none absolute -top-24 -right-24 hidden size-[38rem] text-marca-700/[0.035] lg:block"
+          id="hero-cruz"
+          class="pointer-events-none absolute top-24 -right-32 hidden size-[34rem] text-marca-700/[0.05] lg:block"
           viewBox="0 0 100 100"
           fill="currentColor"
           aria-hidden="true"
@@ -70,23 +86,26 @@
           <path d="M36 0h28a6 6 0 0 1 6 6v24h24a6 6 0 0 1 6 6v28a6 6 0 0 1-6 6H70v24a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6V70H6a6 6 0 0 1-6-6V36a6 6 0 0 1 6-6h24V6a6 6 0 0 1 6-6z" />
         </svg>
 
-        <div class="relative mx-auto grid max-w-6xl gap-14 px-5 pt-12 pb-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-20 lg:pb-32">
+        <div class="relative mx-auto grid max-w-7xl gap-14 px-5 pt-10 pb-24 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-16 lg:pb-32">
           <div>
-            <p class="inline-flex items-center gap-2 rounded-full border border-marca-200 bg-white px-4 py-1.5 text-sm font-semibold text-marca-800">
-              <span class="size-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+            <p data-hero class="inline-flex items-center gap-2.5 rounded-full border border-marca-200 bg-white/80 px-4 py-1.5 text-sm font-semibold text-marca-800 shadow-sm backdrop-blur">
+              <span class="relative flex size-2.5" aria-hidden="true">
+                <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex size-2.5 rounded-full bg-emerald-500"></span>
+              </span>
               Inscripción abierta 2027: del 1 de noviembre al 15 de enero
             </p>
 
-            <h1 class="mt-6 text-4xl font-bold tracking-tight text-balance text-marca-900 sm:text-5xl lg:text-6xl lg:leading-[1.05]">
-              Tu seguro médico en Estados Unidos, resuelto en una sola llamada y sin letra pequeña
+            <h1 id="hero-titulo" class="mt-7 text-[2.6rem] leading-[1.05] font-bold tracking-tight text-marca-900 sm:text-6xl lg:text-[4.25rem]">
+              Tu seguro médico en Estados Unidos, resuelto en <span class="resalte">una sola llamada</span> y sin letra pequeña
             </h1>
 
-            <p class="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
-              Somos una agencia de seguros que trabaja con <strong class="font-semibold text-marca-800">Obamacare, planes Oasis y seguros complementarios</strong>. Un asesor compara las opciones por ti y te las explica en español, vivas donde vivas y sea cual sea tu situación.
+            <p data-hero class="mt-7 max-w-xl text-lg leading-relaxed text-slate-600 lg:text-xl">
+              Agencia de seguros especializada en <strong class="font-semibold text-marca-800">Obamacare, planes Oasis y seguros complementarios</strong>. Comparamos las opciones por ti y te las explicamos en español, vivas donde vivas y sea cual sea tu situación.
             </p>
 
-            <div class="mt-10 flex flex-col gap-3 sm:flex-row">
-              <a href="#cotizar" class="btn-cta text-lg">
+            <div data-hero class="mt-10 flex flex-col gap-3 sm:flex-row">
+              <a href="#cotizar" data-magnetico class="btn-cta text-lg">
                 Quiero mi cotización gratis
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </a>
@@ -96,28 +115,47 @@
               </a>
             </div>
 
-            <ul class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+            <ul data-hero class="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-slate-600">
               <li class="flex items-center gap-2">
-                <svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                <span class="flex size-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                 Sin costo y sin compromiso
               </li>
               <li class="flex items-center gap-2">
-                <svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                <span class="flex size-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                 Atención 100&nbsp;% en español
               </li>
               <li class="flex items-center gap-2">
-                <svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                <span class="flex size-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                 En todo Estados Unidos
               </li>
             </ul>
           </div>
 
           <!-- Formulario de cotización -->
-          <div id="cotizar" class="scroll-mt-24">
-            <div class="rounded-3xl border border-marca-100 bg-white p-6 shadow-2xl shadow-marca-900/10 sm:p-8">
+          <div id="cotizar" class="relative scroll-mt-28">
+            <!-- Distintivos flotantes (solo escritorio) -->
+            <div data-hero class="flotante absolute -top-7 -left-12 z-10 hidden items-center gap-3 rounded-2xl border border-marca-100 bg-white px-4 py-3 shadow-xl shadow-marca-900/10 xl:flex" aria-hidden="true">
+              <span class="flex size-10 items-center justify-center rounded-xl bg-marca-700 text-white">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </span>
+              <span class="text-sm leading-tight"><span class="block font-bold text-marca-900">Asesor en español</span><span class="text-slate-500">De principio a fin</span></span>
+            </div>
+            <div data-hero class="flotante absolute -right-8 -bottom-8 z-10 hidden items-center gap-3 rounded-2xl border border-marca-100 bg-white px-4 py-3 shadow-xl shadow-marca-900/10 xl:flex" aria-hidden="true">
+              <span class="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </span>
+              <span class="text-sm leading-tight"><span class="block font-bold text-marca-900">Revisamos tu subsidio</span><span class="text-slate-500">Para bajar tu prima</span></span>
+            </div>
+
+            <div data-hero class="relative rounded-[1.75rem] border border-marca-100 bg-white p-6 shadow-2xl shadow-marca-900/12 sm:p-8">
               <div id="form-contenido">
-                <h2 class="text-2xl font-bold tracking-tight text-marca-900">Recibe tu cotización personalizada</h2>
-                <p class="mt-2 text-base leading-relaxed text-slate-600">Déjanos tus datos y un asesor te contacta para revisar tus opciones.</p>
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-marca-900">Recibe tu cotización personalizada</h2>
+                    <p class="mt-2 text-base leading-relaxed text-slate-600">Déjanos tus datos y un asesor te contacta para revisar tus opciones.</p>
+                  </div>
+                  <img src="./src/assets/logo-icono.webp" alt="" width="48" height="48" class="hidden size-12 shrink-0 mix-blend-multiply sm:block" />
+                </div>
 
                 <form id="form-cotizar" class="mt-6 space-y-4" novalidate>
                   <div>
@@ -160,15 +198,13 @@
                       <input id="consentimiento" name="consentimiento" type="checkbox" required class="mt-1 size-5 shrink-0 rounded border-slate-300 accent-marca-700" aria-describedby="consentimiento-error" />
                       <span>
                         Acepto que Medical Insurance GE LLC me contacte por llamada, SMS o WhatsApp al número indicado para darme información sobre seguros. No es condición de compra. Pueden aplicar tarifas de mensajes y datos. Leí la
-                        <a href="/legal.html#privacidad" class="font-semibold text-marca-700 underline underline-offset-2">política de privacidad</a>.
+                        <a href="legal.html#privacidad" class="font-semibold text-marca-700 underline underline-offset-2">política de privacidad</a>.
                       </span>
                     </label>
                     <p id="consentimiento-error" class="mt-1.5 hidden text-sm font-medium text-red-700"></p>
                   </div>
 
-                  <button type="submit" class="btn-cta w-full text-lg">
-                    Recibir mi cotización gratis
-                  </button>
+                  <button type="submit" data-magnetico class="btn-cta w-full text-lg">Recibir mi cotización gratis</button>
                   <p class="flex items-center justify-center gap-2 text-center text-sm text-slate-500">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     Tus datos son confidenciales. No los vendemos.
@@ -189,215 +225,256 @@
         </div>
       </section>
 
-      <!-- 2. BARRA DE CONFIANZA (tipos de cobertura) -->
-      <section aria-labelledby="confianza-titulo" class="border-y border-marca-100 bg-white">
-        <div class="mx-auto max-w-6xl px-5 py-10 lg:px-8">
-          <h2 id="confianza-titulo" class="text-center text-sm font-semibold tracking-widest text-slate-500 uppercase">Te asesoramos en</h2>
-          <ul class="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 text-marca-800/70 sm:grid-cols-3 lg:grid-cols-6">
-            <li class="flex items-center justify-center gap-2 text-base font-bold tracking-tight">
-              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Obamacare
-            </li>
-            <li class="flex items-center justify-center gap-2 text-base font-bold tracking-tight">
-              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="10"/></svg>
-              Planes Oasis
-            </li>
-            <li class="flex items-center justify-center gap-2 text-base font-bold tracking-tight">
-              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3c-2 0-4 2-4 5 0 4 2 5 2.5 9 .3 2.3 1 4 2.5 4s1.7-2.5 2-4c.3-1.3 1-2 2-2s1.7.7 2 2c.3 1.5.5 4 2 4s2.2-1.7 2.5-4C19 13 21 12 21 8c0-3-2-5-4-5-1.7 0-2.6 1-5 1S8.7 3 7 3z"/></svg>
-              Dental
-            </li>
-            <li class="flex items-center justify-center gap-2 text-base font-bold tracking-tight">
-              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-              Visión
-            </li>
-            <li class="flex items-center justify-center gap-2 text-base font-bold tracking-tight">
-              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></svg>
-              Vida
-            </li>
-            <li class="flex items-center justify-center gap-2 text-base font-bold tracking-tight">
-              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M12 11v6M9 14h6"/></svg>
-              Accidentes
-            </li>
+      <!-- 2. BANDA DE CONFIANZA: tipos de cobertura en movimiento -->
+      <section aria-label="Tipos de seguro en los que te asesoramos" class="relative bg-marca-900 py-7 text-white">
+        <div class="marquesina overflow-hidden">
+          <ul class="marquesina-pista flex w-max items-center gap-12 pr-12 text-lg font-semibold tracking-tight whitespace-nowrap lg:text-xl">
+            <li>Obamacare</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Planes Oasis</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Seguro dental</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Seguro de visión</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Seguro de vida</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Accidentes</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Hospitalización</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li>Enfermedades graves</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Obamacare</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Planes Oasis</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Seguro dental</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Seguro de visión</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Seguro de vida</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Accidentes</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Hospitalización</li><li class="text-marca-300" aria-hidden="true">✚</li>
+            <li aria-hidden="true">Enfermedades graves</li><li class="text-marca-300" aria-hidden="true">✚</li>
           </ul>
         </div>
       </section>
 
       <!-- 3. PROBLEMA · AGITACIÓN · SOLUCIÓN -->
-      <section aria-labelledby="problema-titulo" class="py-24 lg:py-32">
-        <div class="mx-auto max-w-6xl px-5 lg:px-8">
-          <div class="max-w-3xl">
-            <p class="eyebrow">El problema</p>
-            <h2 id="problema-titulo" class="mt-4 text-3xl font-bold tracking-tight text-balance text-marca-900 lg:text-5xl">
-              Elegir seguro médico en Estados Unidos no debería sentirse como descifrar otro idioma
-            </h2>
-            <p class="mt-6 text-lg leading-relaxed text-slate-600">
-              Deducible, coaseguro, copago, red de proveedores, prima… Formularios en inglés, decenas de planes que parecen iguales y la duda de siempre: <em>¿y esto qué cubre de verdad?</em>
-            </p>
+      <section aria-labelledby="problema-titulo" class="py-24 lg:py-36">
+        <div class="mx-auto max-w-7xl px-5 lg:px-8">
+          <div class="grid gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-20">
+            <div>
+              <p data-reveal class="eyebrow">El problema</p>
+              <h2 id="problema-titulo" data-split class="mt-5 text-4xl font-bold tracking-tight text-marca-900 lg:text-6xl">
+                Elegir seguro médico en EE.&nbsp;UU. no debería sentirse como descifrar otro idioma
+              </h2>
+              <p data-reveal class="mt-7 max-w-xl text-lg leading-relaxed text-slate-600">
+                Formularios en inglés, decenas de planes que parecen iguales y la duda de siempre: <em>¿y esto qué cubre de verdad?</em>
+              </p>
+            </div>
+            <div id="jerga" class="relative">
+              <ul class="flex flex-wrap gap-3" aria-label="Términos que suelen confundir">
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Deducible</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Coaseguro</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Copago</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Red de proveedores</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Prima mensual</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Máximo de bolsillo</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Crédito fiscal</li>
+                <li class="jerga-chip rounded-full border px-5 py-2.5 text-base font-semibold">Periodo especial</li>
+              </ul>
+              <p class="jerga-pie mt-6 flex items-center gap-2 text-base font-semibold text-marca-700">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                Nosotros te lo traducimos, palabra por palabra.
+              </p>
+            </div>
           </div>
 
-          <div class="mt-16 grid gap-6 md:grid-cols-3">
-            <article class="rounded-2xl border border-red-100 bg-white p-8">
-              <p class="text-4xl font-bold tracking-tight text-red-700" aria-hidden="true">01</p>
-              <h3 class="mt-4 text-xl font-bold text-marca-900">Facturas que no esperabas</h3>
+          <div data-stagger class="mt-20 grid gap-5 md:grid-cols-3">
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-white p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5 lg:p-10">
+              <p class="text-6xl font-bold tracking-tighter text-marca-100 transition-colors duration-500 group-hover:text-red-200" aria-hidden="true">01</p>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Facturas que no esperabas</h3>
               <p class="mt-3 text-base leading-relaxed text-slate-600">Una visita a urgencias sin la cobertura adecuada puede costar miles de dólares y convertirse en una deuda que arrastras por años.</p>
             </article>
-            <article class="rounded-2xl border border-red-100 bg-white p-8">
-              <p class="text-4xl font-bold tracking-tight text-red-700" aria-hidden="true">02</p>
-              <h3 class="mt-4 text-xl font-bold text-marca-900">Pagar por lo que no usas</h3>
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-white p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5 lg:p-10">
+              <p class="text-6xl font-bold tracking-tighter text-marca-100 transition-colors duration-500 group-hover:text-red-200" aria-hidden="true">02</p>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Pagar por lo que no usas</h3>
               <p class="mt-3 text-base leading-relaxed text-slate-600">Un plan mal elegido te cobra cada mes y, cuando lo necesitas, tu médico está fuera de la red o el deducible es tan alto que no te sirve.</p>
             </article>
-            <article class="rounded-2xl border border-red-100 bg-white p-8">
-              <p class="text-4xl font-bold tracking-tight text-red-700" aria-hidden="true">03</p>
-              <h3 class="mt-4 text-xl font-bold text-marca-900">Perder la fecha</h3>
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-white p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5 lg:p-10">
+              <p class="text-6xl font-bold tracking-tighter text-marca-100 transition-colors duration-500 group-hover:text-red-200" aria-hidden="true">03</p>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Perder la fecha</h3>
               <p class="mt-3 text-base leading-relaxed text-slate-600">Si dejas pasar el periodo de inscripción y no tienes un evento que te dé un periodo especial, podrías quedarte meses sin cobertura.</p>
             </article>
           </div>
 
           <!-- Solución -->
-          <div class="mt-20 grid gap-12 rounded-3xl bg-marca-900 p-8 text-white sm:p-12 lg:mt-24 lg:grid-cols-2 lg:items-center lg:p-16">
-            <div>
-              <p class="text-sm font-bold tracking-widest text-marca-200 uppercase">La solución</p>
-              <h2 class="mt-4 text-3xl font-bold tracking-tight text-balance lg:text-4xl">Un asesor que habla tu idioma y defiende tu bolsillo</h2>
-              <p class="mt-6 text-lg leading-relaxed text-marca-100">
-                En Medical Insurance GE revisamos tu caso, te explicamos tus opciones con palabras simples y te ayudamos a inscribirte en el plan que encaja con tu salud y tu presupuesto. Tú decides con toda la información.
-              </p>
-              <a href="#cotizar" class="btn-cta mt-10">Hablar con un asesor</a>
+          <div class="relative mt-24 overflow-hidden rounded-[2rem] bg-marca-900 text-white lg:mt-32">
+            <div class="relative grid gap-14 p-8 sm:p-12 lg:grid-cols-2 lg:gap-20 lg:p-20">
+              <div class="lg:sticky lg:top-32 lg:self-start">
+                <p data-reveal class="inline-flex items-center gap-3 text-sm font-bold tracking-[0.18em] text-marca-200 uppercase before:h-px before:w-8 before:bg-current">La solución</p>
+                <h2 data-split class="mt-5 text-4xl font-bold tracking-tight lg:text-5xl">Un asesor que habla tu idioma y defiende tu bolsillo</h2>
+                <p data-reveal class="mt-7 text-lg leading-relaxed text-marca-100">
+                  Revisamos tu caso, te explicamos tus opciones con palabras simples y te ayudamos a inscribirte en el plan que encaja con tu salud y tu presupuesto. Tú decides con toda la información.
+                </p>
+                <div data-reveal class="mt-10">
+                  <a href="#cotizar" data-magnetico class="btn-cta">Hablar con un asesor</a>
+                </div>
+              </div>
+
+              <div id="pasos" class="relative lg:py-6">
+                <div class="absolute top-3 bottom-3 left-[21px] w-0.5 bg-white/15 lg:top-9 lg:bottom-9" aria-hidden="true">
+                  <div id="pasos-relleno" class="h-full w-full origin-top bg-white"></div>
+                </div>
+                <ol class="relative space-y-14">
+                <li class="paso relative flex gap-6">
+                  <span class="paso-num relative flex size-11 shrink-0 items-center justify-center rounded-full bg-marca-800 text-lg font-bold text-white ring-1 ring-white/25">1</span>
+                  <div class="pt-1.5">
+                    <h3 class="text-xl font-bold">Nos cuentas tu situación</h3>
+                    <p class="mt-2 text-base leading-relaxed text-marca-100">Estado donde vives, quiénes necesitan cobertura y qué es importante para ti. Toma pocos minutos.</p>
+                  </div>
+                </li>
+                <li class="paso relative flex gap-6">
+                  <span class="paso-num relative flex size-11 shrink-0 items-center justify-center rounded-full bg-marca-800 text-lg font-bold text-white ring-1 ring-white/25">2</span>
+                  <div class="pt-1.5">
+                    <h3 class="text-xl font-bold">Comparamos y te explicamos</h3>
+                    <p class="mt-2 text-base leading-relaxed text-marca-100">Revisamos si calificas para ayuda del gobierno y te mostramos, lado a lado, las opciones que aplican a tu caso.</p>
+                  </div>
+                </li>
+                <li class="paso relative flex gap-6">
+                  <span class="paso-num relative flex size-11 shrink-0 items-center justify-center rounded-full bg-marca-800 text-lg font-bold text-white ring-1 ring-white/25">3</span>
+                  <div class="pt-1.5">
+                    <h3 class="text-xl font-bold">Te inscribimos y te acompañamos</h3>
+                    <p class="mt-2 text-base leading-relaxed text-marca-100">Hacemos el trámite contigo y seguimos ahí para renovaciones, cambios de vida y cualquier duda con tu póliza.</p>
+                  </div>
+                </li>
+                </ol>
+              </div>
             </div>
-            <ol class="space-y-6">
-              <li class="flex gap-5">
-                <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-marca-900">1</span>
-                <div>
-                  <h3 class="text-lg font-bold">Nos cuentas tu situación</h3>
-                  <p class="mt-1 text-base leading-relaxed text-marca-100">Estado donde vives, quiénes necesitan cobertura y qué es importante para ti.</p>
-                </div>
-              </li>
-              <li class="flex gap-5">
-                <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-marca-900">2</span>
-                <div>
-                  <h3 class="text-lg font-bold">Comparamos y te explicamos</h3>
-                  <p class="mt-1 text-base leading-relaxed text-marca-100">Revisamos si calificas para ayuda del gobierno y te mostramos las opciones que aplican a tu caso.</p>
-                </div>
-              </li>
-              <li class="flex gap-5">
-                <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-marca-900">3</span>
-                <div>
-                  <h3 class="text-lg font-bold">Te inscribimos y te acompañamos</h3>
-                  <p class="mt-1 text-base leading-relaxed text-marca-100">Hacemos el trámite contigo y seguimos ahí para renovaciones, cambios y dudas.</p>
-                </div>
-              </li>
-            </ol>
           </div>
         </div>
       </section>
 
-      <!-- 4. BENEFICIOS + TIPOS DE SEGURO -->
-      <section aria-labelledby="beneficios-titulo" class="bg-white py-24 lg:py-32">
-        <div class="mx-auto max-w-6xl px-5 lg:px-8">
-          <div class="mx-auto max-w-3xl text-center">
-            <p class="eyebrow">Por qué con nosotros</p>
-            <h2 id="beneficios-titulo" class="mt-4 text-3xl font-bold tracking-tight text-balance text-marca-900 lg:text-5xl">
+      <!-- 4. BENEFICIOS -->
+      <section aria-labelledby="beneficios-titulo" class="bg-white py-24 lg:py-36">
+        <div class="mx-auto max-w-7xl px-5 lg:px-8">
+          <div class="max-w-3xl">
+            <p data-reveal class="eyebrow">Por qué con nosotros</p>
+            <h2 id="beneficios-titulo" data-split class="mt-5 text-4xl font-bold tracking-tight text-marca-900 lg:text-6xl">
               Cobertura para todo tipo de personas, en cualquier ciudad del país
             </h2>
           </div>
 
-          <div class="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            <article>
-              <div class="flex size-12 items-center justify-center rounded-xl bg-marca-50 text-marca-700">
+          <div data-stagger class="mt-16 grid gap-5 lg:grid-cols-3">
+            <!-- Mapa -->
+            <article class="relative overflow-hidden rounded-3xl bg-marca-900 p-8 text-white sm:p-10 lg:col-span-2 lg:row-span-2">
+              <div class="flex items-center gap-3 text-marca-200">
+                <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span class="text-sm font-bold tracking-[0.18em] uppercase">Todo EE. UU.</span>
+              </div>
+              <h3 class="mt-4 max-w-md text-2xl font-bold tracking-tight lg:text-3xl">Te atendemos donde vivas</h3>
+              <p class="mt-3 max-w-lg text-base leading-relaxed text-marca-100">Por teléfono o WhatsApp, desde cualquier ciudad de Estados Unidos. Sin desplazarte ni pedir el día libre.</p>
+              <div id="mapa" class="mt-8 lg:mt-6">
+                <!-- mapa-usa -->
+              </div>
+            </article>
+
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-fondo p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5">
+              <div class="flex size-12 items-center justify-center rounded-2xl bg-marca-700 text-white transition-transform duration-500 ease-in-out group-hover:-rotate-6">
                 <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               </div>
-              <h3 class="mt-5 text-xl font-bold text-marca-900">Entiendes cada palabra antes de firmar</h3>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Entiendes cada palabra antes de firmar</h3>
               <p class="mt-2 text-base leading-relaxed text-slate-600">Toda la asesoría es en español. Nada de firmar algo en inglés que no sabes qué dice.</p>
             </article>
-            <article>
-              <div class="flex size-12 items-center justify-center rounded-xl bg-marca-50 text-marca-700">
+
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-fondo p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5">
+              <div class="flex size-12 items-center justify-center rounded-2xl bg-marca-700 text-white transition-transform duration-500 ease-in-out group-hover:-rotate-6">
                 <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
               </div>
-              <h3 class="mt-5 text-xl font-bold text-marca-900">Una opción para cada situación</h3>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Una opción para cada situación</h3>
               <p class="mt-2 text-base leading-relaxed text-slate-600">Atendemos a todas las personas, sin importar su estatus. Si un plan no aplica para ti, buscamos otro que sí.</p>
             </article>
-            <article>
-              <div class="flex size-12 items-center justify-center rounded-xl bg-marca-50 text-marca-700">
+
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-fondo p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5">
+              <div class="flex size-12 items-center justify-center rounded-2xl bg-marca-700 text-white transition-transform duration-500 ease-in-out group-hover:-rotate-6">
                 <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               </div>
-              <h3 class="mt-5 text-xl font-bold text-marca-900">Pagas menos cada mes si calificas</h3>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Pagas menos cada mes si calificas</h3>
               <p class="mt-2 text-base leading-relaxed text-slate-600">Revisamos si tienes derecho a crédito fiscal del Marketplace para bajar tu prima mensual.</p>
             </article>
-            <article>
-              <div class="flex size-12 items-center justify-center rounded-xl bg-marca-50 text-marca-700">
-                <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              </div>
-              <h3 class="mt-5 text-xl font-bold text-marca-900">Te atendemos donde vivas</h3>
-              <p class="mt-2 text-base leading-relaxed text-slate-600">Por teléfono o WhatsApp, desde cualquier ciudad de Estados Unidos. Sin desplazarte ni pedir el día libre.</p>
-            </article>
-            <article>
-              <div class="flex size-12 items-center justify-center rounded-xl bg-marca-50 text-marca-700">
+
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-fondo p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5">
+              <div class="flex size-12 items-center justify-center rounded-2xl bg-marca-700 text-white transition-transform duration-500 ease-in-out group-hover:-rotate-6">
                 <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               </div>
-              <h3 class="mt-5 text-xl font-bold text-marca-900">Sabes qué cubre tu póliza</h3>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Sabes qué cubre tu póliza</h3>
               <p class="mt-2 text-base leading-relaxed text-slate-600">Te explicamos coberturas, exclusiones y costos de cada plan antes de que decidas. Sin sorpresas después.</p>
             </article>
-            <article>
-              <div class="flex size-12 items-center justify-center rounded-xl bg-marca-50 text-marca-700">
+
+            <article data-spotlight class="group rounded-3xl border border-marca-100 bg-fondo p-8 transition-all duration-500 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-marca-900/5">
+              <div class="flex size-12 items-center justify-center rounded-2xl bg-marca-700 text-white transition-transform duration-500 ease-in-out group-hover:-rotate-6">
                 <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
               </div>
-              <h3 class="mt-5 text-xl font-bold text-marca-900">Alguien a quien llamar después</h3>
+              <h3 class="mt-6 text-xl font-bold text-marca-900">Alguien a quien llamar después</h3>
               <p class="mt-2 text-base leading-relaxed text-slate-600">Renovaciones, mudanzas, un bebé en camino o un cambio de trabajo: seguimos contigo para ajustar tu cobertura.</p>
             </article>
           </div>
 
           <!-- Pestañas por tipo de seguro -->
-          <div class="mt-24 rounded-3xl border border-marca-100 bg-fondo p-6 sm:p-10 lg:p-12">
-            <h3 class="text-2xl font-bold tracking-tight text-marca-900 lg:text-3xl">¿Qué seguro necesitas?</h3>
-            <div role="tablist" aria-label="Tipos de seguro" class="mt-6 flex gap-2 overflow-x-auto pb-1" id="pestanas">
-              <button role="tab" id="tab-obamacare" aria-controls="panel-obamacare" aria-selected="true" class="shrink-0 rounded-full px-5 py-2.5 text-base font-semibold transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98] aria-selected:bg-marca-700 aria-selected:text-white aria-[selected=false]:bg-white aria-[selected=false]:text-marca-800 aria-[selected=false]:ring-1 aria-[selected=false]:ring-marca-200">Obamacare</button>
-              <button role="tab" id="tab-oasis" aria-controls="panel-oasis" aria-selected="false" tabindex="-1" class="shrink-0 rounded-full px-5 py-2.5 text-base font-semibold transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98] aria-selected:bg-marca-700 aria-selected:text-white aria-[selected=false]:bg-white aria-[selected=false]:text-marca-800 aria-[selected=false]:ring-1 aria-[selected=false]:ring-marca-200">Planes Oasis</button>
-              <button role="tab" id="tab-complementarios" aria-controls="panel-complementarios" aria-selected="false" tabindex="-1" class="shrink-0 rounded-full px-5 py-2.5 text-base font-semibold transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98] aria-selected:bg-marca-700 aria-selected:text-white aria-[selected=false]:bg-white aria-[selected=false]:text-marca-800 aria-[selected=false]:ring-1 aria-[selected=false]:ring-marca-200">Complementarios</button>
-            </div>
-
-            <div id="panel-obamacare" role="tabpanel" aria-labelledby="tab-obamacare" tabindex="0" class="mt-8 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+          <div data-reveal class="mt-24 rounded-[2rem] border border-marca-100 bg-fondo p-5 sm:p-10 lg:mt-32 lg:p-14">
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h4 class="text-xl font-bold text-marca-900">Obamacare (Ley de Cuidado de Salud a Bajo Precio)</h4>
-                <p class="mt-3 text-base leading-relaxed text-slate-600">Planes médicos del Marketplace con beneficios esenciales: consultas, emergencias, hospitalización, maternidad, medicamentos recetados, salud mental y servicios preventivos. Según tus ingresos, puedes recibir crédito fiscal que reduce tu pago mensual.</p>
-                <a href="#cotizar" class="btn-cta mt-6">Ver si califico</a>
+                <p class="eyebrow">Nuestros seguros</p>
+                <h3 class="mt-4 text-3xl font-bold tracking-tight text-marca-900 lg:text-4xl">¿Qué seguro necesitas?</h3>
               </div>
-              <ul class="space-y-3 text-base text-slate-700">
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No te pueden negar el plan por condiciones preexistentes</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Servicios preventivos incluidos en los planes</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Ayuda económica según ingresos y tamaño del hogar</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Requiere ciudadanía o un estatus migratorio elegible</li>
-              </ul>
-            </div>
-
-            <div id="panel-oasis" role="tabpanel" aria-labelledby="tab-oasis" tabindex="0" hidden class="mt-8 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
               <div>
-                <h4 class="text-xl font-bold text-marca-900">Planes Oasis</h4>
-                <p class="mt-3 text-base leading-relaxed text-slate-600">Una alternativa de cobertura médica para quienes no califican para Obamacare o buscan otras opciones. Te explicamos qué incluye cada plan, sus costos y sus condiciones para que elijas con claridad.</p>
-                <a href="#cotizar" class="btn-cta mt-6">Consultar planes Oasis</a>
+                <div class="relative inline-flex rounded-full bg-white p-1.5 ring-1 ring-marca-100">
+                  <span id="pestanas-indicador" class="absolute top-1.5 bottom-1.5 left-0 rounded-full bg-marca-700 shadow-md shadow-marca-900/20" aria-hidden="true"></span>
+                  <div role="tablist" aria-label="Tipos de seguro" id="pestanas" class="relative flex">
+                    <button role="tab" id="tab-obamacare" aria-controls="panel-obamacare" aria-selected="true" class="shrink-0 rounded-full px-2.5 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors duration-300 ease-in-out focus-visible:outline-3 focus-visible:outline-marca-700 aria-selected:text-white aria-[selected=false]:text-marca-800 aria-[selected=false]:hover:text-marca-600 sm:px-6 sm:text-base">Obamacare</button>
+                    <button role="tab" id="tab-oasis" aria-controls="panel-oasis" aria-selected="false" tabindex="-1" class="shrink-0 rounded-full px-2.5 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors duration-300 ease-in-out focus-visible:outline-3 focus-visible:outline-marca-700 aria-selected:text-white aria-[selected=false]:text-marca-800 aria-[selected=false]:hover:text-marca-600 sm:px-6 sm:text-base"><span class="hidden sm:inline">Planes </span>Oasis</button>
+                    <button role="tab" id="tab-complementarios" aria-controls="panel-complementarios" aria-selected="false" tabindex="-1" class="shrink-0 rounded-full px-2.5 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors duration-300 ease-in-out focus-visible:outline-3 focus-visible:outline-marca-700 aria-selected:text-white aria-[selected=false]:text-marca-800 aria-[selected=false]:hover:text-marca-600 sm:px-6 sm:text-base">Complementarios</button>
+                  </div>
+                </div>
               </div>
-              <ul class="space-y-3 text-base text-slate-700">
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Opción para personas sin acceso al Marketplace</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Te asesoramos sobre coberturas y condiciones de cada plan</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Puede combinarse con seguros complementarios</li>
-              </ul>
             </div>
 
-            <div id="panel-complementarios" role="tabpanel" aria-labelledby="tab-complementarios" tabindex="0" hidden class="mt-8 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-              <div>
-                <h4 class="text-xl font-bold text-marca-900">Seguros complementarios</h4>
-                <p class="mt-3 text-base leading-relaxed text-slate-600">Amplían tu protección donde tu plan médico no llega. Algunos pagan dinero directamente a ti ante un accidente u hospitalización, para que lo uses en lo que necesites.</p>
-                <a href="#cotizar" class="btn-cta mt-6">Ampliar mi protección</a>
+            <div class="mt-10 border-t border-marca-100 pt-10">
+              <div id="panel-obamacare" role="tabpanel" aria-labelledby="tab-obamacare" tabindex="0" class="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+                <div>
+                  <h4 class="text-2xl font-bold tracking-tight text-marca-900">Obamacare <span class="font-medium text-slate-500">· Ley de Cuidado de Salud a Bajo Precio</span></h4>
+                  <p class="mt-4 text-base leading-relaxed text-slate-600 lg:text-lg">Planes médicos del Marketplace con beneficios esenciales: consultas, emergencias, hospitalización, maternidad, medicamentos recetados, salud mental y servicios preventivos. Según tus ingresos, puedes recibir crédito fiscal que reduce tu pago mensual.</p>
+                  <a href="#cotizar" data-magnetico class="btn-cta mt-8">Ver si califico</a>
+                </div>
+                <ul class="space-y-4 text-base text-slate-700">
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No te pueden negar el plan por condiciones preexistentes</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Servicios preventivos incluidos en los planes</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Ayuda económica según ingresos y tamaño del hogar</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Requiere ciudadanía o un estatus migratorio elegible</li>
+                </ul>
               </div>
-              <ul class="grid grid-cols-2 gap-3 text-base text-slate-700">
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Dental</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Visión</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Vida</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Accidentes</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Hospitalización</li>
-                <li class="flex gap-3"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Enfermedades graves</li>
-              </ul>
+
+              <div id="panel-oasis" role="tabpanel" aria-labelledby="tab-oasis" tabindex="0" hidden class="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+                <div>
+                  <h4 class="text-2xl font-bold tracking-tight text-marca-900">Planes Oasis</h4>
+                  <p class="mt-4 text-base leading-relaxed text-slate-600 lg:text-lg">Una alternativa de cobertura médica para quienes no califican para Obamacare o buscan otras opciones. Te explicamos qué incluye cada plan, sus costos y sus condiciones para que elijas con claridad.</p>
+                  <a href="#cotizar" data-magnetico class="btn-cta mt-8">Consultar planes Oasis</a>
+                </div>
+                <ul class="space-y-4 text-base text-slate-700">
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Opción para personas sin acceso al Marketplace</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Te asesoramos sobre coberturas y condiciones de cada plan</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Puede combinarse con seguros complementarios</li>
+                </ul>
+              </div>
+
+              <div id="panel-complementarios" role="tabpanel" aria-labelledby="tab-complementarios" tabindex="0" hidden class="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+                <div>
+                  <h4 class="text-2xl font-bold tracking-tight text-marca-900">Seguros complementarios</h4>
+                  <p class="mt-4 text-base leading-relaxed text-slate-600 lg:text-lg">Amplían tu protección donde tu plan médico no llega. Algunos pagan dinero directamente a ti ante un accidente u hospitalización, para que lo uses en lo que necesites.</p>
+                  <a href="#cotizar" data-magnetico class="btn-cta mt-8">Ampliar mi protección</a>
+                </div>
+                <ul class="grid grid-cols-2 gap-3 text-base text-slate-700">
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Dental</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Visión</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Vida</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Accidentes</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Hospitalización</li>
+                  <li class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-marca-100"><svg class="mt-0.5 size-5 shrink-0 text-marca-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Enfermedades graves</li>
+                </ul>
+              </div>
             </div>
 
-            <p class="mt-10 border-t border-marca-100 pt-6 text-sm leading-relaxed text-slate-500">
+            <p class="mt-10 text-sm leading-relaxed text-slate-500">
               Las coberturas, beneficios, costos y requisitos dependen de cada plan, aseguradora y póliza, así como del estado donde vives. Tu asesor te explicará las condiciones concretas antes de contratar.
             </p>
           </div>
@@ -405,122 +482,141 @@
       </section>
 
       <!-- 5. TESTIMONIOS (se muestran solo con testimonios reales en src/config.ts) -->
-      <section id="testimonios" hidden aria-labelledby="testimonios-titulo" class="py-24 lg:py-32">
-        <div class="mx-auto max-w-6xl px-5 lg:px-8">
-          <div class="mx-auto max-w-3xl text-center">
+      <section id="testimonios" hidden aria-labelledby="testimonios-titulo" class="py-24 lg:py-36">
+        <div class="mx-auto max-w-7xl px-5 lg:px-8">
+          <div class="max-w-3xl">
             <p class="eyebrow">Clientes reales</p>
-            <h2 id="testimonios-titulo" class="mt-4 text-3xl font-bold tracking-tight text-balance text-marca-900 lg:text-5xl">Familias que ya duermen tranquilas</h2>
+            <h2 id="testimonios-titulo" class="mt-5 text-4xl font-bold tracking-tight text-marca-900 lg:text-6xl">Familias que ya duermen tranquilas</h2>
           </div>
-          <div id="testimonios-lista" class="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+          <div id="testimonios-lista" class="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3"></div>
         </div>
       </section>
 
       <!-- 6. FAQ -->
-      <section aria-labelledby="faq-titulo" class="border-t border-marca-100 py-24 lg:py-32">
-        <div class="mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:px-8">
-          <div>
-            <p class="eyebrow">Preguntas frecuentes</p>
-            <h2 id="faq-titulo" class="mt-4 text-3xl font-bold tracking-tight text-balance text-marca-900 lg:text-5xl">Resolvemos tus dudas antes de que llames</h2>
-            <p class="mt-6 text-lg leading-relaxed text-slate-600">¿No ves tu pregunta? Un asesor te responde sin compromiso.</p>
-            <a href="#cotizar" class="btn-cta mt-8">Hablar con un asesor</a>
+      <section aria-labelledby="faq-titulo" class="py-24 lg:py-36">
+        <div class="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:gap-24 lg:px-8">
+          <div class="lg:sticky lg:top-32 lg:self-start">
+            <p data-reveal class="eyebrow">Preguntas frecuentes</p>
+            <h2 id="faq-titulo" data-split class="mt-5 text-4xl font-bold tracking-tight text-marca-900 lg:text-6xl">Resolvemos tus dudas antes de que llames</h2>
+            <p data-reveal class="mt-7 text-lg leading-relaxed text-slate-600">¿No ves tu pregunta? Un asesor te responde sin compromiso.</p>
           </div>
 
-          <div class="divide-y divide-marca-100 border-y border-marca-100">
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+          <div data-stagger class="border-t border-marca-100">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Puedo tener seguro médico sin importar mi estatus migratorio?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>Sí, hay opciones para todas las personas. Obamacare exige ciudadanía o un estatus migratorio elegible; si no calificas, revisamos contigo alternativas como los planes Oasis y los seguros complementarios. Te decimos con claridad qué aplica a tu caso y tratamos tus datos con total confidencialidad.</p>
               </div>
             </details>
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Cuánto me cuesta su asesoría?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>Nada. La cotización y la asesoría no tienen costo para ti. Solo pagas la prima del plan que elijas, directamente a la aseguradora.</p>
               </div>
             </details>
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Cuándo me puedo inscribir?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>La inscripción abierta de Obamacare para 2027 va del 1 de noviembre al 15 de enero en la mayoría de los estados. Fuera de esas fechas puedes inscribirte si tienes un evento de vida que abre un periodo especial (mudarte, perder tu cobertura, casarte o tener un bebé). Muchos seguros complementarios se pueden contratar en cualquier momento del año.</p>
               </div>
             </details>
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Qué cubre exactamente mi plan?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>Depende de cada plan y póliza. Los planes de Obamacare incluyen los beneficios esenciales de salud; los planes Oasis y los complementarios tienen sus propias coberturas y condiciones. Antes de contratar te explicamos qué cubre, qué no, el deducible y lo que pagarías en cada consulta.</p>
               </div>
             </details>
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Atienden en mi estado o ciudad?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>Sí. Trabajamos a distancia, por teléfono y WhatsApp, con clientes de cualquier ciudad de Estados Unidos. No necesitas visitar una oficina.</p>
               </div>
             </details>
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Qué necesito para cotizar?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>Para empezar basta con tu código postal, las edades de quienes necesitan cobertura y un estimado de los ingresos del hogar (para saber si calificas para ayuda). Los documentos se piden después, solo los necesarios para el plan que elijas.</p>
               </div>
             </details>
-            <details class="group" name="faq">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left text-lg font-semibold text-marca-900 transition-all duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700">
+            <details class="border-b border-marca-100" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-left text-lg font-semibold text-marca-900 transition-colors duration-300 ease-in-out hover:text-marca-700 focus-visible:outline-3 focus-visible:outline-marca-700 lg:text-xl">
                 ¿Son ustedes el gobierno o HealthCare.gov?
-                <svg class="chevron size-5 shrink-0 text-marca-700 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-marca-50 text-marca-700"><svg class="chevron size-4 transition-transform duration-400 ease-[var(--ease-salida)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
               </summary>
-              <div class="pb-6 text-base leading-relaxed text-slate-600">
+              <div class="pr-12 pb-7 text-base leading-relaxed text-slate-600">
                 <p>No. Somos una agencia de seguros privada. Te ayudamos a comparar y a inscribirte en planes del Marketplace y de otras aseguradoras, pero no somos una entidad del gobierno.</p>
               </div>
             </details>
+          </div>
+        </div>
+
+        <!-- Cierre con CTA -->
+        <div class="mx-auto mt-24 max-w-7xl px-5 lg:mt-36 lg:px-8">
+          <div id="cierre" class="relative overflow-hidden rounded-[2rem] bg-marca-700 px-8 py-16 text-center text-white sm:px-12 lg:py-24">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.12)_1px,transparent_1px)] bg-[size:22px_22px] [mask-image:radial-gradient(ellipse_at_center,#000,transparent_70%)]" aria-hidden="true"></div>
+            <svg id="cierre-cruz" class="pointer-events-none absolute -top-24 -right-24 size-80 text-white/[0.06]" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+              <path d="M36 0h28a6 6 0 0 1 6 6v24h24a6 6 0 0 1 6 6v28a6 6 0 0 1-6 6H70v24a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6V70H6a6 6 0 0 1-6-6V36a6 6 0 0 1 6-6h24V6a6 6 0 0 1 6-6z" />
+            </svg>
+            <div class="relative mx-auto max-w-3xl">
+              <h2 data-split class="text-4xl font-bold tracking-tight lg:text-6xl">Tu tranquilidad empieza con una llamada</h2>
+              <p data-reveal class="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-marca-100">Cuéntanos tu caso hoy y descubre qué cobertura te corresponde, antes de que cierre la inscripción abierta.</p>
+              <div data-reveal class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <a href="#cotizar" data-magnetico class="btn-cta text-lg">Quiero mi cotización gratis</a>
+                <a data-contacto="telefono" hidden class="inline-flex items-center gap-2 rounded-xl px-6 py-4 font-semibold text-white ring-1 ring-white/30 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:bg-white/10 active:scale-[0.98]">
+                  Llamar al <span data-contacto-texto="telefono"></span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
     <!-- 7. FOOTER -->
-    <footer class="bg-marca-900 pb-28 text-marca-100 md:pb-0">
-      <div class="mx-auto max-w-6xl px-5 py-14 lg:px-8">
-        <div class="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-          <div class="flex items-center gap-3">
-            <img src="/logo-icono.webp" alt="" width="44" height="44" class="size-11 rounded-lg bg-white p-1" />
+    <footer class="bg-marca-950 pb-28 text-marca-100 md:pb-0">
+      <div class="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+        <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+          <div class="flex items-center gap-4">
+            <img src="./src/assets/logo-icono.webp" alt="" width="48" height="48" class="size-12 rounded-xl bg-white p-1" />
             <p class="leading-tight">
-              <span class="block font-extrabold text-white">Medical Insurance GE LLC</span>
-              <span class="block text-sm">Cuidamos de tu salud y de tu bolsillo.</span>
+              <span class="block text-lg font-extrabold text-white">Medical Insurance GE LLC</span>
+              <span class="mt-1 block text-sm">Cuidamos de tu salud y de tu bolsillo.</span>
             </p>
           </div>
           <ul class="space-y-2 text-sm">
-            <li data-contacto="telefono" hidden><a class="transition-all duration-300 ease-in-out hover:text-white" data-contacto-enlace="telefono"><span data-contacto-texto="telefono"></span></a></li>
-            <li data-contacto="email" hidden><a class="transition-all duration-300 ease-in-out hover:text-white" data-contacto-enlace="email"><span data-contacto-texto="email"></span></a></li>
+            <li data-contacto="telefono" hidden><a class="transition-colors duration-300 ease-in-out hover:text-white" data-contacto-enlace="telefono"><span data-contacto-texto="telefono"></span></a></li>
+            <li data-contacto="email" hidden><a class="transition-colors duration-300 ease-in-out hover:text-white" data-contacto-enlace="email"><span data-contacto-texto="email"></span></a></li>
             <li data-contacto="horario" hidden><span data-contacto-texto="horario"></span></li>
           </ul>
         </div>
-        <p class="mt-10 max-w-4xl text-xs leading-relaxed text-marca-200">
+        <p class="mt-12 max-w-4xl text-xs leading-relaxed text-marca-300">
           Medical Insurance GE LLC es una agencia de seguros privada y no está afiliada ni respaldada por el gobierno de Estados Unidos, HealthCare.gov ni los mercados estatales. Las coberturas, beneficios, costos y la elegibilidad para ayuda económica dependen de cada plan, aseguradora, póliza y estado. La disponibilidad de los productos varía según el estado.<span data-contacto="npn" hidden> NPN: <span data-contacto-texto="npn"></span>.</span>
         </p>
-        <div class="mt-8 flex flex-col gap-4 border-t border-white/10 pt-8 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div class="mt-10 flex flex-col gap-4 border-t border-white/10 pt-8 text-sm sm:flex-row sm:items-center sm:justify-between">
           <p>© <span id="anio">2026</span> Medical Insurance GE LLC. Todos los derechos reservados.</p>
           <nav aria-label="Enlaces legales">
             <ul class="flex flex-wrap gap-x-6 gap-y-2">
-              <li><a href="/legal.html#privacidad" class="transition-all duration-300 ease-in-out hover:text-white">Privacidad</a></li>
-              <li><a href="/legal.html#terminos" class="transition-all duration-300 ease-in-out hover:text-white">Términos de uso</a></li>
-              <li><a href="/legal.html#aviso" class="transition-all duration-300 ease-in-out hover:text-white">Aviso legal</a></li>
+              <li><a href="legal.html#privacidad" class="transition-colors duration-300 ease-in-out hover:text-white">Privacidad</a></li>
+              <li><a href="legal.html#terminos" class="transition-colors duration-300 ease-in-out hover:text-white">Términos de uso</a></li>
+              <li><a href="legal.html#aviso" class="transition-colors duration-300 ease-in-out hover:text-white">Aviso legal</a></li>
             </ul>
           </nav>
         </div>
@@ -530,7 +626,7 @@
     <!-- CTA fijo en móvil: aparece al pasar el hero -->
     <div
       id="cta-movil"
-      class="fixed inset-x-0 bottom-0 z-40 translate-y-full border-t border-marca-100 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md transition-transform duration-300 ease-in-out md:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 translate-y-full border-t border-marca-100 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md transition-transform duration-500 ease-[var(--ease-salida)] md:hidden"
       aria-hidden="true"
     >
       <div class="flex gap-2">
