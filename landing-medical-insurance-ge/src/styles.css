@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/plus-jakarta-sans/wght.css';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Marca: azul del logo + azul noche para textos. */
+  --color-marca-50: #eef4fa;
+  --color-marca-100: #d9e7f3;
+  --color-marca-200: #b3cfe6;
+  --color-marca-600: #0a5d9c;
+  --color-marca-700: #004e86;
+  --color-marca-800: #0b3b63;
+  --color-marca-900: #0b2a47;
+
+  /* Acento: reservado solo para los botones de conversión (contraste AA con blanco). */
+  --color-acento: #c2410c;
+  --color-acento-hover: #9a3412;
+
+  --color-fondo: #fbfaf6;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+body {
+  @apply bg-fondo font-sans text-slate-700 antialiased;
+}
+
+@utility btn-cta {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-acento px-6 py-4 text-base font-bold text-white shadow-lg shadow-orange-900/15 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:bg-acento-hover active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-acento;
+}
+
+@utility btn-secundario {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-marca-200 bg-white px-6 py-4 text-base font-semibold text-marca-800 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:border-marca-700 active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-marca-700;
+}
+
+@utility campo {
+  @apply block w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-marca-900 placeholder:text-slate-400 transition-all duration-300 ease-in-out focus:border-marca-700 focus:ring-4 focus:ring-marca-100 focus:outline-none aria-invalid:border-red-600 aria-invalid:ring-red-100;
+}
+
+@utility eyebrow {
+  @apply text-sm font-bold tracking-widest text-marca-700 uppercase;
+}
+
+/* Acordeón de FAQs: animación de apertura con detalles nativos (accesibles sin JS). */
+details summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .chevron {
+  transform: rotate(180deg);
+}
+details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.3s ease-in-out,
+    content-visibility 0.3s allow-discrete;
+}
+details[open]::details-content {
+  block-size: auto;
+}
+:root {
+  interpolate-size: allow-keywords;
+}
