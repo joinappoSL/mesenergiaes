@@ -1,0 +1,10 @@
+TÍTULO (Shorts / YouTube):
+CLAUDE.md: la memoria de Claude Code
+
+DESCRIPCIÓN:
+Un simple archivo de texto le da memoria a Claude Code. Se llama CLAUDE.md y lo lee al empezar cada sesión.
+
+Pon tus reglas una vez: idioma, comandos, lo que no debe tocar. Se acabó repetirte cada día.
+
+HASHTAGS:
+#IA #InteligenciaArtificial #Claude #ClaudeCode #Anthropic #Automatizacion #Productividad #Tecnologia #AprendeIA #Appo #Programacion #Desarrollo #Tips

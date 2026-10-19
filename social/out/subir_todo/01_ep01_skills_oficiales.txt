@@ -1,0 +1,12 @@
+TÍTULO (Shorts / YouTube):
+Claude ya crea PDF, Word, Excel y PowerPoint
+
+DESCRIPCIÓN:
+Claude ya sabe crear PDF, Word, Excel y PowerPoint. Se lo pides y te devuelve el archivo listo, no solo texto.
+
+Son skills oficiales que Anthropic publica gratis en el repo anthropics/skills.
+
+¿Quieres algo así en tu empresa? Auditoría gratis en joinappo.com
+
+HASHTAGS:
+#IA #InteligenciaArtificial #Claude #ClaudeCode #Anthropic #Automatizacion #Productividad #Tecnologia #AprendeIA #Appo #Skills #Excel #PowerPoint

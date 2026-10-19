@@ -1,0 +1,10 @@
+TÍTULO (Shorts / YouTube):
+Hooks: que Claude ejecute algo solo
+
+DESCRIPCIÓN:
+Los hooks de Claude Code son acciones que se disparan antes o después de que Claude use una herramienta: formatear código, correr tests o bloquear un comando peligroso.
+
+Se configuran una vez en .claude/settings.json y ya.
+
+HASHTAGS:
+#IA #InteligenciaArtificial #Claude #ClaudeCode #Anthropic #Automatizacion #Productividad #Tecnologia #AprendeIA #Appo #Hooks #Programacion #Automatizacion

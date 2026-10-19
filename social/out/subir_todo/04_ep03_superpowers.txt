@@ -1,0 +1,12 @@
+TÍTULO (Shorts / YouTube):
+El repo que hace que Claude piense antes de programar
+
+DESCRIPCIÓN:
+obra/superpowers es una colección de skills muy popular en GitHub. Hace que Claude pregunte, diseñe y te enseñe el plan antes de tocar código, y que trabaje con pruebas y subagentes.
+
+Menos código a ciegas, más resultados.
+
+¿Lo has probado?
+
+HASHTAGS:
+#IA #InteligenciaArtificial #Claude #ClaudeCode #Anthropic #Automatizacion #Productividad #Tecnologia #AprendeIA #Appo #GitHub #Programacion #Desarrollo

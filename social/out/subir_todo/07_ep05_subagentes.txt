@@ -1,0 +1,10 @@
+TÍTULO (Shorts / YouTube):
+Varios Claude trabajando a la vez: subagentes
+
+DESCRIPCIÓN:
+Los subagentes de Claude Code reparten una tarea en partes y las ejecutan en paralelo. Cada uno trabaja aparte y solo devuelve el resultado.
+
+Buscar, revisar y probar a la vez, no uno detrás de otro.
+
+HASHTAGS:
+#IA #InteligenciaArtificial #Claude #ClaudeCode #Anthropic #Automatizacion #Productividad #Tecnologia #AprendeIA #Appo #Subagentes #AgentesIA #Programacion

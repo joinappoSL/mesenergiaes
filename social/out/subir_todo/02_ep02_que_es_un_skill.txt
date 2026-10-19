@@ -1,0 +1,12 @@
+TÍTULO (Shorts / YouTube):
+Qué es un skill de Claude
+
+DESCRIPCIÓN:
+Un skill de Claude es una carpeta con un archivo SKILL.md dentro. Claude lo lee solo cuando tu petición encaja, y si no, no gasta nada.
+
+Lo enseñas una vez y lo recuerda siempre.
+
+Guárdalo para cuando lo necesites y compártelo con quien use IA.
+
+HASHTAGS:
+#IA #InteligenciaArtificial #Claude #ClaudeCode #Anthropic #Automatizacion #Productividad #Tecnologia #AprendeIA #Appo #Skills #AgentesIA
