@@ -15,7 +15,12 @@ spec = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 out = Path(spec["out"])
 work = out.with_suffix("")
 work.mkdir(parents=True, exist_ok=True)
-W, H, FPS, XF, OUTRO = 1080, 1920, 60, 0.35, 1.8
+FMT = spec.get("formato", "9x16")
+W, H = (1080, 1350) if FMT == "4x5" else (1080, 1920)
+FPS, XF, OUTRO = 60, 0.35, 1.8
+# Posiciones (y) que dependen del formato.
+LAY = {"9x16": dict(logo=50, title=250, cap=560, o1=520, o2=330, logo_v=620, logo_v_dy=160),
+       "4x5": dict(logo=30, title=215, cap=150, o1=300, o2=150, logo_v=460, logo_v_dy=120)}[FMT]
 
 def run(cmd):
     subprocess.run(cmd, check=True)
@@ -38,7 +43,7 @@ for i, c in enumerate(clips):
     if not dst.exists():
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", c, "-an", "-vf",
              f"scale=720:1280:flags=lanczos,minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,"
-             f"scale={W}:{H}:flags=lanczos,setsar=1,tpad=stop_mode=clone:stop_duration=3,trim=0:{scene_len:.3f},setpts=PTS-STARTPTS",
+             f"scale=1080:1920:flags=lanczos,crop={W}:{H}:0:(ih-{H})/2,setsar=1,tpad=stop_mode=clone:stop_duration=3,trim=0:{scene_len:.3f},setpts=PTS-STARTPTS",
              "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-pix_fmt", "yuv420p", str(dst)])
     scenes.append(dst)
 
@@ -47,7 +52,7 @@ outro = work / "outro.mp4"
 if not outro.exists():
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"color=c=white:s={W}x{H}:r={FPS}:d={OUTRO + XF}",
          "-i", str(here / "logo_v.png"), "-filter_complex",
-         f"[1:v]scale=620:-1[lg];[0:v][lg]overlay=(W-w)/2:(H-h)/2-160,format=yuv420p",
+         f"[1:v]scale={LAY['logo_v']}:-1[lg];[0:v][lg]overlay=(W-w)/2:(H-h)/2-{LAY['logo_v_dy']},format=yuv420p",
          "-c:v", "libx264", "-preset", "fast", "-crf", "16", str(outro)])
 
 # 3. Une las escenas con transiciones.
@@ -106,10 +111,10 @@ ass = [
     "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {W}", f"PlayResY: {H}", "WrapStyle: 0", "",
     "[V4+ Styles]",
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-    f"Style: Cap,Montserrat ExtraBold,96,{WHITE},{WHITE},{BLUE},&H64000000,0,0,0,0,100,100,0,0,1,9,5,2,70,70,560,1",
-    f"Style: Title,Montserrat ExtraBold,66,{WHITE},{WHITE},{BLUE},{BLUE},0,0,0,0,100,100,0,0,3,24,0,8,70,70,250,1",
-    f"Style: Outro1,Montserrat ExtraBold,64,{BLUE},{BLUE},{WHITE},{WHITE},0,0,0,0,100,100,0,0,1,0,0,2,80,80,520,1",
-    f"Style: Outro2,Montserrat ExtraBold,58,{WHITE},{WHITE},{TURQ},{TURQ},0,0,0,0,100,100,0,0,3,22,0,2,80,80,330,1",
+    f"Style: Cap,Montserrat ExtraBold,96,{WHITE},{WHITE},{BLUE},&H64000000,0,0,0,0,100,100,0,0,1,9,5,2,70,70,{LAY['cap']},1",
+    f"Style: Title,Montserrat ExtraBold,66,{WHITE},{WHITE},{BLUE},{BLUE},0,0,0,0,100,100,0,0,3,24,0,8,70,70,{LAY['title']},1",
+    f"Style: Outro1,Montserrat ExtraBold,64,{BLUE},{BLUE},{WHITE},{WHITE},0,0,0,0,100,100,0,0,1,0,0,2,80,80,{LAY['o1']},1",
+    f"Style: Outro2,Montserrat ExtraBold,58,{WHITE},{WHITE},{TURQ},{TURQ},0,0,0,0,100,100,0,0,3,22,0,2,80,80,{LAY['o2']},1",
     "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     f"Dialogue: 1,{ts(0.15)},{ts(min(3.2, end_main))},Title,,0,0,0,,{{\\fad(150,250)\\fscx80\\fscy80\\t(0,180,\\fscx100\\fscy100)}}{esc(spec['titulo'])}",
     f"Dialogue: 1,{ts(end_main + 0.2)},{ts(total)},Outro1,,0,0,0,,{{\\fad(200,0)}}Sígueme para más trucos de IA",
@@ -148,7 +153,7 @@ ImageDraw.Draw(canvas).rounded_rectangle((20, 20, 20 + cw, 20 + ch), radius=ch /
 canvas.alpha_composite(lg, (20 + px, 20 + py))
 canvas.save(pill)
 fc = (
-    f"[0:v][1:v]overlay=(W-w)/2:50:enable='lt(t,{end_main:.2f})'[v1];"
+    f"[0:v][1:v]overlay=(W-w)/2:{LAY['logo']}:enable='lt(t,{end_main:.2f})'[v1];"
     f"color=c=0x26B9CC:s={W}x14:r={FPS}:d={total}[bar];[v1][bar]overlay=x='-W+W*t/{total}':y=H-14:shortest=1[v2];"
     f"[v2]ass={work / 'subs.ass'}[vo];"
     f"[2:a]adelay=200|200,aresample=48000,volume=1.0[voz];[3:a]aresample=48000[fx];"
