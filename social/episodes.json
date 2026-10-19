@@ -1,0 +1,93 @@
+[
+  {"id":"ep01_skills_oficiales","title":"Claude crea PDF, Word, Excel y PowerPoint","scenes":[
+    {"type":"hook","tag":"IA · Claude","text":"Claude ya crea **PDF, Word, Excel y PowerPoint**","dur":3.2},
+    {"type":"point","n":"1","head":"Son **skills** oficiales","body":"Anthropic los publica gratis en el repo **anthropics/skills**.","dur":3.4},
+    {"type":"point","n":"2","head":"Una carpeta, una orden","body":"Pídele un informe y te devuelve el **archivo listo**, no solo texto.","code":"# tú\nHaz un Excel con mis gastos\n# Claude\n→ gastos.xlsx","dur":3.8},
+    {"type":"point","n":"3","head":"Cero programar","body":"Se activan **solos** cuando los necesita.","dur":3.0},
+    {"type":"cta","line":"Y esto, **en tu empresa**","button":"joinappo.com","sub":"Automatizamos lo que te hace perder dinero","dur":3.2}
+  ]},
+  {"id":"ep02_que_es_un_skill","title":"Qué es un skill","scenes":[
+    {"type":"hook","tag":"IA · Claude","text":"Esto es un **skill** de Claude (y casi nadie lo entiende)","dur":3.2},
+    {"type":"point","n":"1","head":"Una **carpeta**","body":"Dentro hay un archivo llamado **SKILL.md** con instrucciones.","code":"mi-skill/\n  SKILL.md","dur":3.6},
+    {"type":"point","n":"2","head":"Claude lo **lee solo**","body":"Cuando tu petición encaja, lo carga. Si no, no gasta nada.","dur":3.4},
+    {"type":"point","n":"3","head":"Tú lo **enseñas una vez**","body":"Tu forma de redactar, tus plantillas, tus reglas. **Para siempre.**","dur":3.4},
+    {"type":"cta","line":"¿Te lo montamos **a medida**?","button":"joinappo.com","sub":"Agentes IA para pymes","dur":3.2}
+  ]},
+  {"id":"ep03_superpowers","title":"Superpowers: que Claude planifique antes de programar","scenes":[
+    {"type":"hook","tag":"Repo de GitHub","text":"El repo que hace que Claude **piense antes de programar**","dur":3.2},
+    {"type":"point","n":"1","head":"**obra/superpowers**","body":"Una colección de skills muy popular en GitHub.","dur":3.2},
+    {"type":"point","n":"2","head":"**Plan primero**","body":"Claude pregunta, diseña y te enseña el plan **antes de tocar código**.","dur":3.6},
+    {"type":"point","n":"3","head":"Tests y subagentes","body":"Trabaja con **pruebas** y reparte tareas en **subagentes**.","dur":3.4},
+    {"type":"cta","line":"IA que **trabaja** por ti","button":"joinappo.com","sub":"Automatiza tu oficina con Appo","dur":3.2}
+  ]},
+  {"id":"ep04_claude_md","title":"CLAUDE.md","scenes":[
+    {"type":"hook","tag":"Claude Code","text":"Un archivo de texto que le da **memoria** a Claude","dur":3.0},
+    {"type":"point","n":"1","head":"Se llama **CLAUDE.md**","body":"Claude Code lo lee **al empezar** cada sesión.","code":"CLAUDE.md","dur":3.2},
+    {"type":"point","n":"2","head":"Pon tus **reglas**","body":"Cómo se llama tu proyecto, qué comandos usar, qué **no tocar**.","code":"# CLAUDE.md\n- Responde en español\n- Corre los tests antes","dur":3.8},
+    {"type":"point","n":"3","head":"Mejor que repetirte","body":"Escríbelo **una vez**. Se acabó explicar lo mismo cada día.","dur":3.2},
+    {"type":"cta","line":"Que la IA **te conozca**","button":"joinappo.com","sub":"Agentes IA a medida","dur":3.2}
+  ]},
+  {"id":"ep05_subagentes","title":"Subagentes","scenes":[
+    {"type":"hook","tag":"Claude Code","text":"Varios Claude trabajando **a la vez**: así funcionan los **subagentes**","dur":3.4},
+    {"type":"point","n":"1","head":"Un jefe, varios **ayudantes**","body":"Claude reparte la tarea en partes y las lanza en **paralelo**.","dur":3.6},
+    {"type":"point","n":"2","head":"Contexto **limpio**","body":"Cada subagente trabaja aparte y **solo devuelve el resultado**.","dur":3.6},
+    {"type":"point","n":"3","head":"Más rápido","body":"Buscar, revisar y probar a la vez, no **uno detrás de otro**.","dur":3.2},
+    {"type":"cta","line":"Tu equipo, **x10**","button":"joinappo.com","sub":"Automatización con IA para pymes","dur":3.2}
+  ]},
+  {"id":"ep06_hooks","title":"Hooks de Claude Code","scenes":[
+    {"type":"hook","tag":"Claude Code","text":"Haz que Claude **ejecute algo solo** cada vez que edita un archivo","dur":3.4},
+    {"type":"point","n":"1","head":"Se llaman **hooks**","body":"Acciones que se disparan **antes o después** de que Claude use una herramienta.","dur":3.8},
+    {"type":"point","n":"2","head":"Ejemplos útiles","body":"Formatear el código, correr tests o **bloquear** un comando peligroso.","dur":3.6},
+    {"type":"point","n":"3","head":"Se configuran en","body":"el archivo de ajustes de Claude Code. **Una vez, y ya.**","code":".claude/settings.json","dur":3.4},
+    {"type":"cta","line":"Automatiza **lo repetitivo**","button":"joinappo.com","sub":"Appo · IA para tu negocio","dur":3.2}
+  ]},
+  {"id":"ep07_mcp","title":"MCP: conecta Claude a tus apps","scenes":[
+    {"type":"hook","tag":"IA · MCP","text":"Conecta Claude con **Gmail, Notion y Drive**. Así se hace","dur":3.2},
+    {"type":"point","n":"1","head":"MCP = **un enchufe**","body":"Un estándar para que la IA use tus herramientas.","dur":3.2},
+    {"type":"point","n":"2","head":"Le dices **qué hacer**","body":"\"Busca el presupuesto de Marta y **respóndele**.\"","dur":3.4},
+    {"type":"point","n":"3","head":"Tú **decides**","body":"Eliges a qué apps puede entrar y qué puede **hacer**.","dur":3.2},
+    {"type":"cta","line":"Tu empresa, **conectada**","button":"joinappo.com","sub":"CRM, WhatsApp y agentes IA","dur":3.2}
+  ]},
+  {"id":"ep08_skill_creator","title":"Crea tu skill en un minuto","scenes":[
+    {"type":"hook","tag":"Tutorial","text":"Crea **tu propio skill** de Claude en **1 minuto**","dur":3.0},
+    {"type":"point","n":"1","head":"Usa **skill-creator**","body":"Un skill que **crea skills**. Le cuentas qué quieres.","dur":3.4},
+    {"type":"point","n":"2","head":"Describe **tu tarea**","body":"\"Cada lunes resume mis ventas con este formato.\"","dur":3.4},
+    {"type":"point","n":"3","head":"Pruébalo y **ajusta**","body":"Claude te lo prueba, lo mejora y te deja la carpeta lista.","dur":3.4},
+    {"type":"cta","line":"¿Prefieres que **lo hagamos nosotros**?","button":"joinappo.com","sub":"Auditoría gratis · 30 min","dur":3.4}
+  ]},
+  {"id":"ad01_whatsapp","title":"Anuncio: Asistente WhatsApp IA 24/7","scenes":[
+    {"type":"hook","tag":"Para tu negocio","text":"Son las **22:00**. Un cliente te escribe por WhatsApp…","dur":3.2},
+    {"type":"point","n":"✗","head":"Sin Appo","body":"Lo ve por la mañana. **Ya se ha ido** con la competencia.","dur":3.4},
+    {"type":"point","n":"✓","head":"Con Appo","body":"Un asistente de IA le **contesta al momento**, resuelve dudas y le da cita.","dur":3.8},
+    {"type":"point","n":"24h","head":"Asistente WhatsApp IA","body":"Pasa los interesados a tu equipo. **Tú duermes.**","dur":3.4},
+    {"type":"cta","line":"**Auditoría gratis** de 30 minutos","button":"joinappo.com","sub":"+34 747 429 843","dur":3.6}
+  ]},
+  {"id":"ad02_voz","title":"Anuncio: Recepcionista de voz IA","scenes":[
+    {"type":"hook","tag":"Para tu negocio","text":"¿Cuántas **llamadas pierdes** cuando estás con un cliente?","dur":3.2},
+    {"type":"point","n":"1","head":"Recepcionista de **voz IA**","body":"Coge el teléfono cuando **nadie puede**.","dur":3.2},
+    {"type":"point","n":"2","head":"Resuelve y **da cita**","body":"Atiende lo básico, agenda y te manda **un resumen** por WhatsApp.","dur":3.6},
+    {"type":"point","n":"3","head":"Cero **llamadas perdidas**","body":"También **fuera de horario**.","dur":3.0},
+    {"type":"cta","line":"Pruébalo en **tu móvil**","button":"joinappo.com","sub":"Auditoría gratis · 30 min","dur":3.4}
+  ]},
+  {"id":"ad03_citas","title":"Anuncio: Citas y recordatorios","scenes":[
+    {"type":"hook","tag":"Clínicas · talleres · academias","text":"**Menos ausencias.** Menos huecos vacíos en la agenda","dur":3.2},
+    {"type":"point","n":"1","head":"Reserva **online**","body":"Tus clientes piden cita **solos**, a cualquier hora.","dur":3.2},
+    {"type":"point","n":"2","head":"Recordatorios **automáticos**","body":"Aviso **24 h y 2 h antes** y confirmación con un toque.","dur":3.6},
+    {"type":"point","n":"3","head":"¿Cancelan? **Se rellena**","body":"Reagenda y avisa a la **lista de espera**.","dur":3.2},
+    {"type":"cta","line":"Llena tu **agenda**","button":"joinappo.com","sub":"Citas y recordatorios · Appo","dur":3.4}
+  ]},
+  {"id":"ad04_verifactu","title":"Anuncio: Verifactu y factura electrónica","scenes":[
+    {"type":"hook","tag":"Autónomos y pymes","text":"**Verifactu** y la **factura electrónica** ya vienen. ¿Estás listo?","dur":3.4},
+    {"type":"point","n":"1","head":"Verifactu","body":"Fechas vigentes: **1 ene 2027** sociedades y **1 jul 2027** autónomos. Hacienda quiere moverlo a oct 2028.","dur":4.2},
+    {"type":"point","n":"2","head":"Factura electrónica B2B","body":"**6 oct 2027** para facturación de más de 8 M€. **6 oct 2028** para el resto.","dur":4.0},
+    {"type":"point","n":"3","head":"Appo lo **integra**","body":"Facturas, impagos y cobros **automáticos**, sobre un programa ya adaptado.","dur":3.8},
+    {"type":"cta","line":"Llega **sin sustos**","button":"joinappo.com","sub":"Facturación y cobros · Appo","dur":3.4}
+  ]},
+  {"id":"ad05_auditoria","title":"Anuncio: Auditoría gratis","scenes":[
+    {"type":"hook","tag":"Oferta","text":"¿Cuánto dinero **pierde tu empresa** en tareas repetitivas?","dur":3.2},
+    {"type":"point","n":"1","head":"Auditoría **gratis**","body":"30 minutos. Revisamos **cinco procesos** de tu empresa.","dur":3.4},
+    {"type":"point","n":"2","head":"Informe en **24 h**","body":"Las **horas y euros** que pierdes al mes y cómo recuperarlos.","dur":3.4},
+    {"type":"point","n":"3","head":"Demo en tu **móvil**","body":"La solución funcionando **antes de pagar nada**.","dur":3.4},
+    {"type":"cta","line":"Pide tu **auditoría gratis**","button":"joinappo.com","sub":"info@joinappo.com · +34 747 429 843","dur":3.6}
+  ]}
+]
