@@ -77,7 +77,7 @@ function v(f){const c=S.map[f];return c?String(S.rows[S.i][c]??'').trim():''}
 function render(){const r=S.rows[S.i],emp=v('emp')||'[empresa]',kw=v('kw')||'[xxx]',tel=v('tel');
 $('pos').textContent=`Lead ${S.i+1} de ${S.rows.length} · hechos ${Object.keys(S.res).length}`;
 $('emp').textContent=emp;$('tel').textContent=tel?'📞 '+tel:'Sin teléfono';$('tel').href=tel?'tel:'+tel.replace(/\s/g,''):'#';
-$('data').innerHTML=S.cols.filter(c=>String(r[c]).trim()).map(c=>`<div><b>${esc(c)}</b>${esc(r[c])}</div>`).join('');
+$('data').innerHTML=`<div><b>Consumo a decir en el speech</b><span class="big" style="color:var(--ac)">${esc(kw)} kW</span></div>`;
 const x=S.res[S.i];$('st').textContent=x?'Resultado: '+x.s+(x.n?' · '+x.n:''):'';$('note').value=x?.n||'';
 const m=s=>`<mark>${esc(s)}</mark>`,cont=v('cont');
 $('speech').innerHTML=`<h2>Speech</h2>
