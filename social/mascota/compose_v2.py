@@ -72,11 +72,19 @@ from faster_whisper import WhisperModel
 model = WhisperModel("medium", device="cpu", compute_type="int8")
 segs, _ = model.transcribe(str(vo), language="es", word_timestamps=True, beam_size=5)
 heard = [(w.start, w.end) for s in segs for w in s.words]
-words = spec["subs"].split()
-if len(heard) != len(words):
-    raise SystemExit(f"ERROR: Whisper oye {len(heard)} palabras y el guion tiene {len(words)}; revisar locución")
+# Una palabra de pantalla puede ocupar varias habladas: "CLAUDE.md{4}" = "Clod punto eme de".
+words = []
+for tok in spec["subs"].split():
+    m = re.fullmatch(r"(.+)\{(\d+)\}", tok)
+    words.append((m.group(1), int(m.group(2))) if m else (tok, 1))
+need = sum(k for _, k in words)
+if len(heard) != need:
+    raise SystemExit(f"ERROR: Whisper oye {len(heard)} palabras y el guion tiene {need}; revisar locución")
 VO_DELAY = 0.2  # la locución entra con este retraso (ver paso 6)
-timed = [(w, a + VO_DELAY, b + VO_DELAY) for w, (a, b) in zip(words, heard)]
+timed, i = [], 0
+for w, k in words:
+    timed.append((w, heard[i][0] + VO_DELAY, heard[i + k - 1][1] + VO_DELAY))
+    i += k
 chunks, cur = [], []
 for item in timed:
     cur.append(item)
