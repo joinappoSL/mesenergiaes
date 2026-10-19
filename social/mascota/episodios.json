@@ -1,0 +1,53 @@
+{
+  "mascota": {
+    "nombre": "Appi",
+    "imagen_base": "1f2f0826-cd9a-4c1a-af26-692afbed46a3",
+    "voz_referencia": "c5a2bc73-f1d6-48a4-be1a-dae166b3a671",
+    "poses": {
+      "saludo": "1f2f0826-cd9a-4c1a-af26-692afbed46a3",
+      "senalando": "7f0e92bd-bb10-4c91-98d3-d7d3bef75149",
+      "sorprendido": "898cac0c-f6a2-470f-aa75-49dc18578fa4",
+      "movil": "b13e1223-56f4-4f1d-916f-081022c125ac",
+      "portatil": "82d0d77f-b11c-44b0-b654-504a2b624a96",
+      "pensando": "5e689d4c-cecb-4188-83c0-8729b6f0b2f8",
+      "auriculares": "cd21e128-7ff5-4d1e-aacc-3e512106a7a3",
+      "factura": "98df01a6-b96f-49cc-a754-120ddcd64d61",
+      "celebrando": "b113dc67-9f67-4f24-993c-9c3f56a4fae9"
+    }
+  },
+  "episodios": [
+    {"id": "appi00_presentacion", "pose": "saludo", "dur": 6, "titulo": "¿Quién es Appi?",
+     "voz": "¡Hola! Soy Appi, la A de Appo. Cada día te enseño un truco de inteligencia artificial. ¡Sígueme!",
+     "subs": "¡Hola! Soy Appi, la A de Appo. Cada día te enseño un truco de inteligencia artificial. ¡Sígueme!"},
+    {"id": "appi01_claude_archivos", "pose": "sorprendido", "dur": 13, "titulo": "Esto no lo sabías de Claude",
+     "voz": "¿Sabías que Claude ya te crea un Excel, un Word o un PowerPoint? Se lo pides y te devuelve el archivo listo. Son skills gratis de Anthropic. ¡Guárdalo y sígueme para más!",
+     "subs": "¿Sabías que Claude ya te crea un Excel, un Word o un PowerPoint? Se lo pides y te devuelve el archivo listo. Son skills gratis de Anthropic. ¡Guárdalo y sígueme para más!"},
+    {"id": "appi02_prompt", "pose": "pensando", "dur": 12, "titulo": "El truco para que la IA te entienda",
+     "voz": "Deja de pedirle cosas a la IA en una sola línea. Dale contexto: quién eres, qué quieres y un ejemplo. La respuesta mejora muchísimo. Pruébalo hoy y me cuentas.",
+     "subs": "Deja de pedirle cosas a la IA en una sola línea. Dale contexto: quién eres, qué quieres y un ejemplo. La respuesta mejora muchísimo. Pruébalo hoy y me cuentas."},
+    {"id": "appi03_whatsapp", "pose": "movil", "dur": 13, "titulo": "Son las 22:00 y te escribe un cliente",
+     "voz": "Son las diez de la noche y un cliente te escribe por WhatsApp. Si no contestas, se va a la competencia. Con Appo, una IA le responde al momento y le da cita. Joinappo punto com.",
+     "subs": "Son las 22:00 y un cliente te escribe por WhatsApp. Si no contestas, se va a la competencia. Con Appo, una IA le responde al momento y le da cita. joinappo.com"},
+    {"id": "appi04_claude_md", "pose": "portatil", "dur": 12, "titulo": "Dale memoria a Claude Code",
+     "voz": "Si usas Claude Code, crea un archivo llamado Claude punto eme de. Escribe ahí tus reglas y Claude las lee cada vez que empieza. Se acabó repetirte. ¡Sígueme para más trucos!",
+     "subs": "Si usas Claude Code, crea un archivo llamado CLAUDE.md. Escribe ahí tus reglas y Claude las lee cada vez que empieza. Se acabó repetirte. ¡Sígueme para más trucos!"},
+    {"id": "appi05_agente", "pose": "senalando", "dur": 12, "titulo": "Chatbot vs agente de IA",
+     "voz": "¿Qué es un agente de IA? Un chatbot te contesta. Un agente hace el trabajo: lee tus emails, prepara el presupuesto y lo envía. Esa es la diferencia. ¡Sígueme!",
+     "subs": "¿Qué es un agente de IA? Un chatbot te contesta. Un agente hace el trabajo: lee tus emails, prepara el presupuesto y lo envía. Esa es la diferencia. ¡Sígueme!"},
+    {"id": "appi06_voz", "pose": "auriculares", "dur": 13, "titulo": "¿Cuántas llamadas pierdes al día?",
+     "voz": "¿Cuántas llamadas pierdes mientras atiendes a un cliente? Yo cojo el teléfono por ti, resuelvo dudas, doy cita y te mando un resumen por WhatsApp. Cero llamadas perdidas. Joinappo punto com.",
+     "subs": "¿Cuántas llamadas pierdes mientras atiendes a un cliente? Yo cojo el teléfono por ti, resuelvo dudas, doy cita y te mando un resumen por WhatsApp. Cero llamadas perdidas. joinappo.com"},
+    {"id": "appi07_subagentes", "pose": "sorprendido", "dur": 12, "titulo": "Varios Claude trabajando a la vez",
+     "voz": "Claude Code puede crear subagentes: varios ayudantes de IA trabajando a la vez en partes distintas de tu tarea. Uno busca, otro revisa, otro prueba. ¡Mucho más rápido!",
+     "subs": "Claude Code puede crear subagentes: varios ayudantes de IA trabajando a la vez en partes distintas de tu tarea. Uno busca, otro revisa, otro prueba. ¡Mucho más rápido!"},
+    {"id": "appi08_verifactu", "pose": "factura", "dur": 13, "titulo": "Verifactu llega. ¿Estás listo?",
+     "voz": "Verifactu y la factura electrónica están llegando a autónomos y pymes. Con Appo, tus facturas, cobros e impagos se gestionan solos, con un programa ya adaptado. Llega sin sustos. Joinappo punto com.",
+     "subs": "Verifactu y la factura electrónica están llegando a autónomos y pymes. Con Appo, tus facturas, cobros e impagos se gestionan solos, con un programa ya adaptado. Llega sin sustos. joinappo.com"},
+    {"id": "appi09_mcp", "pose": "pensando", "dur": 12, "titulo": "Conecta la IA a tus apps",
+     "voz": "Con MCP conectas la IA a tus herramientas: Gmail, Notion o Drive. Le dices: busca el presupuesto de Marta y respóndele. Y lo hace. Tú decides a qué puede entrar.",
+     "subs": "Con MCP conectas la IA a tus herramientas: Gmail, Notion o Drive. Le dices: busca el presupuesto de Marta y respóndele. Y lo hace. Tú decides a qué puede entrar."},
+    {"id": "appi10_auditoria", "pose": "celebrando", "dur": 13, "titulo": "Auditoría GRATIS para tu empresa",
+     "voz": "¿Cuánto dinero pierde tu empresa en tareas repetitivas? Te lo digo gratis: auditoría de treinta minutos, informe en veinticuatro horas y una demo en tu móvil. Pídela en joinappo punto com.",
+     "subs": "¿Cuánto dinero pierde tu empresa en tareas repetitivas? Te lo digo gratis: auditoría de 30 minutos, informe en 24 horas y una demo en tu móvil. Pídela en joinappo.com"}
+  ]
+}
