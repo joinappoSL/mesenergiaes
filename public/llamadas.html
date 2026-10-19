@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Llamadas +Energía</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f24;--mu:#6b7280;--ac:#f59e0b;--ok:#16a34a;--ko:#dc2626;--bd:#e5e7eb}
+@media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b1f24;--tx:#eef0f3;--mu:#9aa3ae;--bd:#2c323a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,sans-serif}
+.w{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:14px}
+h1{font-size:20px;margin:0 0 8px}h2{font-size:14px;text-transform:uppercase;color:var(--mu);margin:0 0 8px;letter-spacing:.05em}
+textarea{width:100%;min-height:140px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px;font:13px monospace}
+input,select{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px}
+button{border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--bd);color:var(--tx)}
+.p{background:var(--ac);color:#111}.ok{background:var(--ok);color:#fff}.ko{background:var(--ko);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lead{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.lead div{font-size:14px}.lead b{display:block;color:var(--mu);font-size:11px;text-transform:uppercase}
+.big{font-size:26px;font-weight:700}.tel{font-size:22px;font-weight:700;color:var(--ac);text-decoration:none}
+.sp p{font-size:19px;margin:0 0 14px}.sp mark{background:var(--ac);color:#111;padding:0 4px;border-radius:4px;font-weight:700}
+.ph{font-size:12px;font-weight:700;color:var(--ac);text-transform:uppercase}
+.hide{display:none}.mu{color:var(--mu);font-size:13px}
+</style>
+</head>
+<body><div class="w">
+
+<div id="setup" class="card">
+<h1>Cargar leads</h1>
+<p class="mu">Sube tu Excel/CSV o pega la tabla (con cabeceras) copiada de Excel.</p>
+<div class="row"><input type="file" id="file" accept=".xlsx,.xls,.csv"></div><br>
+<textarea id="paste" placeholder="Empresa	Teléfono	Contacto	Potencia kW	Consumo	Comercializadora	CUPS ..."></textarea>
+<div class="row" style="margin-top:8px"><span>Tu nombre:</span><input id="me" value="Hugo Méndez"><button class="p" id="load">Cargar</button></div>
+<div id="map" class="hide" style="margin-top:12px"></div>
+</div>
+
+<div id="call" class="hide">
+<div class="card">
+<div class="row" style="justify-content:space-between">
+<span class="mu" id="pos"></span>
+<div class="row"><button id="prev">◀ Anterior</button><button id="next" class="p">Siguiente ▶ (→)</button><button id="reset">Cargar otros</button></div>
+</div>
+<div class="big" id="emp"></div>
+<a class="tel" id="tel"></a>
+<div class="lead" id="data" style="margin-top:10px"></div>
+<div class="row" style="margin-top:12px">
+<button class="ok" data-s="Visita">Visita</button><button class="ok" data-s="Email enviado">Email enviado</button>
+<button data-s="Volver a llamar">Volver a llamar</button><button data-s="No contesta">No contesta</button><button class="ko" data-s="No interesa">No interesa</button>
+<input id="note" placeholder="Nota" style="flex:1;min-width:150px">
+</div>
+<div class="mu" id="st" style="margin-top:6px"></div>
+</div>
+<div class="card sp" id="speech"></div>
+<div class="card"><button id="exp">Descargar resultados (CSV)</button></div>
+</div>
+
+</div>
+<script>
+const K='mes_llamadas_v1';let S={rows:[],cols:[],map:{},i:0,me:'Hugo Méndez',res:{}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+try{const d=JSON.parse(localStorage.getItem(K));if(d&&d.rows&&d.rows.length)S=d}catch(e){}
+const $=id=>document.getElementById(id);
+const FIELDS={emp:['empresa','razon','razón','nombre','cliente','titular','sociedad'],tel:['tel','movil','móvil','phone'],kw:['kw','potencia','consumo'],cont:['contacto','persona','responsable'],email:['mail','correo']};
+const norm=s=>String(s).toLowerCase();
+function guess(){S.map={};for(const f in FIELDS){S.map[f]=S.cols.find(c=>FIELDS[f].some(k=>norm(c).includes(k)))||''}}
+function setRows(rows){rows=rows.filter(r=>Object.values(r).some(v=>String(v).trim()));if(!rows.length)return alert('No hay filas');S.rows=rows;S.cols=Object.keys(rows[0]);S.i=0;S.res={};S.me=$('me').value;guess();showMap()}
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'array'});setRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))};r.readAsArrayBuffer(f)};
+$('load').onclick=()=>{const t=$('paste').value.trim();if(!t)return alert('Sube un archivo o pega datos');const wb=XLSX.read(t,{type:'string'});setRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))};
+function showMap(){const L={emp:'Empresa',tel:'Teléfono',kw:'kW / consumo',cont:'Contacto',email:'Email'};const m=$('map');m.classList.remove('hide');
+m.innerHTML='<h2>¿Qué columna es cada cosa? ('+S.rows.length+' leads)</h2>'+Object.keys(L).map(f=>`<div class="row" style="margin:4px 0"><span style="width:110px">${L[f]}</span><select data-f="${f}"><option value="">—</option>${S.cols.map(c=>`<option ${S.map[f]===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>`).join('')+'<button class="p" id="go" style="margin-top:8px">Empezar a llamar</button>';
+m.querySelectorAll('select').forEach(s=>s.onchange=()=>S.map[s.dataset.f]=s.value);$('go').onclick=start}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function start(){S.me=$('me').value||S.me;save();$('setup').classList.add('hide');$('call').classList.remove('hide');render()}
+function v(f){const c=S.map[f];return c?String(S.rows[S.i][c]??'').trim():''}
+function render(){const r=S.rows[S.i],emp=v('emp')||'[empresa]',kw=v('kw')||'[xxx]',tel=v('tel');
+$('pos').textContent=`Lead ${S.i+1} de ${S.rows.length} · hechos ${Object.keys(S.res).length}`;
+$('emp').textContent=emp;$('tel').textContent=tel?'📞 '+tel:'Sin teléfono';$('tel').href=tel?'tel:'+tel.replace(/\s/g,''):'#';
+$('data').innerHTML=S.cols.filter(c=>String(r[c]).trim()).map(c=>`<div><b>${esc(c)}</b>${esc(r[c])}</div>`).join('');
+const x=S.res[S.i];$('st').textContent=x?'Resultado: '+x.s+(x.n?' · '+x.n:''):'';$('note').value=x?.n||'';
+const m=s=>`<mark>${esc(s)}</mark>`,cont=v('cont');
+$('speech').innerHTML=`<h2>Speech</h2>
+<div class="ph">1 · Captación</div><p>Buenos días, ¿hablo con la empresa ${m(emp)}?</p>
+<p>Te comento: mi nombre es ${m(S.me)} y te llamo de la asesoría energética <b>+Energía</b>, para hablar con la persona encargada de los suministros. ¿Eres tú mismo/a?${cont?` <span class="mu">(contacto: ${esc(cont)})</span>`:''}</p>
+<div class="ph">2 · Interés</div><p>Te contactamos porque hemos detectado que tienes un consumo de ${m(kw)} kW y nos consta que tienes una <b>tarifa estándar</b> cuando deberías tener una <b>tarifa de gran consumo</b>…</p>
+<p>Nosotros somos una asesoría energética que trabaja con tu compañía; de hecho, trabajamos con todas: Endesa, Iberdrola, Naturgy… y nuestra misión es poder hacerte un <b>estudio totalmente gratuito</b>, para que sepas cuáles son las mejores condiciones del mercado actual. También hacemos un estudio de la <b>optimización de potencia</b> para poder ajustar al máximo los costes de tu empresa.</p>
+<div class="ph">3 · Anhelo</div><p>Actualmente conseguimos entre un <b>20 % y un 40 %</b> de ahorro en tus facturas…</p>
+<div class="ph">4 · Cierre</div><p>El procedimiento es muy sencillo: me confirmas una dirección de <b>correo electrónico</b>${v('email')?` <span class="mu">(tenemos: ${esc(v('email'))})</span>`:''} y te envío la presentación de nuestra empresa para que puedas verla, y en ese mismo mail te solicitamos que nos envíes las <b>dos últimas facturas</b> para que te podamos hacer el estudio…</p>
+<p>Si prefieres, puedo <b>pasar por tu local</b> y lo vemos in situ: cojo las facturas y en un par de días te presentamos el estudio energético realizado.</p>`;save()}
+const go=d=>{S.i=Math.max(0,Math.min(S.rows.length-1,S.i+d));render();scrollTo(0,0)};
+$('next').onclick=()=>go(1);$('prev').onclick=()=>go(-1);
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{S.res[S.i]={s:b.dataset.s,n:$('note').value};go(1)});
+$('note').onchange=()=>{if(S.res[S.i]){S.res[S.i].n=$('note').value;save()}};
+document.onkeydown=e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1)};
+$('reset').onclick=()=>{if(confirm('¿Cargar otra lista? Se perderá el progreso actual (descarga antes los resultados).')){$('call').classList.add('hide');$('setup').classList.remove('hide');$('map').classList.add('hide')}};
+$('exp').onclick=()=>{const rows=S.rows.map((r,i)=>({...r,Resultado:S.res[i]?.s||'',Nota:S.res[i]?.n||''}));const ws=XLSX.utils.json_to_sheet(rows);
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+XLSX.utils.sheet_to_csv(ws,{FS:';'})],{type:'text/csv'}));a.download='resultados_llamadas.csv';a.click()};
+$('me').value=S.me;if(S.rows.length){$('setup').classList.add('hide');$('call').classList.remove('hide');render()}
+</script>
+</body></html>
