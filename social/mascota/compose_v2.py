@@ -16,11 +16,12 @@ out = Path(spec["out"])
 work = out.with_suffix("")
 work.mkdir(parents=True, exist_ok=True)
 FMT = spec.get("formato", "9x16")
-W, H = (1080, 1350) if FMT == "4x5" else (1080, 1920)
+W, H = {"9x16": (1080, 1920), "4x5": (1080, 1350), "3x4": (1080, 1440)}[FMT]
 FPS, XF, OUTRO = 60, 0.35, 1.8
 # Posiciones (y) que dependen del formato.
 LAY = {"9x16": dict(logo=50, title=250, cap=560, o1=520, o2=330, logo_v=620, logo_v_dy=160),
-       "4x5": dict(logo=30, title=215, cap=150, o1=300, o2=150, logo_v=460, logo_v_dy=120)}[FMT]
+       "4x5": dict(logo=30, title=215, cap=150, o1=300, o2=150, logo_v=460, logo_v_dy=120),
+       "3x4": dict(logo=36, title=225, cap=190, o1=340, o2=170, logo_v=500, logo_v_dy=130)}[FMT]
 
 def run(cmd):
     subprocess.run(cmd, check=True)
