@@ -1,15 +1,118 @@
 {
- "t04_resumir_pdf": {"tipo": "voz", "voz_sandbox": "~/appo/v2/vo04.mp3",
-   "titulo": "Lee un PDF de 80 páginas en 10 segundos",
-   "subs": "¿Un PDF de 80 páginas y cero ganas? Súbelo a la inteligencia artificial y pídele: resúmelo en cinco puntos y dime qué tengo que hacer yo. En segundos tienes lo importante. ¡De nada!",
-   "imagenes": ["8d8da08b-a3f1-4ccd-afac-a04c48c38de3", "f5a6972a-1f8d-4f5f-b52c-920e63b7db41", "ab3a816d-cde3-4f12-9be8-31222ebf3aca", "00535b18-daaa-45d6-960a-71eea99b2176"],
-   "clips": ["b00baa92-91fe-4d41-b7c3-474d3b631352", "aa7be20f-d87f-405f-8df0-7ded3f523f55", "2cc10ec9-ffc8-40d3-ad29-2ce7aabfd675", "17afb739-e67c-488a-ba18-5925671c787e"]},
- "w01_pov_3am": {"tipo": "texto", "semilla": 1,
-   "textos": ["POV: son las *3:00*|de la mañana", "Un cliente escribe|por *WhatsApp*", "Appi le responde|y le da *cita*", "Y tú te levantas con|la *agenda llena*"],
-   "cierre": "Tu asistente de WhatsApp 24/7",
-   "imagenes": ["dd95d9f8-c4fc-4879-b1ee-7629b404aa92", "8002b402-53c2-40ea-aa15-200fc891dfcb", "a88aad43-efe3-4b3a-8ac3-4037b5fce1d3", "0cfa057a-635d-4472-9860-20e854e88c46"]},
- "w02_sin_vs_con": {"tipo": "texto", "semilla": 2,
-   "textos": ["Tu negocio *SIN* IA", "Llamadas perdidas =|*clientes perdidos*", "Tu negocio *CON* Appo", "Todo automático.|*Tú, a lo importante*"],
-   "cierre": "Auditoría gratis en joinappo.com",
-   "imagenes": ["d0400835-d380-4991-8cfe-50686f444a13", "f1f1f89d-1f22-459a-b6bf-9cab842f1213", "4c69d652-f8e7-440f-9595-84677be6454b", "183d4290-54e8-4a70-9596-3715c9908314"]}
+ "t04_resumir_pdf": {
+  "tipo": "voz",
+  "voz_sandbox": "~/appo/v2/vo04.mp3",
+  "titulo": "Lee un PDF de 80 páginas en 10 segundos",
+  "subs": "¿Un PDF de 80 páginas y cero ganas? Súbelo a la inteligencia artificial y pídele: resúmelo en cinco puntos y dime qué tengo que hacer yo. En segundos tienes lo importante. ¡De nada!",
+  "imagenes": [
+   "8d8da08b-a3f1-4ccd-afac-a04c48c38de3",
+   "f5a6972a-1f8d-4f5f-b52c-920e63b7db41",
+   "ab3a816d-cde3-4f12-9be8-31222ebf3aca",
+   "00535b18-daaa-45d6-960a-71eea99b2176"
+  ],
+  "clips": [
+   "b00baa92-91fe-4d41-b7c3-474d3b631352",
+   "aa7be20f-d87f-405f-8df0-7ded3f523f55",
+   "2cc10ec9-ffc8-40d3-ad29-2ce7aabfd675",
+   "17afb739-e67c-488a-ba18-5925671c787e"
+  ],
+  "estado": "montado en ~/appo/serie/out (3 formatos)"
+ },
+ "w01_pov_3am": {
+  "tipo": "texto",
+  "semilla": 1,
+  "textos": [
+   "POV: son las *3:00*|de la mañana",
+   "Un cliente escribe|por *WhatsApp*",
+   "Appi le responde|y le da *cita*",
+   "Y tú te levantas con|la *agenda llena*"
+  ],
+  "cierre": "Tu asistente de WhatsApp 24/7",
+  "imagenes": [
+   "dd95d9f8-c4fc-4879-b1ee-7629b404aa92",
+   "8002b402-53c2-40ea-aa15-200fc891dfcb",
+   "a88aad43-efe3-4b3a-8ac3-4037b5fce1d3",
+   "0cfa057a-635d-4472-9860-20e854e88c46"
+  ],
+  "clips": [
+   "13dcd0ba-79cd-49e3-8356-8e508e872d48",
+   "e37b8b21-6109-4e96-94b8-57ff6195fc52",
+   "3247df6d-5c93-4caf-ac28-b9c0e8d55272",
+   "999c481e-e8dc-45a0-b3e0-cc6a6b36414f"
+  ]
+ },
+ "w02_sin_vs_con": {
+  "tipo": "texto",
+  "semilla": 2,
+  "textos": [
+   "Tu negocio *SIN* IA",
+   "Llamadas perdidas =|*clientes perdidos*",
+   "Tu negocio *CON* Appo",
+   "Todo automático.|*Tú, a lo importante*"
+  ],
+  "cierre": "Auditoría gratis en joinappo.com",
+  "imagenes": [
+   "d0400835-d380-4991-8cfe-50686f444a13",
+   "f1f1f89d-1f22-459a-b6bf-9cab842f1213",
+   "4c69d652-f8e7-440f-9595-84677be6454b",
+   "183d4290-54e8-4a70-9596-3715c9908314"
+  ],
+  "clips": [
+   "929803d6-a869-41a6-abde-3ce8768f95f5",
+   "c5754700-d33e-4e52-929a-babcdd935e1b",
+   "f413116a-37be-420c-99fa-2924d2c26202",
+   "8ae5ff0b-ce5f-4ddb-aace-920c96cc1986"
+  ]
+ },
+ "w03_3_cosas": {
+  "tipo": "texto",
+  "semilla": 3,
+  "textos": [
+   "3 cosas que tu negocio|ya puede *automatizar*",
+   "1. Responder|*WhatsApp* 24/7",
+   "2. *Citas* y|recordatorios",
+   "3. *Facturas*|y cobros"
+  ],
+  "cierre": "Auditoría gratis en joinappo.com",
+  "imagenes": [
+   "a61df3f2-1ac4-4a59-8d23-87bdb9ac34c9",
+   "ee7821fc-4f6c-45b1-a0c2-2d9a4f2e9909",
+   "401be4a9-896b-4582-8996-8e734fe4419a",
+   "73029dab-923d-4ce8-80bf-77a439076c2a"
+  ]
+ },
+ "w04_competencia": {
+  "tipo": "texto",
+  "semilla": 4,
+  "textos": [
+   "Cuando tu competencia|ya usa *IA*...",
+   "...y tú sigues con el|*boli y la libreta*",
+   "Hasta que llamas|a *Appo*",
+   "Ahora la cola está|*en tu puerta*"
+  ],
+  "cierre": "Auditoría gratis en joinappo.com",
+  "imagenes": [
+   "4b182d7c-076b-4eb7-9c9f-459472e47a06",
+   "7dfc0f54-6c8c-47fa-a148-1961de9537cc",
+   "dd096511-3e07-4a60-aefe-41cc8c86ac84",
+   "ae10a058-67f6-4d2a-9fb9-1bd3c30ec76c"
+  ]
+ },
+ "w05_dia_appi": {
+  "tipo": "texto",
+  "semilla": 5,
+  "textos": [
+   "Un día en la vida|de *Appi*",
+   "08:00 Contesta todos|los *WhatsApp*",
+   "12:00 Te llena|la *agenda*",
+   "19:00 Cobra tus|*facturas*"
+  ],
+  "cierre": "Sígueme para conocer a Appi",
+  "imagenes": [
+   "f2b8c084-55e8-46fb-8786-a4c4f90629ae",
+   "7da1b57e-b6ce-41fe-8713-307d64885413",
+   "7dbdae6e-85cf-46ac-8027-c37a080e4405",
+   "813125c3-19b3-4a07-ab5e-fff9b0f5e35c"
+  ]
+ }
 }
