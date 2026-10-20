@@ -79,6 +79,12 @@
    "ee7821fc-4f6c-45b1-a0c2-2d9a4f2e9909",
    "401be4a9-896b-4582-8996-8e734fe4419a",
    "73029dab-923d-4ce8-80bf-77a439076c2a"
+  ],
+  "clips": [
+   "2e15b6d1-2dd5-4464-9a24-e56547ec17d2",
+   "fec06426-42e8-4020-827d-f253836abc20",
+   "de825c88-04b5-4436-ad23-f160a45eb483",
+   "8d60f707-6a27-4e44-8ec3-7dbef739a5af"
   ]
  },
  "w04_competencia": {
@@ -96,6 +102,12 @@
    "7dfc0f54-6c8c-47fa-a148-1961de9537cc",
    "dd096511-3e07-4a60-aefe-41cc8c86ac84",
    "ae10a058-67f6-4d2a-9fb9-1bd3c30ec76c"
+  ],
+  "clips": [
+   "cf8d4382-ec22-44fe-9f58-f84dff50ad75",
+   "2e42517a-ff80-4a5d-9cef-0be6e6f950b3",
+   "124dfb0c-42c8-42c1-861b-f847f9412e71",
+   "9f505949-c2d3-423c-a6a9-8d951038e5ce"
   ]
  },
  "w05_dia_appi": {
@@ -113,6 +125,81 @@
    "7da1b57e-b6ce-41fe-8713-307d64885413",
    "7dbdae6e-85cf-46ac-8027-c37a080e4405",
    "813125c3-19b3-4a07-ab5e-fff9b0f5e35c"
+  ],
+  "clips": [
+   "8336fe48-901f-4840-b5bf-f401b4ce8d85",
+   "619dae5e-20c3-499e-881a-80ceee5c84bb",
+   "cea17e60-e98a-4657-a971-356468be94b4",
+   "6899cbb6-f713-4b7c-855c-71c5cd760314"
+  ]
+ },
+ "w06_lunes": {
+  "tipo": "texto",
+  "semilla": 6,
+  "textos": [
+   "Los *lunes*|en una pyme...",
+   "*Café* doble.|Bueno, triple.",
+   "Pero Appi tiene|un *truco*",
+   "Lunes, pero|*sin estrés*"
+  ],
+  "cierre": "Sígueme para más trucos de IA",
+  "imagenes": [
+   "a9d44eec-4d91-465d-929f-916cf5bec863",
+   "23587b3c-2292-4751-a1ce-bf7dbf71fb5f",
+   "f5aafad9-5967-47ea-a689-14576d326287",
+   "ea97ce72-6055-41f0-be97-236c9c370fb0"
+  ],
+  "clips": [
+   "36a06b72-6f9c-48bb-8d42-67d7868ae055",
+   "b69e5477-35e2-449e-a96b-de17d666e754",
+   "e87441de-1e6a-473a-88ec-e74dedf09a0d",
+   "538476ce-7b1a-475a-b577-d2ce4df793e9"
+  ]
+ },
+ "w07_llamada": {
+  "tipo": "texto",
+  "semilla": 7,
+  "textos": [
+   "Estás atendiendo|a un *cliente*...",
+   "...y pierdes|*otra llamada*",
+   "La recepcionista|de *voz IA* de Appo",
+   "*Cero* llamadas|perdidas"
+  ],
+  "cierre": "Pruébala gratis en joinappo.com",
+  "imagenes": [
+   "9e09148e-c8a1-4e8d-929b-5f376c707a8d",
+   "e7b9de65-d457-440a-8e04-ab5cb5089c35",
+   "b0d545e6-004f-4430-b379-19e8d9b17b4e",
+   "8fd8371c-fbf0-4851-a770-7f7be74a40cc"
+  ],
+  "clips": [
+   "4972684e-2c9e-4ccc-9d51-fdffecac8e61",
+   "1196f917-2aa7-4adf-8ecf-8c35403df67c",
+   "804237b7-09a9-4bc0-af33-694af09deefc",
+   "0d2a4fe0-6053-48f3-9efd-d7200763c9d1"
+  ]
+ },
+ "w08_auditoria": {
+  "tipo": "texto",
+  "semilla": 8,
+  "textos": [
+   "Tu empresa pierde|*dinero* cada mes...",
+   "...en tareas|*repetitivas*",
+   "Auditoría *GRATIS*|de 30 minutos",
+   "Pídela en|*joinappo.com*"
+  ],
+  "cierre": "Auditoría gratis en joinappo.com",
+  "imagenes": [
+   "ecec40ae-b153-413a-85b2-b1ac853838e1",
+   "9376ccbc-c4da-48be-8cf1-3f5c209db062",
+   "7f278dd8-719e-4da7-86dd-8aa81e7d0e57",
+   "e9177871-29f3-435f-96d8-3753c5e0a04c"
+  ],
+  "clips": [
+   "15cb1960-66f3-44a0-aee2-5c97934def22",
+   "984f24b5-5d9b-4fb2-98eb-fccbeb10f0cc",
+   "7132d5d4-3b69-4810-886c-e9c50e0803b8",
+   "2780a0ec-764b-46d3-b6fa-66c49c1898fc"
   ]
  }
 }
