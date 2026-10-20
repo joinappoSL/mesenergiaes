@@ -47,12 +47,20 @@ else:
 
 # 1. Escenas: 60 fps por interpolación de movimiento y 1080x1920.
 scenes = []
+# La interpolación (lo lento) se hace una vez por clip y se reutiliza en todos los formatos.
+cache = Path(spec.get("cache", work))
+cache.mkdir(parents=True, exist_ok=True)
 for i, c in enumerate(clips):
-    dst = work / f"s{i}.mp4"
-    if not dst.exists():
+    full = cache / f"full{i}.mp4"
+    if not full.exists():
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", c, "-an", "-vf",
              f"scale=720:1280:flags=lanczos,minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,"
-             f"scale=1080:1920:flags=lanczos,crop={W}:{H}:0:(ih-{H})/2,setsar=1,tpad=stop_mode=clone:stop_duration=3,trim=0:{scene_len:.3f},setpts=PTS-STARTPTS",
+             f"scale=1080:1920:flags=lanczos,setsar=1",
+             "-c:v", "libx264", "-preset", "fast", "-crf", "15", "-pix_fmt", "yuv420p", str(full)])
+    dst = work / f"s{i}.mp4"
+    if not dst.exists():
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(full), "-vf",
+             f"crop={W}:{H}:0:(ih-{H})/2,setsar=1,tpad=stop_mode=clone:stop_duration=3,trim=0:{scene_len:.3f},setpts=PTS-STARTPTS",
              "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-pix_fmt", "yuv420p", str(dst)])
     scenes.append(dst)
 

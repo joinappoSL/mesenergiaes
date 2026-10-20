@@ -1,0 +1,15 @@
+{
+ "t04_resumir_pdf": {"tipo": "voz", "voz_sandbox": "~/appo/v2/vo04.mp3",
+   "titulo": "Lee un PDF de 80 páginas en 10 segundos",
+   "subs": "¿Un PDF de 80 páginas y cero ganas? Súbelo a la inteligencia artificial y pídele: resúmelo en cinco puntos y dime qué tengo que hacer yo. En segundos tienes lo importante. ¡De nada!",
+   "imagenes": ["8d8da08b-a3f1-4ccd-afac-a04c48c38de3", "f5a6972a-1f8d-4f5f-b52c-920e63b7db41", "ab3a816d-cde3-4f12-9be8-31222ebf3aca", "00535b18-daaa-45d6-960a-71eea99b2176"],
+   "clips": ["b00baa92-91fe-4d41-b7c3-474d3b631352", "aa7be20f-d87f-405f-8df0-7ded3f523f55", "2cc10ec9-ffc8-40d3-ad29-2ce7aabfd675", "17afb739-e67c-488a-ba18-5925671c787e"]},
+ "w01_pov_3am": {"tipo": "texto", "semilla": 1,
+   "textos": ["POV: son las *3:00*|de la mañana", "Un cliente escribe|por *WhatsApp*", "Appi le responde|y le da *cita*", "Y tú te levantas con|la *agenda llena*"],
+   "cierre": "Tu asistente de WhatsApp 24/7",
+   "imagenes": ["dd95d9f8-c4fc-4879-b1ee-7629b404aa92", "8002b402-53c2-40ea-aa15-200fc891dfcb", "a88aad43-efe3-4b3a-8ac3-4037b5fce1d3", "0cfa057a-635d-4472-9860-20e854e88c46"]},
+ "w02_sin_vs_con": {"tipo": "texto", "semilla": 2,
+   "textos": ["Tu negocio *SIN* IA", "Llamadas perdidas =|*clientes perdidos*", "Tu negocio *CON* Appo", "Todo automático.|*Tú, a lo importante*"],
+   "cierre": "Auditoría gratis en joinappo.com",
+   "imagenes": ["d0400835-d380-4991-8cfe-50686f444a13", "f1f1f89d-1f22-459a-b6bf-9cab842f1213", "4c69d652-f8e7-440f-9595-84677be6454b", "183d4290-54e8-4a70-9596-3715c9908314"]}
+}
