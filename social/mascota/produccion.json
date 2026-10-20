@@ -201,5 +201,143 @@
    "7132d5d4-3b69-4810-886c-e9c50e0803b8",
    "2780a0ec-764b-46d3-b6fa-66c49c1898fc"
   ]
+ },
+ "w09_prompt": {
+  "tipo": "texto",
+  "semilla": 9,
+  "textos": [
+   "Tu IA responde|*fatal*...",
+   "...porque no le das|*contexto*",
+   "Dile quién eres|y *qué quieres*",
+   "Y la respuesta|*cambia por completo*"
+  ],
+  "cierre": "Sígueme para más trucos de IA",
+  "imagenes": [
+   "2ab7888f-819e-4a8d-aaa0-663012865592",
+   "0b6212c3-ac71-4d69-a5df-0dfaa12037c5",
+   "e2a6c773-cdc3-4056-9020-02d385789f43",
+   "4af73220-cf20-4d90-8b92-0842562ce66a"
+  ],
+  "clips": [
+   "12fc8898-2d0d-434e-beea-e84a0d642ce0",
+   "e07b48e5-4e73-442e-8fc6-846277919c2f",
+   "457ab303-1ba7-45d8-b69e-198498542da5",
+   "52184e49-4e12-4f27-8dc6-50548118896b"
+  ]
+ },
+ "w10_presupuesto": {
+  "tipo": "texto",
+  "semilla": 10,
+  "textos": [
+   "Un cliente te pide|un *presupuesto*",
+   "Antes: *2 días*|haciéndolo",
+   "Con Appo:|*2 minutos*",
+   "Y el cliente|*dice que sí*"
+  ],
+  "cierre": "Auditoría gratis en joinappo.com",
+  "imagenes": [
+   "15dad502-13fa-4e78-bcfe-f46ed2518998",
+   "1ed0e77b-8ff4-4666-a7af-8461e00dbad4",
+   "330011d2-09c1-4094-8f4e-bb2a767d368b",
+   "799ce42e-4cd7-43fd-8648-3e0741719979"
+  ],
+  "clips": [
+   "5dffcb00-0693-440b-98ad-4369b652920a",
+   "5b259c95-c75e-488c-abd4-a7a5454cdbd5",
+   "e188c281-a896-4f48-9080-98595b3268c3",
+   "784bc633-d35e-4480-aac3-b96f78d3ba16"
+  ]
+ },
+ "w11_vacaciones": {
+  "tipo": "texto",
+  "semilla": 11,
+  "textos": [
+   "Te vas de|*vacaciones*...",
+   "...y tu negocio|*sigue funcionando*",
+   "Appi contesta,|agenda y *cobra*",
+   "Tú solo|*disfrutas*"
+  ],
+  "cierre": "Tu negocio 24/7 con joinappo.com",
+  "imagenes": [
+   "3549138b-478a-4dda-8d59-32bf59f21525",
+   "e8b0a60b-263c-4ede-abc7-128e402536eb",
+   "a5587e78-6fcb-450a-abea-1adcf1dbdead",
+   "6abb3432-7a14-411b-9dbc-4e769c31def8"
+  ],
+  "clips": [
+   "8c0fb381-8965-419e-83d3-3c533faa218a",
+   "136cd4ae-fc98-417d-a9bf-1b48bc854e2b",
+   "8b560e11-6318-47f1-be33-06ccceff38e5",
+   "f07e67e4-01ae-4541-9a35-143a917f4a63"
+  ]
+ },
+ "w12_verifactu": {
+  "tipo": "texto",
+  "semilla": 12,
+  "textos": [
+   "¿Te suena|*Verifactu*?",
+   "Las facturas|ahora van *controladas*",
+   "Appo las hace|*por ti*",
+   "Tú, *tranquilo*"
+  ],
+  "cierre": "Facturación Verifactu con Appo",
+  "imagenes": [
+   "3e57e372-d98b-47fa-9355-61a726e45614",
+   "78b0b2e6-b97f-433c-bdce-202e83694a39",
+   "19296802-d081-4b97-aa79-da36dc1566de",
+   "87c02ca4-1bae-4ebc-99d5-f105fa6d14fc"
+  ],
+  "clips": [
+   "67520215-3f1e-4230-ac83-6a1d3b7c1bea",
+   "a698630b-b530-4633-ab16-311278e31c51",
+   "d2df893a-9a1a-4b96-8d0c-c8ecb7dece74",
+   "a99604a6-1a9e-4f5b-9747-cbc79d7cdfea"
+  ]
+ },
+ "w13_secreto": {
+  "tipo": "texto",
+  "semilla": 13,
+  "textos": [
+   "El secreto de las|pymes que *crecen*",
+   "No trabajan|*más horas*",
+   "*Automatizan*|lo repetitivo",
+   "Y se centran en|*sus clientes*"
+  ],
+  "cierre": "Auditoría gratis en joinappo.com",
+  "imagenes": [
+   "23dcaaf1-28fb-49e3-bcb0-50e4ac5e454b",
+   "5e472627-20eb-48f3-8b55-7492decc13fe",
+   "b27291be-d3ab-4e46-9d20-1fcf9789fea0",
+   "67bfe288-084c-4305-95a2-e16594840155"
+  ],
+  "clips": [
+   "2c7f0986-37a9-4dc3-b92c-56a572c94c68",
+   "71a04ff8-99bb-46c0-8de6-60d9ddef8e38",
+   "d47b3a8f-659a-4fca-ae55-76bd34c5fdba",
+   "5fc54c5c-aed3-44be-9ceb-7185ad315404"
+  ]
+ },
+ "w14_superappi": {
+  "tipo": "texto",
+  "semilla": 14,
+  "textos": [
+   "Cuando tu negocio|*necesita ayuda*...",
+   "...llega *Appi*",
+   "WhatsApp, citas|y facturas: *resuelto*",
+   "Tu héroe de|la *IA*"
+  ],
+  "cierre": "Sígueme para conocer a Appi",
+  "imagenes": [
+   "65222a49-b106-4369-b9b2-eff75d627d46",
+   "6571d277-2a8b-4495-9db6-84469b5b536f",
+   "49b71bfb-5de7-47f0-8cf8-a974ad28592f",
+   "d83f170a-8926-4c55-a7a0-fc6b05cb946b"
+  ],
+  "clips": [
+   "b66021bd-c5b3-4ec2-a9ae-7d5d5a1c7065",
+   "9b01c5f9-8a34-4ab9-afd3-7bd275d336bb",
+   "ec67a3ee-0757-41e0-958a-d816281656a5",
+   "c4364b08-f268-43ed-abe0-97a1593b6f0b"
+  ]
  }
 }

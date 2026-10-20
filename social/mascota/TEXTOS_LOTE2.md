@@ -58,3 +58,37 @@ Estás atendiendo a un cliente y pierdes otra llamada. La recepcionista de voz c
 …en tareas repetitivas. Te decimos cuánto, gratis: auditoría de 30 minutos, informe en 24 h y una demo en tu móvil. Pídela en joinappo.com
 
 #Pymes #Autonomos #Auditoria #Digitalizacion #IA #Appi #Appo
+
+---
+
+# Lote 3
+
+## w09 · Tu IA responde fatal… por esto
+Si la IA te da respuestas genéricas, no es culpa suya: dile quién eres, qué quieres conseguir y dale un ejemplo. La respuesta cambia por completo. Guárdalo 📌
+
+#IA #ChatGPT #Claude #Prompts #TrucosIA #Productividad #Appi #Appo
+
+## w10 · Presupuestos en 2 minutos
+Antes: 2 días para preparar un presupuesto. Con Appo: 2 minutos, y el cliente dice que sí antes de que llame a otro. Auditoría gratis en joinappo.com
+
+#Pymes #Autonomos #Presupuestos #IA #Automatizacion #Ventas #Appi #Appo
+
+## w11 · Te vas de vacaciones…
+…y tu negocio sigue funcionando. Appi contesta, agenda y cobra mientras tú disfrutas. ¿Cuándo fueron tus últimas vacaciones sin mirar el móvil? 👇
+
+#Vacaciones #Pymes #Autonomos #IA #Automatizacion #Appi #Appo
+
+## w12 · ¿Te suena Verifactu?
+Las facturas ahora tienen que cumplir Verifactu. Appo las hace por ti, listas y en regla, para que tú estés tranquilo. Info en joinappo.com
+
+#Verifactu #Facturacion #Autonomos #Pymes #Hacienda #IA #Appi #Appo
+
+## w13 · El secreto de las pymes que crecen
+No trabajan más horas: automatizan lo repetitivo y se centran en sus clientes. Te ayudamos a empezar con una auditoría gratis en joinappo.com
+
+#Pymes #Emprendedores #Crecimiento #IA #Automatizacion #Appi #Appo
+
+## w14 · Súper Appi
+Cuando tu negocio necesita ayuda… llega Appi. WhatsApp, citas y facturas: resuelto. Tu héroe de la IA 🦸
+
+#Superheroe #Pymes #IA #Automatizacion #Mascota #Appi #Appo
