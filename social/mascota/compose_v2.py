@@ -5,6 +5,8 @@ Corre en el sandbox de Higgsfield. Uso:
   python3 compose_v2.py spec.json
 spec.json = {"out": "...mp4", "titulo": "...", "subs": "texto exacto en pantalla",
              "voz": "vo.mp3", "clips": ["a.mp4", "b.mp4", ...]}
+Sin voz: en lugar de "voz"/"subs"/"titulo" pasar "textos": ["texto escena 1", ...] (uno por clip;
+"|" = salto de línea, *palabra* = turquesa). Lleva música propia (musica.py) y efectos.
 """
 import json, os, re, subprocess, sys, unicodedata
 from pathlib import Path
@@ -30,14 +32,20 @@ def probe(p):
     return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                                           "-of", "csv=p=0", str(p)]).decode().strip())
 
-vo = Path(spec["voz"])
-vo_dur = probe(vo)
-total = vo_dur + 0.4 + OUTRO
-
-# 1. Escenas: 60 fps por interpolación de movimiento y 1080x1920.
 clips = spec["clips"]
 n = len(clips)
-scene_len = (total - OUTRO + XF * n) / n
+TEXTOS = spec.get("textos")
+if TEXTOS:
+    assert len(TEXTOS) == n, "un texto por escena"
+    scene_len = spec.get("escena", 3.4)
+    total = n * scene_len - XF * n + OUTRO + XF
+else:
+    vo = Path(spec["voz"])
+    vo_dur = probe(vo)
+    total = vo_dur + 0.4 + OUTRO
+    scene_len = (total - OUTRO + XF * n) / n
+
+# 1. Escenas: 60 fps por interpolación de movimiento y 1080x1920.
 scenes = []
 for i, c in enumerate(clips):
     dst = work / f"s{i}.mp4"
@@ -74,30 +82,32 @@ run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", ";".join(
      "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(FPS), str(base)])
 
 # 4. Tiempos de palabra de la locución (Whisper) emparejados con el texto de pantalla.
-from faster_whisper import WhisperModel
-model = WhisperModel("medium", device="cpu", compute_type="int8")
-segs, _ = model.transcribe(str(vo), language="es", word_timestamps=True, beam_size=5)
-heard = [(w.start, w.end) for s in segs for w in s.words]
-# Una palabra de pantalla puede ocupar varias habladas: "CLAUDE.md{4}" = "Clod punto eme de".
-words = []
-for tok in spec["subs"].split():
-    m = re.fullmatch(r"(.+)\{(\d+)\}", tok)
-    words.append((m.group(1), int(m.group(2))) if m else (tok, 1))
-need = sum(k for _, k in words)
-if len(heard) != need:
-    raise SystemExit(f"ERROR: Whisper oye {len(heard)} palabras y el guion tiene {need}; revisar locución")
-VO_DELAY = 0.2  # la locución entra con este retraso (ver paso 6)
-timed, i = [], 0
-for w, k in words:
-    timed.append((w, heard[i][0] + VO_DELAY, heard[i + k - 1][1] + VO_DELAY))
-    i += k
-chunks, cur = [], []
-for item in timed:
-    cur.append(item)
-    if len(cur) == 3 or re.search(r"[.,!?¡¿:;…]$", item[0]):
-        chunks.append(cur); cur = []
-if cur:
-    chunks.append(cur)
+words, chunks = [], []
+if not TEXTOS:
+    from faster_whisper import WhisperModel
+    model = WhisperModel("medium", device="cpu", compute_type="int8")
+    segs, _ = model.transcribe(str(vo), language="es", word_timestamps=True, beam_size=5)
+    heard = [(w.start, w.end) for s in segs for w in s.words]
+    # Una palabra de pantalla puede ocupar varias habladas: "CLAUDE.md{4}" = "Clod punto eme de".
+    words = []
+    for tok in spec["subs"].split():
+        m = re.fullmatch(r"(.+)\{(\d+)\}", tok)
+        words.append((m.group(1), int(m.group(2))) if m else (tok, 1))
+    need = sum(k for _, k in words)
+    if len(heard) != need:
+        raise SystemExit(f"ERROR: Whisper oye {len(heard)} palabras y el guion tiene {need}; revisar locución")
+    VO_DELAY = 0.2  # la locución entra con este retraso (ver paso 6)
+    timed, i = [], 0
+    for w, k in words:
+        timed.append((w, heard[i][0] + VO_DELAY, heard[i + k - 1][1] + VO_DELAY))
+        i += k
+    chunks, cur = [], []
+    for item in timed:
+        cur.append(item)
+        if len(cur) == 3 or re.search(r"[.,!?¡¿:;…]$", item[0]):
+            chunks.append(cur); cur = []
+    if cur:
+        chunks.append(cur)
 
 def ts(x):
     x = max(x, 0)
@@ -115,12 +125,22 @@ ass = [
     f"Style: Cap,Montserrat ExtraBold,96,{WHITE},{WHITE},{BLUE},&H64000000,0,0,0,0,100,100,0,0,1,9,5,2,70,70,{LAY['cap']},1",
     f"Style: Title,Montserrat ExtraBold,66,{WHITE},{WHITE},{BLUE},{BLUE},0,0,0,0,100,100,0,0,3,24,0,8,70,70,{LAY['title']},1",
     f"Style: Outro1,Montserrat ExtraBold,64,{BLUE},{BLUE},{WHITE},{WHITE},0,0,0,0,100,100,0,0,1,0,0,2,80,80,{LAY['o1']},1",
+    f"Style: Big,Montserrat ExtraBold,82,{WHITE},{WHITE},{BLUE},{BLUE},0,0,0,0,100,100,0,0,3,26,0,8,80,80,{LAY['title']},1",
     f"Style: Outro2,Montserrat ExtraBold,58,{WHITE},{WHITE},{TURQ},{TURQ},0,0,0,0,100,100,0,0,3,22,0,2,80,80,{LAY['o2']},1",
     "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
-    f"Dialogue: 1,{ts(0.15)},{ts(min(3.2, end_main))},Title,,0,0,0,,{{\\fad(150,250)\\fscx80\\fscy80\\t(0,180,\\fscx100\\fscy100)}}{esc(spec['titulo'])}",
-    f"Dialogue: 1,{ts(end_main + 0.2)},{ts(total)},Outro1,,0,0,0,,{{\\fad(200,0)}}Sígueme para más trucos de IA",
+    f"Dialogue: 1,{ts(end_main + 0.2)},{ts(total)},Outro1,,0,0,0,,{{\\fad(200,0)}}{esc(spec.get('cierre', 'Sígueme para más trucos de IA'))}",
     f"Dialogue: 1,{ts(end_main + 0.4)},{ts(total)},Outro2,,0,0,0,,{{\\fad(200,0)}}joinappo.com",
 ]
+if TEXTOS:
+    st = 0.0
+    for k, txt in enumerate(TEXTOS):
+        a, b = st + 0.12, st + scene_len - XF - 0.05
+        body = esc(txt).replace("|", "\\N")
+        body = re.sub(r"\*(.+?)\*", lambda m: f"{{\\c{TURQ}}}{m.group(1)}{{\\c{WHITE}}}", body)
+        ass.append(f"Dialogue: 2,{ts(a)},{ts(b)},Big,,0,0,0,,{{\\fad(120,120)\\fscx70\\fscy70\\t(0,160,\\fscx100\\fscy100)}}{body}")
+        st += scene_len - XF
+else:
+    ass.append(f"Dialogue: 1,{ts(0.15)},{ts(min(3.2, end_main))},Title,,0,0,0,,{{\\fad(150,250)\\fscx80\\fscy80\\t(0,180,\\fscx100\\fscy100)}}{esc(spec['titulo'])}")
 for ci, ch in enumerate(chunks):
     nxt = chunks[ci + 1][0][1] if ci + 1 < len(chunks) else ch[-1][2] + 0.5
     for wi, (w, a, b) in enumerate(ch):
@@ -160,6 +180,10 @@ fc = (
     f"[2:a]adelay=200|200,aresample=48000,volume=1.0[voz];[3:a]aresample=48000[fx];"
     f"[voz][fx]amix=inputs=2:normalize=0:duration=longest,loudnorm=I=-14:TP=-1.5:LRA=11[a]"
 )
+if TEXTOS:
+    vo = work / "musica.wav"
+    run([sys.executable, str(here / "musica.py"), str(vo), f"{total + 0.5:.2f}", str(spec.get("semilla", 0))])
+    fc = fc.replace("adelay=200|200,aresample=48000,volume=1.0[voz]", "aresample=48000,volume=0.55[voz]")
 run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(base), "-i", str(pill), "-i", str(vo), "-i", str(sfx),
      "-filter_complex", fc, "-map", "[vo]", "-map", "[a]", "-t", f"{total:.3f}",
      "-c:v", "libx264", "-profile:v", "high", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-r", str(FPS),
