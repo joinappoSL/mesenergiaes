@@ -85,9 +85,15 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
     <button data-v="stats">Registro diario</button>
     <button data-v="load">Subir Excel</button>
   </nav>
-  <select id="owner" style="width:auto;margin-left:auto" title="Comercial"></select> <span id="today" class="mut"></span>
+  <b id="ownerName" style="margin-left:auto"></b> <button id="logout">Salir</button> <span id="today" class="mut"></span>
 </header>
-<div class="who" id="who"><div><h2 style="margin-top:0">¿Quién eres?</h2><div id="whoBtns"></div></div></div>
+<div class="who" id="who"><form id="lg" style="background:var(--card);padding:26px;border-radius:14px;min-width:290px;text-align:left">
+  <h2 style="margin:0 0 4px;text-align:center">📞 Llamadas Leads</h2><p class="mut" style="text-align:center;margin:0 0 14px">Mes Energia · acceso comerciales</p>
+  <label>Usuario<select id="lgUser"></select></label><br><br>
+  <label>Contraseña<input type="password" id="lgPass" autocomplete="current-password" autofocus></label>
+  <label style="display:block;margin:10px 0"><input type="checkbox" id="lgKeep"> Mantener sesión 7 días en este equipo</label>
+  <div id="lgErr" class="warn" style="min-height:20px"></div>
+  <button class="b-pri" style="width:100%;padding:12px;font-weight:700">Entrar</button></form></div>
 <main>
 
 <section id="v-load" class="hidden">
@@ -183,7 +189,9 @@ const ST={pendiente:"Pendiente",no_contesta:"No contesta",rechazado:"Rechazado",
 const CALLST=["no_contesta","rechazado","correo"];
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const OWNERS=["Carlos Del Moral","Mario García","Gabriela Santamaría"];
-let owner=load("owner",null);
+const USERS=[{"n": "Carlos Del Moral", "s": "e437d0f1ae3c053505c8ce95cf57e816", "h": "62e378c5e56a106a3c37c37f74f34dbeca212816610d9f3c1a3d5d4f52af1c80"}, {"n": "Mario García", "s": "4aad4fc4480002c69760e0e038d5a1a6", "h": "5a63d95e313e83fcd0e48ec8716c8f95bdafe5ace78c3f0730c4b215347553d1"}, {"n": "Gabriela Santamaría", "s": "298b1db3390ac3ecfd11f06ab037d100", "h": "50bb640ed592b13c02969bb1646fa4d2251395e098200ce635235e7b7b755382"}];
+const SESS=()=>{try{const x=JSON.parse(sessionStorage.getItem("sess")||localStorage.getItem("sess")||"null");return x&&x.exp>Date.now()&&OWNERS.includes(x.o)?x.o:null}catch(e){return null}};
+let owner=SESS();
 const K=n=>n+":"+owner;
 const save=()=>{if(!owner)return;localStorage.setItem(K("leads"),JSON.stringify(leads));localStorage.setItem(K("log"),JSON.stringify(log))};
 let leads=[], log=[];   // leads: {id,f,status,calls,note,last,mailAt,hist:[{t,x}],files:[{id,name,size,t,kind}]}
@@ -815,14 +823,32 @@ function renderSegDetail(){
 }
 
 /* ---------- comercial / copia de seguridad ---------- */
-$("#owner").innerHTML=OWNERS.map(o=>`<option>${o}</option>`).join("");
-$("#owner").onchange=()=>{owner=$("#owner").value;localStorage.setItem("owner",JSON.stringify(owner));boot()};
-$("#whoBtns").innerHTML=OWNERS.map(o=>`<button>${o}</button>`).join("");
-$("#whoBtns").querySelectorAll("button").forEach(b=>b.onclick=()=>{owner=b.textContent;localStorage.setItem("owner",JSON.stringify(owner));boot()});
+const hex2b=h=>new Uint8Array(h.match(/../g).map(x=>parseInt(x,16)));
+async function pwHash(pw,saltHex){
+  const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:hex2b(saltHex),iterations:150000},k,256);
+  return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+let lgFails=0;
+$("#lgUser").innerHTML=USERS.map(u=>`<option>${u.n}</option>`).join("");
+$("#lg").onsubmit=async e=>{
+  e.preventDefault(); const u=USERS.find(x=>x.n===$("#lgUser").value), err=$("#lgErr"), btn=$("#lg button");
+  const pw=$("#lgPass").value.toLowerCase().replace(/[\s-]/g,"");
+  btn.disabled=true; err.textContent="";
+  try{
+    if(lgFails)await new Promise(r=>setTimeout(r,Math.min(lgFails,5)*1000));
+    if(pw&&await pwHash(pw,u.s)===u.h){
+      lgFails=0; owner=u.n; const v=JSON.stringify({o:owner,exp:Date.now()+($("#lgKeep").checked?7*864e5:12*36e5)});
+      (($("#lgKeep").checked)?localStorage:sessionStorage).setItem("sess",v); $("#lgPass").value=""; boot();
+    }else{lgFails++;err.textContent="Contraseña incorrecta"}
+  }catch(x){err.textContent="No se puede comprobar la contraseña en este navegador (¿https?)"}
+  btn.disabled=false;
+};
+$("#logout").onclick=()=>{sessionStorage.removeItem("sess");localStorage.removeItem("sess");location.reload()};
 $("#expBak").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({owner,leads,log})],{type:"application/json"}));a.download=`copia-${owner.split(" ")[0]}-${day()}.json`;a.click()};
 $("#impBak").onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.leads))throw 0;if(confirm(`Restaurar ${d.leads.length} leads en ${owner}? Sustituye lo actual.`)){leads=d.leads;log=d.log||[];save();boot()}}catch(x){alert("Archivo no válido")}e.target.value=""};
 function boot(){
-  $("#who").style.display="none"; $("#owner").value=owner; loadData(); segSel=null; idx=0;
+  $("#who").style.display="none"; $("#ownerName").textContent=owner; loadData(); segSel=null; idx=0;
   show(leads.length?"call":"load");
 }
 if(!owner)$("#who").style.display="grid"; else boot();
