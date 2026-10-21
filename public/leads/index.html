@@ -325,6 +325,20 @@ function setStatus(l,s,advance,txt){
 }
 
 /* ---------- correo ---------- */
+const ANA={
+ ca:{ini:"En l’anàlisi preliminar observem que ",bal:"el consum es manté relativament equilibrat entre els períodes P1 i P2, mentre que ",
+  main:(k,p,top)=>`el període P${k} concentra ${top?"el pic de consum més elevat":"el consum més elevat"}, superant el ${p} % del total.`,
+  cost:" A més, és un dels períodes amb el cost energètic més elevat dins de la seva tarifa actual.",
+  p6:" A més, és el període més econòmic de la tarifa (franja nocturna i caps de setmana), cosa que ens permet ajustar millor el contracte."},
+ es:{ini:"En el análisis preliminar observamos que ",bal:"el consumo se mantiene relativamente equilibrado entre los periodos P1 y P2, mientras que ",
+  main:(k,p,top)=>`el periodo P${k} concentra ${top?"el pico de consumo más elevado":"el consumo más elevado"}, superando el ${p} % del total.`,
+  cost:" Además, es uno de los periodos con mayor coste energético dentro de su tarifa actual.",
+  p6:" Además, es el periodo más económico de la tarifa (franja nocturna y fines de semana), lo que nos permite ajustar mejor el contrato."}
+};
+function analisi(d,lang){
+  const t=ANA[lang],k=+d.pk||3,p=d.pp||"[48]";
+  return t.ini+(k>=3&&d.bal?t.bal:"")+t.main(k,p,k<=3)+(k<=3?t.cost:k===6?t.p6:"");
+}
 const SENDERS=OWNERS;
 const TPL={
  ca:{subj:"Estudi energètic gratuït - Mes Energia",
@@ -339,7 +353,7 @@ Pel nivell de consum registrat, aquest tipus de subministrament sol beneficiar-s
 
 Adjunto també una imatge del maxímetre per poder valorar amb més precisió els diferents paràmetres de consum.
 
-En l’anàlisi preliminar observem que el consum es manté relativament equilibrat entre els períodes P1 i P2, mentre que el període P3 concentra el pic de consum més elevat, superant el ${d.p3||"[48]"} % del total. A més, és el període amb el cost energètic més elevat dins de la seva tarifa actual.
+${analisi(d,"ca")}
 
 Cal recordar que el període P6 correspon al tram horari comprès entre les 20.00 h i les 08.00 h, així com als caps de setmana.
 
@@ -369,7 +383,7 @@ Por el nivel de consumo registrado, este tipo de suministro suele beneficiarse m
 
 Adjunto también una imagen del maxímetro para poder valorar con más precisión los diferentes parámetros de consumo.
 
-En el análisis preliminar observamos que el consumo se mantiene relativamente equilibrado entre los periodos P1 y P2, mientras que el periodo P3 concentra el pico de consumo más elevado, superando el ${d.p3||"[48]"} % del total. Además, es el periodo con el coste energético más elevado dentro de su tarifa actual.
+${analisi(d,"es")}
 
 Conviene recordar que el periodo P6 corresponde al tramo horario comprendido entre las 20.00 h y las 08.00 h, así como a los fines de semana.
 
@@ -402,7 +416,8 @@ function openMail(l){
       <label>Nombre<input type="text" id="n" value="${esc(f.__nombre)}"></label>
       <label>CUPS<input type="text" id="cups" value="${esc(f.__cups)}"></label>
       <label>Consumo anual<input type="text" id="consumo" value="${esc(f.__consumo)}"></label>
-      <label>% P3<input type="text" id="p3" value="${esc(f.__p3||"")}" placeholder="48"><span class="mut" style="font-size:11px">${esc(f.__pmax||"")}</span></label>
+      <label>Periodo con más consumo<select id="pk">${[1,2,3,4,5,6].map(k=>`<option value="${k}" ${String(f.__pk||3)===String(k)?"selected":""}>P${k}${f.__pk&&String(f.__pk)===String(k)?" (automático)":""}</option>`).join("")}</select></label>
+      <label>% del total (de ese periodo)<input type="text" id="p3" value="${esc(f.__p3||"")}" placeholder="48"><span class="mut" style="font-size:11px">${esc(f.__pmax||"")}</span></label>
       <label>Comercializadora actual<input type="text" id="comer" value="${esc(f.__comer)}"></label>
     </div>
     <div class="stat" style="text-align:left;margin-bottom:8px" id="mxBar">
@@ -423,10 +438,10 @@ function openMail(l){
       <button class="b-ok" id="done">✅ Confirmar correo enviado</button>
     </div></div>`;
   $("#from").value=owner||mailFrom;
-  const keep=()=>{f.__nombre=$("#n").value;f.__cups=$("#cups").value.trim();f.__consumo=$("#consumo").value.trim();f.__p3=$("#p3").value.trim();f.__comer=$("#comer").value.trim();const to=$("#to").value.trim();if(to)f.__email=to;save()};
+  const keep=()=>{f.__nombre=$("#n").value;f.__cups=$("#cups").value.trim();f.__consumo=$("#consumo").value.trim();f.__p3=$("#p3").value.trim();f.__pk=$("#pk").value;f.__comer=$("#comer").value.trim();const to=$("#to").value.trim();if(to)f.__email=to;save()};
   const fill=()=>{
     const m=new Date().getHours()<14;
-    const d={pres:PRES_URL,n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
+    const d={pk:$("#pk").value,pp:$("#p3").value.trim(),bal:f.__bal!=="0",pres:PRES_URL,n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
       sal:{ca:m?"bon dia":"bona tarda",es:m?"buenos días":"buenas tardes"},when:{ca:m?"aquest matí":"aquesta tarda",es:m?"esta mañana":"esta tarde"}};
     const t=TPL[mailLang];
     $("#subj").value=t.subj;$("#body").value=t.body(d);
@@ -434,7 +449,7 @@ function openMail(l){
   };
   document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{mailLang=b.dataset.l;localStorage.setItem("mailLang",JSON.stringify(mailLang));fill()});
   $("#from").onchange=()=>{mailFrom=$("#from").value;localStorage.setItem("mailFrom",JSON.stringify(mailFrom));fill()};
-  ["n","cups","consumo","p3","comer"].forEach(i=>$("#"+i).oninput=()=>{keep();fill()});
+  ["n","cups","consumo","p3","comer","pk"].forEach(i=>$("#"+i).oninput=()=>{keep();fill()});
   $("#cp").onclick=async()=>{
     keep();
     const txt=`Asunto: ${$("#subj").value}\n\n${$("#body").value}`;
@@ -589,9 +604,10 @@ function persistMx(){
   l.mx=mx; const s=summary();
   if(mx.cups)l.f.__cups=mx.cups;
   l.f.__consumo=String(Math.round(s.T));
-  l.f.__p3=String(Math.round(s.pct[2]));
+  const kk=s.pct.indexOf(Math.max(...s.pct));
+  l.f.__pk=String(kk+1); l.f.__p3=String(Math.floor(s.pct[kk])); l.f.__bal=Math.abs(s.pct[0]-s.pct[1])<=8?"1":"0";
   const k=s.pct.indexOf(Math.max(...s.pct));
-  l.f.__pmax=`Periodo con más consumo: P${k+1} (${Math.round(s.pct[k])} %)`;
+  l.f.__pmax=s.pct.map((v,i)=>`P${i+1} ${Math.round(v)} %`).join(" · ");
   save();
 }
 function svgStack(){
