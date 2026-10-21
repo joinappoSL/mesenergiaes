@@ -129,6 +129,9 @@ const ROLES={
   email:["email","e mail","correo","correo electronico","mail"],
   direccion:["direccion","domicilio","calle","cups direccion"],
   poblacion:["poblacion","localidad","municipio","ciudad"],
+  cups:["cups"],
+  consumo:["consumo anual","consumo","kwh anual","kwh"],
+  comer:["comercializadora","compania","companyia","actual comercializadora","distribuidora"],
 };
 function detect(headers){
   const nh=headers.map(norm), map={}, used=new Set();
@@ -139,14 +142,14 @@ function detect(headers){
     }
     return -1;
   };
-  for(const r of ["tel2","kw","email","nombre","direccion","poblacion"]){let i=find(r,true);if(i<0)i=find(r,false);if(i>=0){map[r]=i;used.add(i)}}
+  for(const r of ["tel2","kw","email","nombre","direccion","poblacion","cups","consumo","comer"]){let i=find(r,true);if(i<0)i=find(r,false);if(i>=0){map[r]=i;used.add(i)}}
   // tel1: exacto primero, luego el que contiene "tel" y no es tel2
   let i=find("tel1",true); if(i<0)i=find("tel1",false); if(i>=0){map.tel1=i;used.add(i)}
   // kw sin cabecera clara: columna justo al lado de teléfono 2
   if(map.kw==null&&map.tel2!=null){const j=map.tel2+1;if(j<headers.length&&!used.has(j)){map.kw=j}}
   return map;
 }
-const ROLE_LBL={nombre:"Nombre / Cliente",tel1:"Teléfono 1",tel2:"Teléfono 2",kw:"kW (al lado de Teléfono 2)",email:"Email",direccion:"Dirección",poblacion:"Población"};
+const ROLE_LBL={nombre:"Nombre / Cliente",tel1:"Teléfono 1",tel2:"Teléfono 2",kw:"kW (al lado de Teléfono 2)",email:"Email",direccion:"Dirección",poblacion:"Población",cups:"CUPS",consumo:"Consumo anual",comer:"Comercializadora actual"};
 let pend=null; // {headers,rows,map}
 
 $("#file").onchange=async e=>{
@@ -172,7 +175,7 @@ $("#doImport").onclick=()=>{
   for(const r of rows){
     const f={}; headers.forEach((h,i)=>f[h]=String(r[i]??"").trim());
     const g=k=>map[k]!=null?f[headers[map[k]]]:"";
-    f.__nombre=g("nombre");f.__tel=g("tel1");f.__tel2=g("tel2");f.__kw=g("kw");f.__email=g("email");f.__dir=g("direccion");f.__pob=g("poblacion");
+    f.__nombre=g("nombre");f.__tel=g("tel1");f.__tel2=g("tel2");f.__kw=g("kw");f.__email=g("email");f.__dir=g("direccion");f.__pob=g("poblacion");f.__cups=g("cups");f.__consumo=g("consumo");f.__comer=g("comer");
     f.__cols=JSON.stringify(map.__x||null);
     const key=f.__tel||f.__tel2; if(key&&phones.has(f.__tel))continue; phones.add(f.__tel);
     leads.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),f,status:"pendiente",calls:0,note:"",last:null,headers});
@@ -237,47 +240,113 @@ function setStatus(l,s,advance){
 }
 
 /* ---------- correo ---------- */
+const SENDERS=["Carlos Del Moral","Mario García","Gabriela Santamaría"];
 const TPL={
- es:{subj:"Facturas para estudio de ahorro energético",
-  body:(n,kw,gas)=>`Hola${n?" "+n:""},\n\nGracias por atendernos por teléfono. Para poder preparar su estudio de ahorro${kw?` (potencia contratada: ${kw} kW)`:""}, necesitamos que nos envíe:\n\n  • Las dos últimas facturas de luz.${gas?"\n  • Las dos últimas facturas de gas.":""}\n\nPuede responder a este correo adjuntando las facturas en PDF o una foto clara de cada una.\n\nQuedamos a su disposición para cualquier duda.\n\nUn saludo,`},
- ca:{subj:"Factures per a l'estudi d'estalvi energètic",
-  body:(n,kw,gas)=>`Hola${n?" "+n:""},\n\nGràcies per atendre'ns per telèfon. Per poder preparar el seu estudi d'estalvi${kw?` (potència contractada: ${kw} kW)`:""}, necessitem que ens enviï:\n\n  • Les dues últimes factures de llum.${gas?"\n  • Les dues últimes factures de gas.":""}\n\nPot respondre a aquest correu adjuntant les factures en PDF o una foto clara de cadascuna.\n\nQuedem a la seva disposició per a qualsevol dubte.\n\nUna salutació,`}
+ ca:{subj:"Estudi energètic gratuït - Mes Energia",
+  body:(d)=>`Hola${d.n?" "+d.n:""} ${d.sal.ca},
+
+Tal com hem comentat en la nostra conversa telefònica d’${d.when.ca}, li envio les nostres dades de contacte i una breu presentació de la nostra empresa.
+
+En relació amb el subministrament associat al CUPS: ${d.cups||"[CUPS]"}, hem dut a terme una primera revisió del maxímetre i de l’històric de consum corresponent a l’any 2026. Segons les dades analitzades, el consum anual supera els ${d.consumo||"[consum]"} kW, mentre que actualment el subministrament disposa d’una tarifa estàndard.
+Pel nivell de consum registrat, aquest tipus de subministrament sol beneficiar-se més de tarifes específiques per a grans consums, les quals permeten optimitzar tant els costos energètics com l’estructura del contracte.
+
+Adjunto també una imatge del maxímetre per poder valorar amb més precisió els diferents paràmetres de consum.
+
+En l’anàlisi preliminar observem que el consum es manté relativament equilibrat entre els períodes P1 i P2, mentre que el període P3 concentra el pic de consum més elevat, superant el ${d.p3||"[48]"} % del total. A més, és el període amb el cost energètic més elevat dins de la seva tarifa actual.
+
+Cal recordar que el període P6 correspon al tram horari comprès entre les 20.00 h i les 08.00 h, així com als caps de setmana.
+
+Així mateix, hem detectat que el seu contracte amb ${d.comer||"[comercialitzadora]"} s’ha renovat tàcitament, fet que en molts casos implica que no s’hagin actualitzat les condicions econòmiques més competitives disponibles per a l’any 2027.
+
+A Mes Energia, la nostra tasca com a assessors energètics consisteix a analitzar cada any les condicions dels subministraments dels nostres clients, comparant diferents comercialitzadores del mercat energètic industrial per garantir l’opció més eficient i econòmica.
+
+Per aquest motiu, ens agradaria oferir-li un estudi energètic totalment gratuït i sense cap compromís, mitjançant el qual podrem determinar amb exactitud el potencial d’estalvi real en la seva factura, que habitualment se situa entre el 15 % i el 30 % anual.
+
+Per poder dur a terme aquesta anàlisi, únicament necessitaríem que ens facilités les dues últimes factures de llum i gas. Amb aquesta informació, podrem elaborar l’estudi i presentar-li els resultats en un termini aproximat de 24 a 48 hores.
+
+Resto a l’espera de la seva resposta.
+
+Rebi una cordial salutació,
+
+${d.from}
+Mes Energia`},
+ es:{subj:"Estudio energético gratuito - Mes Energia",
+  body:(d)=>`Hola${d.n?" "+d.n:""} ${d.sal.es},
+
+Tal como hemos comentado en nuestra conversación telefónica de ${d.when.es}, le envío nuestros datos de contacto y una breve presentación de nuestra empresa.
+
+En relación con el suministro asociado al CUPS: ${d.cups||"[CUPS]"}, hemos realizado una primera revisión del maxímetro y del histórico de consumo correspondiente al año 2026. Según los datos analizados, el consumo anual supera los ${d.consumo||"[consumo]"} kW, mientras que actualmente el suministro dispone de una tarifa estándar.
+Por el nivel de consumo registrado, este tipo de suministro suele beneficiarse más de tarifas específicas para grandes consumos, que permiten optimizar tanto los costes energéticos como la estructura del contrato.
+
+Adjunto también una imagen del maxímetro para poder valorar con más precisión los diferentes parámetros de consumo.
+
+En el análisis preliminar observamos que el consumo se mantiene relativamente equilibrado entre los periodos P1 y P2, mientras que el periodo P3 concentra el pico de consumo más elevado, superando el ${d.p3||"[48]"} % del total. Además, es el periodo con el coste energético más elevado dentro de su tarifa actual.
+
+Conviene recordar que el periodo P6 corresponde al tramo horario comprendido entre las 20.00 h y las 08.00 h, así como a los fines de semana.
+
+Asimismo, hemos detectado que su contrato con ${d.comer||"[comercializadora]"} se ha renovado tácitamente, lo que en muchos casos implica que no se hayan actualizado las condiciones económicas más competitivas disponibles para el año 2027.
+
+En Mes Energia, nuestra labor como asesores energéticos consiste en analizar cada año las condiciones de los suministros de nuestros clientes, comparando distintas comercializadoras del mercado energético industrial para garantizar la opción más eficiente y económica.
+
+Por este motivo, nos gustaría ofrecerle un estudio energético totalmente gratuito y sin ningún compromiso, mediante el cual podremos determinar con exactitud el potencial de ahorro real en su factura, que habitualmente se sitúa entre el 15 % y el 30 % anual.
+
+Para poder llevar a cabo este análisis, únicamente necesitaríamos que nos facilitase las dos últimas facturas de luz y gas. Con esta información, podremos elaborar el estudio y presentarle los resultados en un plazo aproximado de 24 a 48 horas.
+
+Quedo a la espera de su respuesta.
+
+Reciba un cordial saludo,
+
+${d.from}
+Mes Energia`}
 };
-let mailLang=load("mailLang","es"), mailGas=load("mailGas",true);
+let mailLang=load("mailLang","ca"), mailFrom=load("mailFrom",SENDERS[0]);
 function openMail(l){
   const f=l.f;
   $("#mailBox").innerHTML=`<div class="card">
     <h3 style="margin-top:0">Correo para ${esc(f.__nombre||"el cliente")}</h3>
     <div class="row" style="margin-bottom:8px">
-      <button data-l="es">Castellano</button><button data-l="ca">Català</button>
-      <label><input type="checkbox" id="gas"> incluir facturas de gas</label>
+      <button data-l="ca">Català</button><button data-l="es">Castellano</button>
+      <label>Firma: <select id="from" style="width:auto">${SENDERS.map(x=>`<option>${x}</option>`).join("")}</select></label>
+    </div>
+    <div class="grid" style="margin-bottom:8px">
+      <label>Nombre<input type="text" id="n" value="${esc(f.__nombre)}"></label>
+      <label>CUPS<input type="text" id="cups" value="${esc(f.__cups)}"></label>
+      <label>Consumo anual<input type="text" id="consumo" value="${esc(f.__consumo)}"></label>
+      <label>% P3<input type="text" id="p3" value="${esc(f.__p3||"")}" placeholder="48"></label>
+      <label>Comercializadora actual<input type="text" id="comer" value="${esc(f.__comer)}"></label>
     </div>
     <input type="email" id="to" placeholder="Email del cliente" value="${esc(f.__email)}" style="margin-bottom:8px">
     <input type="text" id="subj" style="margin-bottom:8px">
-    <textarea id="body"></textarea>
+    <textarea id="body" style="min-height:420px"></textarea>
     <div class="actions">
       <button id="cp">📋 Copiar texto</button>
       <button id="mt">Abrir en mi correo</button>
       <button class="b-ok" id="done">✅ Confirmar correo enviado</button>
     </div></div>`;
-  $("#gas").checked=mailGas;
+  $("#from").value=mailFrom;
+  const keep=()=>{f.__nombre=$("#n").value;f.__cups=$("#cups").value.trim();f.__consumo=$("#consumo").value.trim();f.__p3=$("#p3").value.trim();f.__comer=$("#comer").value.trim();const to=$("#to").value.trim();if(to)f.__email=to;save()};
   const fill=()=>{
+    const m=new Date().getHours()<14;
+    const d={n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
+      sal:{ca:m?"bon dia":"bona tarda",es:m?"buenos días":"buenas tardes"},when:{ca:m?"aquest matí":"aquesta tarda",es:m?"esta mañana":"esta tarde"}};
     const t=TPL[mailLang];
-    $("#subj").value=t.subj;$("#body").value=t.body(f.__nombre,f.__kw,$("#gas").checked);
+    $("#subj").value=t.subj;$("#body").value=t.body(d);
     document.querySelectorAll("[data-l]").forEach(b=>b.classList.toggle("on",b.dataset.l===mailLang));
   };
   document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{mailLang=b.dataset.l;localStorage.setItem("mailLang",JSON.stringify(mailLang));fill()});
-  $("#gas").onchange=()=>{mailGas=$("#gas").checked;localStorage.setItem("mailGas",JSON.stringify(mailGas));fill()};
+  $("#from").onchange=()=>{mailFrom=$("#from").value;localStorage.setItem("mailFrom",JSON.stringify(mailFrom));fill()};
+  ["n","cups","consumo","p3","comer"].forEach(i=>$("#"+i).oninput=()=>{keep();fill()});
   $("#cp").onclick=async()=>{
+    keep();
     const txt=`Asunto: ${$("#subj").value}\n\n${$("#body").value}`;
     try{await navigator.clipboard.writeText(txt)}catch(e){$("#body").select();document.execCommand("copy")}
     $("#cp").textContent="✔ Copiado";
   };
   $("#mt").onclick=()=>{
-    const to=$("#to").value.trim(); if(to){f.__email=to;save()}
-    location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent($("#subj").value)}&body=${encodeURIComponent($("#body").value)}`;
+    keep();
+    location.href=`mailto:${encodeURIComponent($("#to").value.trim())}?subject=${encodeURIComponent($("#subj").value)}&body=${encodeURIComponent($("#body").value)}`;
   };
-  $("#done").onclick=()=>{const to=$("#to").value.trim();if(to)f.__email=to;setStatus(l,"correo",true)};
+  $("#done").onclick=()=>{keep();setStatus(l,"correo",true)};
   fill();
   $("#mailBox").scrollIntoView({behavior:"smooth"});
 }
