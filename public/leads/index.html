@@ -45,26 +45,26 @@ textarea{min-height:260px;font-family:inherit}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}dt{color:var(--mut)}dd{margin:0;word-break:break-word}
 
 /* ---- maxímetro ---- */
-#rep{background:#fff;color:#0f1e43;border-radius:12px;padding:28px;border:1px solid var(--bd);font-size:13px}
-#rep h2{margin:0;font-size:22px;color:#1b3263}
-#rep h3{margin:22px 0 8px;font-size:14px;color:#fff;background:linear-gradient(90deg,#1b3263,#36538f);padding:6px 12px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
-#rep .rh{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:4px solid;border-image:linear-gradient(90deg,#6ca83c,#f5c030,#36538f) 1;padding-bottom:12px}
-#rep .rh img{height:120px;margin:-20px 0}
-#rep .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;margin-top:12px}
-#rep .info div{border-bottom:1px solid #e3e8f2;padding:3px 0}#rep .info b{display:block;font-size:10px;color:#6b7785;text-transform:uppercase}
-#rep table{font-size:12px;text-align:right}#rep th,#rep td{border-bottom:1px solid #e3e8f2;text-align:right;padding:4px 6px;color:#0f1e43}
-#rep th{background:#eef2f9;color:#1b3263}#rep td:first-child,#rep th:first-child{text-align:left}
-#rep tr.tot td{font-weight:700;background:#f2f8ec}
-#rep td.hot{background:#fef1c7;font-weight:700}
-#rep input{width:70px;border:1px solid #c4e2a9;background:#f2f8ec;text-align:right;padding:3px 5px;color:#0f1e43;border-radius:4px}
-#rep .note{font-size:11px;color:#6b7785;margin-top:6px}
-#rep svg{width:100%;height:auto}
+.rep{background:#fff;color:#0f1e43;border-radius:12px;padding:28px;border:1px solid var(--bd);font-size:13px}
+.rep h2{margin:0;font-size:22px;color:#1b3263}
+.rep h3{margin:22px 0 8px;font-size:14px;color:#fff;background:linear-gradient(90deg,#1b3263,#36538f);padding:6px 12px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+.rep .rh{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:4px solid;border-image:linear-gradient(90deg,#6ca83c,#f5c030,#36538f) 1;padding-bottom:12px}
+.rep .rh img{height:120px;margin:-20px 0}
+.rep .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;margin-top:12px}
+.rep .info div{border-bottom:1px solid #e3e8f2;padding:3px 0}.rep .info b{display:block;font-size:10px;color:#6b7785;text-transform:uppercase}
+.rep table{font-size:12px;text-align:right}.rep th,.rep td{border-bottom:1px solid #e3e8f2;text-align:right;padding:4px 6px;color:#0f1e43}
+.rep th{background:#eef2f9;color:#1b3263}.rep td:first-child,.rep th:first-child{text-align:left}
+.rep tr.tot td{font-weight:700;background:#f2f8ec}
+.rep td.hot{background:#fef1c7;font-weight:700}
+.rep input{width:70px;border:1px solid #c4e2a9;background:#f2f8ec;text-align:right;padding:3px 5px;color:#0f1e43;border-radius:4px}
+.rep .note{font-size:11px;color:#6b7785;margin-top:6px}
+.rep svg{width:100%;height:auto}
 .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;margin:4px 0}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
 .pg{break-inside:avoid}
 @media print{
   body{background:#fff}header,.noprint,main>section:not(#v-mx){display:none!important}
-  main{max-width:none;padding:0}#rep{border:0;padding:0}
-  #rep input{border:0;background:none;width:auto}
+  main{max-width:none;padding:0}.rep{border:0;padding:0}
+  .rep input{border:0;background:none;width:auto}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 .who{position:fixed;inset:0;background:rgba(10,20,40,.7);display:none;place-items:center;z-index:30}
@@ -80,6 +80,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
   <nav>
     <button data-v="call" class="on">Llamar</button>
     <button data-v="list">Lista</button>
+    <button data-v="mx">Maxímetro</button>
     <button data-v="seg">Seguimiento</button>
     <button data-v="stats">Registro diario</button>
     <button data-v="load">Subir Excel</button>
@@ -162,16 +163,19 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
       <div id="mxStatus" class="mut" style="margin-top:6px"></div>
     </div>
     <div class="actions">
-      <button class="b-pri" id="mxPrint">🖨️ Imprimir / guardar PDF</button>
+      <button class="b-pri" id="mxPdf">⬇ Descargar PDF</button>
+      <button id="mxPrint">🖨️ Imprimir</button>
       <button id="mxXls">⬇ Excel</button>
       <button class="b-ok" id="mxMail">✉️ Pasar datos al correo</button>
     </div>
   </div>
-  <div id="rep"><p class="mut">Sube las tablas para generar el estudio.</p></div>
+  <div id="rep" class="rep"><p class="mut">Sube las tablas para generar el estudio.</p></div>
 </section>
 </main>
 <script src="xlsx.full.min.js"></script>
 <script src="jszip.min.js"></script>
+<script src="html2canvas.min.js"></script>
+<script src="jspdf.umd.min.js"></script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
@@ -299,6 +303,7 @@ function renderCall(){
       <button class="b-ko" data-s="rechazado">❌ Rechazado</button>
       <button class="b-ok" data-s="correo">✉️ Correo enviado</button>
       <button data-s="pendiente">↺ Pendiente</button>
+      <button data-s="mx">📊 Maxímetro</button>
     </div></div>
     <div id="mailBox"></div>`;
   $("#note").onchange=e=>{l.note=e.target.value;save()};
@@ -400,10 +405,18 @@ function openMail(l){
       <label>% P3<input type="text" id="p3" value="${esc(f.__p3||"")}" placeholder="48"><span class="mut" style="font-size:11px">${esc(f.__pmax||"")}</span></label>
       <label>Comercializadora actual<input type="text" id="comer" value="${esc(f.__comer)}"></label>
     </div>
+    <div class="stat" style="text-align:left;margin-bottom:8px" id="mxBar">
+      ${l.mx?`✔ <b>Maxímetro listo</b> · CUPS ${esc(l.mx.cups||"")} · ${esc(l.mx.rows.length)} meses`:`<b>Maxímetro:</b> sube aquí las 2 tablas de SIPS (.zip o .xls)`}
+      <input type="file" id="mailMx" multiple accept=".xls,.xlsx,.zip,.csv" style="margin-top:6px"><span id="mxMsg" class="mut"></span>
+    </div>
     <input type="email" id="to" placeholder="Email del cliente" value="${esc(f.__email)}" style="margin-bottom:8px">
     <input type="text" id="subj" style="margin-bottom:8px">
     <textarea id="body" style="min-height:420px"></textarea>
     <div class="actions">
+      <button class="b-pri" id="all" style="font-size:17px">📨 Copiar y enviar con todo adjunto</button>
+    </div>
+    <div id="sendMsg" class="mut" style="margin:6px 0"></div>
+    <div class="actions" style="margin-top:4px">
       <button id="cp">📋 Copiar texto</button>
       <button id="pdf">📎 Presentación (PDF)</button>
       <button id="mt">Abrir en mi correo</button>
@@ -428,6 +441,13 @@ function openMail(l){
     try{await navigator.clipboard.writeText(txt)}catch(e){$("#body").select();document.execCommand("copy")}
     $("#cp").textContent="✔ Copiado";
   };
+  $("#mailMx").onchange=async e=>{
+    const fl=[...e.target.files]; if(!fl.length)return; $("#mxMsg").textContent=" Leyendo…";
+    mxLeadId=l.id; mx=l.mx||null; $("#mxName").value=f.__nombre||"";
+    const ok=await mxIngest(fl);
+    if(ok){f.__nombre=f.__nombre||l.mx.nombre;openMail(l)} else $("#mxMsg").textContent=" "+$("#mxStatus").textContent;
+  };
+  $("#all").onclick=()=>sendAll(l,keep);
   $("#pdf").onclick=async()=>{
     keep();
     try{
@@ -440,7 +460,7 @@ function openMail(l){
     keep();
     location.href=`mailto:${encodeURIComponent($("#to").value.trim())}?subject=${encodeURIComponent($("#subj").value)}&body=${encodeURIComponent($("#body").value)}`;
   };
-  $("#done").onclick=()=>{keep();setStatus(l,"correo",true,`Correo enviado (${mailLang==="ca"?"català":"castellano"}, firma ${$("#from").value})`)};
+  $("#done").onclick=()=>{keep();setStatus(l,"correo",true,`Correo enviado (${mailLang==="ca"?"català":"castellano"}, firma ${$("#from").value}) con presentación${l.mx?" y maxímetro":""}`)};
   fill();
   $("#mailBox").scrollIntoView({behavior:"smooth"});
 }
@@ -543,13 +563,14 @@ function loadMxFromLead(){
 function openMx(id){mxLeadId=id;show("mx")}
 $("#mxLead").onchange=()=>{mxLeadId=$("#mxLead").value;loadMxFromLead()};
 $("#mxName").oninput=$("#mxNif").oninput=()=>{if(mx){mx.nombre=$("#mxName").value;mx.nif=$("#mxNif").value;persistMx();renderMx(true)}};
-$("#mxFile").onchange=async e=>{
-  const files=[...e.target.files]; if(!files.length)return;
+$("#mxFile").onchange=async e=>{const f=[...e.target.files];await mxIngest(f);e.target.value=""};
+async function mxIngest(files){
+  if(!files.length)return false;
   try{
     const sheets=await readSheets(files); let L=null,P=null;
     for(const a of sheets){ const h=(a[0]||[]).map(x=>String(x).trim());
       if(h.includes("Fecha Lectura Inicial"))L=parseLect(a); else if(h.includes("Tarifa")||h.includes("Codigo CUPS"))P=parsePunto(a); }
-    if(!L&&!(mx&&mx.rows)){$("#mxStatus").textContent="❌ No encuentro la tabla de lecturas (Fecha Lectura Inicial / P1 Activa…).";return}
+    if(!L&&!(mx&&mx.rows)){$("#mxStatus").textContent="❌ No encuentro la tabla de lecturas (Fecha Lectura Inicial / P1 Activa…).";return false}
     const base=mx||{};
     mx={...base,...(P||{}),...(L||{}),nombre:$("#mxName").value,nif:$("#mxNif").value};
     if(P&&!(L))mx.cups=P.cups||mx.cups;
@@ -560,10 +581,9 @@ $("#mxFile").onchange=async e=>{
     const l=mxLeadById(mxLeadId); if(l&&!$("#mxName").value){$("#mxName").value=l.f.__nombre;mx.nombre=l.f.__nombre}
     persistMx();
     if(!/⚠️/.test($("#mxStatus").textContent))$("#mxStatus").textContent=`✔ ${L?"Lecturas":""}${L&&P?" + ":""}${P?"Datos del punto":""} cargados · CUPS ${mx.cups}${l?" · guardado en el lead":" · sin lead asignado"}`;
-    renderMx();
-  }catch(err){console.error(err);$("#mxStatus").textContent="❌ No he podido leer los archivos: "+err.message}
-  e.target.value="";
-};
+    renderMx();return true;
+  }catch(err){console.error(err);$("#mxStatus").textContent="❌ No he podido leer los archivos: "+err.message;return false}
+}
 function persistMx(){
   const l=mxLeadById(mxLeadId); if(!l||!mx)return;
   l.mx=mx; const s=summary();
@@ -599,10 +619,14 @@ function svgPower(){
 }
 function renderMx(keep){
   const el=$("#rep"); if(!mx||!mx.rows){el.innerHTML=`<p class="mut">Sube las tablas para generar el estudio.</p>`;return}
+  el.innerHTML=mxBuild();
+  el.querySelectorAll("[data-o]").forEach(i=>i.onchange=()=>{mx.opt[+i.dataset.o]=num(i.value);persistMx();renderMx()});
+}
+function mxBuild(){
   const s=summary(), C=mx.contr, O=mx.opt, hasC=!!C;
   const hot=Math.max(...s.pct);
   const th=a=>PN.map(p=>`<th>${a}${p}</th>`).join("");
-  el.innerHTML=`
+  return `
   <div class="rh"><div><div class="mut" style="font-size:11px;text-transform:uppercase;letter-spacing:.08em">Estudio de consumo y potencia</div>
     <h2>${esc(mx.nombre||"Cliente")}${mx.nif?` <span style="font-weight:400;font-size:15px">· ${esc(mx.nif)}</span>`:""}</h2>
     <div class="mut">Últimos ${mx.rows.length} meses · ${fd(mx.rows[0].ini)} – ${fd(mx.rows[mx.rows.length-1].fin)}</div></div>
@@ -632,8 +656,59 @@ function renderMx(keep){
   </table>
   <div class="note">Propuesta = máximo registrado en los últimos 12 meses, respetando que cada periodo no sea inferior al anterior. Puedes ajustarla a mano.</div></div>
   <div class="note" style="margin-top:14px;border-top:1px solid #e3e8f2;padding-top:8px">MESENERGIA · +Energía — Nos importa tu ahorro · Estudio preliminar con datos de la distribuidora, sin compromiso.</div>`;
-  el.querySelectorAll("[data-o]").forEach(i=>i.onchange=()=>{mx.opt[+i.dataset.o]=num(i.value);persistMx();renderMx()});
 }
+
+/* ---------- enviar con todo adjunto ---------- */
+async function mxPdfFile(l){
+  const saved=mx; mx=l.mx; let html; try{html=mxBuild()}finally{mx=saved}
+  const holder=document.createElement("div"); holder.style.cssText="position:absolute;left:0;top:0;width:794px;z-index:-1;pointer-events:none;background:#fff";
+  const wrap=document.createElement("div"); wrap.className="rep"; wrap.style.cssText="width:794px;border:0;border-radius:0;box-sizing:border-box";
+  wrap.innerHTML=html; holder.appendChild(wrap);
+  wrap.querySelectorAll("input").forEach(i=>{const sp=document.createElement("b");sp.textContent=i.value;i.replaceWith(sp)});
+  wrap.querySelectorAll("svg").forEach(v=>{v.style.cssText="width:738px;height:236px;display:block"});
+  const sx=scrollX,sy=scrollY; scrollTo(0,0);
+  document.body.appendChild(holder);
+  try{
+    await Promise.all([...wrap.querySelectorAll("img")].map(im=>im.complete?1:new Promise(r=>{im.onload=im.onerror=r})));
+    const canvas=await html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0});
+    const W=wrap.offsetWidth, k=canvas.width/W, wr=wrap.getBoundingClientRect();
+    const cuts=[...[...wrap.querySelectorAll("tr,svg,.info,.rh,.note")].map(e=>e.getBoundingClientRect().bottom-wr.top),...[...wrap.querySelectorAll("h3")].map(e=>e.getBoundingClientRect().top-wr.top-8)].sort((x,y)=>x-y);
+    const mm=8, pw=210-2*mm, ph=297-2*mm, PH=W*ph/pw, total=wrap.offsetHeight;
+    const pdf=new jspdf.jsPDF({unit:"mm",format:"a4"}); let y0=0,first=true;
+    while(y0<total-1){
+      let y1=Math.min(total,y0+PH);
+      if(y1<total){const c=cuts.filter(v=>v>y0+PH*.5&&v<=y1);if(c.length)y1=c[c.length-1]}
+      const h=y1-y0, pc=document.createElement("canvas"); pc.width=canvas.width; pc.height=Math.round(h*k);
+      pc.getContext("2d").drawImage(canvas,0,Math.round(y0*k),canvas.width,pc.height,0,0,canvas.width,pc.height);
+      if(!first)pdf.addPage(); first=false;
+      pdf.addImage(pc.toDataURL("image/jpeg",.92),"JPEG",mm,mm,pw,h*pw/W);
+      y0=y1;
+    }
+    const blob=pdf.output("blob");
+    return new File([blob],`Maximetro-${String(l.mx.nombre||l.mx.cups||"cliente").replace(/[^\w\-]+/g,"_")}.pdf`,{type:"application/pdf"});
+  }finally{holder.remove();scrollTo(sx,sy)}
+}
+function saveFile(f){const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}
+async function sendAll(l,keep){
+  keep();
+  if(!l.mx&&!confirm("Este cliente no tiene maxímetro cargado. ¿Enviar solo con la presentación?"))return;
+  const btn=$("#all"),msg=$("#sendMsg"),old=btn.textContent; btn.disabled=true; btn.textContent="⏳ Preparando adjuntos…";
+  try{
+    const files=[]; if(l.mx)files.push(await mxPdfFile(l));
+    const pres=await (await fetch(PRES_URL)).blob(); files.push(new File([pres],"Presentacion-Mes-Energia.pdf",{type:"application/pdf"}));
+    const txt=$("#body").value, subj=$("#subj").value, to=$("#to").value.trim();
+    if(navigator.canShare&&navigator.canShare({files})){
+      try{await navigator.share({files,title:subj,text:txt});msg.textContent="✔ Compartido con los PDF adjuntos. Cuando lo envíes, pulsa «Confirmar correo enviado».";return}
+      catch(e){if(e.name==="AbortError")return}
+    }
+    try{await navigator.clipboard.writeText(txt)}catch(e){$("#body").select();document.execCommand("copy")}
+    for(const f of files){saveFile(f);await new Promise(r=>setTimeout(r,400))}
+    msg.innerHTML=`✔ <b>Texto copiado</b> y <b>${files.length} PDF descargados</b> (${files.map(f=>esc(f.name)).join(", ")}).<br>En el correo: pega el texto (Ctrl+V) y arrastra los PDF. Luego pulsa «Confirmar correo enviado».`;
+    location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}`;
+  }catch(e){console.error(e);msg.textContent="❌ No he podido preparar los adjuntos: "+e.message}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+$("#mxPdf").onclick=async()=>{if(!mx)return alert("Sube primero las tablas");const l=mxLeadById(mxLeadId)||{mx};if(!l.mx)l.mx=mx;saveFile(await mxPdfFile(l))};
 $("#mxPrint").onclick=()=>{if(!mx)return alert("Sube primero las tablas");const t=document.title;document.title=`Estudio ${mx.nombre||mx.cups}`;window.print();document.title=t};
 $("#mxMail").onclick=()=>{
   const l=mxLeadById(mxLeadId); if(!mx)return alert("Sube primero las tablas");
