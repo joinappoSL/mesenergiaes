@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Llamadas Leads</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#1b2430;--mut:#6b7785;--bd:#dde3ea;--pri:#1f6feb;--ok:#1a9d55;--warn:#d98a00;--ko:#d33b3b}
+@media(prefers-color-scheme:dark){:root{--bg:#10151b;--card:#1a212a;--tx:#e8edf2;--mut:#93a0ae;--bd:#2c3642}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0 8px 0 0}
+nav button{margin-right:4px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--bd);background:var(--card);padding:7px 12px;border-radius:8px;cursor:pointer}
+button:hover{border-color:var(--pri)}
+button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.b-ok{background:var(--ok);color:#fff;border:0}
+button.b-warn{background:var(--warn);color:#fff;border:0}
+button.b-ko{background:var(--ko);color:#fff;border:0}
+button.b-pri{background:var(--pri);color:#fff;border:0}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:24px}
+.mut{color:var(--mut)}
+.kw{font-size:40px;font-weight:800;color:var(--pri)}
+.big{font-size:22px;font-weight:700}
+.phones a{display:inline-block;margin:4px 8px 4px 0;padding:8px 14px;border-radius:8px;background:var(--ok);color:#fff;text-decoration:none;font-weight:700;font-size:18px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.actions button{padding:12px 16px;font-weight:600}
+table{border-collapse:collapse;width:100%}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;color:var(--mut)}
+tr.click{cursor:pointer}tr.click:hover{background:var(--bg)}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;color:#fff}
+.t-pendiente{background:#8795a5}.t-no_contesta{background:var(--warn)}.t-rechazado{background:var(--ko)}.t-correo{background:var(--ok)}
+textarea,input[type=text],input[type=email],select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
+textarea{min-height:260px;font-family:inherit}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hidden{display:none}
+.drop{border:2px dashed var(--bd);border-radius:12px;padding:30px;text-align:center}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}dt{color:var(--mut)}dd{margin:0;word-break:break-word}
+</style>
+</head>
+<body>
+<header>
+  <h1>📞 Llamadas Leads</h1>
+  <nav>
+    <button data-v="call" class="on">Llamar</button>
+    <button data-v="list">Lista</button>
+    <button data-v="stats">Registro diario</button>
+    <button data-v="load">Subir Excel</button>
+  </nav>
+  <span id="today" class="mut" style="margin-left:auto"></span>
+</header>
+<main>
+
+<section id="v-load" class="hidden">
+  <div class="card">
+    <div class="drop">
+      <p><b>Sube tu Excel (.xlsx, .xls o .csv)</b></p>
+      <input type="file" id="file" accept=".xlsx,.xls,.csv">
+    </div>
+    <p class="mut">Los leads nuevos se añaden a los que ya tienes (sin duplicar teléfonos). Se guarda todo en este navegador.</p>
+  </div>
+  <div class="card hidden" id="mapBox">
+    <h3 style="margin-top:0">Columnas detectadas</h3>
+    <p class="mut">Detectado automáticamente por el nombre de la cabecera (aunque cambie el orden). Corrige si hace falta.</p>
+    <div class="grid" id="mapSel"></div>
+    <div class="actions"><button class="b-pri" id="doImport">Importar leads</button></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Datos</h3>
+    <div class="actions" style="margin-top:0">
+      <button id="expLog">Exportar registro a Excel</button>
+      <button id="expLeads">Exportar leads con estado</button>
+      <button id="clearAll" class="b-ko">Borrar todo</button>
+    </div>
+  </div>
+</section>
+
+<section id="v-call">
+  <div class="card row">
+    <label>Mostrar:
+      <select id="fSel" style="width:auto"><option value="pendiente">Pendientes</option><option value="no_contesta">No contesta</option><option value="todos">Todos</option></select>
+    </label>
+    <button id="prev">◀</button><span id="pos" class="mut"></span><button id="next">▶</button>
+  </div>
+  <div id="callBox"></div>
+</section>
+
+<section id="v-list" class="hidden">
+  <div class="card row">
+    <input type="text" id="q" placeholder="Buscar nombre, teléfono..." style="max-width:300px">
+    <select id="lSel" style="width:auto"><option value="todos">Todos</option><option value="pendiente">Pendiente</option><option value="no_contesta">No contesta</option><option value="rechazado">Rechazado</option><option value="correo">Correo enviado</option></select>
+  </div>
+  <div class="card" style="overflow:auto"><table id="tbl"></table></div>
+</section>
+
+<section id="v-stats" class="hidden">
+  <div class="card"><h3 style="margin-top:0">Hoy</h3><div class="grid" id="todayStats"></div></div>
+  <div class="card" style="overflow:auto"><h3 style="margin-top:0">Por día</h3><table id="dayTbl"></table></div>
+</section>
+
+</main>
+<script src="xlsx.full.min.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const ST={pendiente:"Pendiente",no_contesta:"No contesta",rechazado:"Rechazado",correo:"Correo enviado"};
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const save=()=>{localStorage.setItem("leads",JSON.stringify(leads));localStorage.setItem("log",JSON.stringify(log))};
+let leads=load("leads",[]);   // {id,f:{col:val},status,calls,note,last}
+let log=load("log",[]);       // {t:ISO,d:YYYY-MM-DD,id,name,status}
+let idx=0, cur=null, pending=null;
+const day=(d=new Date())=>{const o=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return o.toISOString().slice(0,10)};
+const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- detección de columnas ---------- */
+const ROLES={
+  nombre:["nombre","cliente","razon social","titular","nom","empresa","contacto"],
+  tel1:["telefono 1","telefono","tel 1","tel","movil","telf","phone"],
+  tel2:["telefono 2","telefono dos","tel 2","telf 2","movil 2","segundo telefono","telefono2"],
+  kw:["kw","potencia","kw contratados","potencia contratada"],
+  email:["email","e mail","correo","correo electronico","mail"],
+  direccion:["direccion","domicilio","calle","cups direccion"],
+  poblacion:["poblacion","localidad","municipio","ciudad"],
+};
+function detect(headers){
+  const nh=headers.map(norm), map={}, used=new Set();
+  const find=(role,exact)=>{
+    for(const a of ROLES[role]){
+      let i=nh.findIndex((h,j)=>!used.has(j)&&(exact?h===a:h.includes(a)));
+      if(i>=0)return i;
+    }
+    return -1;
+  };
+  for(const r of ["tel2","kw","email","nombre","direccion","poblacion"]){let i=find(r,true);if(i<0)i=find(r,false);if(i>=0){map[r]=i;used.add(i)}}
+  // tel1: exacto primero, luego el que contiene "tel" y no es tel2
+  let i=find("tel1",true); if(i<0)i=find("tel1",false); if(i>=0){map.tel1=i;used.add(i)}
+  // kw sin cabecera clara: columna justo al lado de teléfono 2
+  if(map.kw==null&&map.tel2!=null){const j=map.tel2+1;if(j<headers.length&&!used.has(j)){map.kw=j}}
+  return map;
+}
+const ROLE_LBL={nombre:"Nombre / Cliente",tel1:"Teléfono 1",tel2:"Teléfono 2",kw:"kW (al lado de Teléfono 2)",email:"Email",direccion:"Dirección",poblacion:"Población"};
+let pend=null; // {headers,rows,map}
+
+$("#file").onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false});
+  // cabecera = primera fila con >=3 celdas no vacías
+  let h=aoa.findIndex(r=>r.filter(c=>String(c).trim()!=="").length>=3); if(h<0)h=0;
+  const headers=aoa[h].map((c,i)=>String(c).trim()||`Col ${i+1}`);
+  const rows=aoa.slice(h+1).filter(r=>r.some(c=>String(c).trim()!==""));
+  pend={headers,rows,map:detect(headers)};
+  renderMap();
+};
+function renderMap(){
+  $("#mapBox").classList.remove("hidden");
+  $("#mapSel").innerHTML=Object.keys(ROLE_LBL).map(r=>`<label>${ROLE_LBL[r]}<select data-r="${r}"><option value="">— ninguna —</option>${pend.headers.map((h,i)=>`<option value="${i}" ${pend.map[r]===i?"selected":""}>${esc(h)}</option>`).join("")}</select></label>`).join("");
+  document.querySelectorAll("#mapSel select").forEach(s=>s.onchange=()=>{pend.map[s.dataset.r]=s.value===""?undefined:+s.value});
+}
+$("#doImport").onclick=()=>{
+  const {headers,rows,map}=pend; const phones=new Set(leads.map(l=>l.f.__tel));
+  let add=0;
+  for(const r of rows){
+    const f={}; headers.forEach((h,i)=>f[h]=String(r[i]??"").trim());
+    const g=k=>map[k]!=null?f[headers[map[k]]]:"";
+    f.__nombre=g("nombre");f.__tel=g("tel1");f.__tel2=g("tel2");f.__kw=g("kw");f.__email=g("email");f.__dir=g("direccion");f.__pob=g("poblacion");
+    f.__cols=JSON.stringify(map.__x||null);
+    const key=f.__tel||f.__tel2; if(key&&phones.has(f.__tel))continue; phones.add(f.__tel);
+    leads.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),f,status:"pendiente",calls:0,note:"",last:null,headers});
+    add++;
+  }
+  save(); pend=null; $("#mapBox").classList.add("hidden"); $("#file").value="";
+  alert(`${add} leads importados`); show("call"); idx=0; renderCall();
+};
+
+/* ---------- vistas ---------- */
+function show(v){
+  document.querySelectorAll("main>section").forEach(s=>s.classList.add("hidden"));
+  $("#v-"+v).classList.remove("hidden");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  if(v==="call")renderCall(); if(v==="list")renderList(); if(v==="stats")renderStats(); updateToday();
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+function updateToday(){const n=log.filter(l=>l.d===day()).length;$("#today").textContent=`Hoy: ${n} llamadas · ${leads.filter(l=>l.status==="pendiente").length} pendientes`}
+
+/* ---------- llamar ---------- */
+const filt=()=>{const s=$("#fSel").value;return leads.filter(l=>s==="todos"||l.status===s)};
+$("#fSel").onchange=()=>{idx=0;renderCall()};
+$("#prev").onclick=()=>{idx=Math.max(0,idx-1);renderCall()};
+$("#next").onclick=()=>{idx++;renderCall()};
+function openLead(id){const i=filt().findIndex(l=>l.id===id);if(i<0)$("#fSel").value="todos";idx=filt().findIndex(l=>l.id===id);show("call")}
+function renderCall(){
+  const list=filt(); if(idx>=list.length)idx=Math.max(0,list.length-1);
+  $("#pos").textContent=list.length?`${idx+1} / ${list.length}`:"0 / 0";
+  const box=$("#callBox");
+  if(!list.length){box.innerHTML=`<div class="card">No hay leads ${leads.length?"con este filtro 🎉":"— sube un Excel primero."}</div>`;return}
+  const l=cur=list[idx], f=l.f;
+  const tel=t=>t?`<a href="tel:${esc(t.replace(/[^\d+]/g,""))}">📞 ${esc(t)}</a>`:"";
+  const skip=new Set([f.__nombre,f.__tel,f.__tel2,f.__kw,f.__email]);
+  const extra=Object.entries(f).filter(([k,v])=>!k.startsWith("__")&&v!==""&&!skip.has(v));
+  box.innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between"><div class="big">${esc(f.__nombre||"(sin nombre)")}</div><span class="tag t-${l.status}">${ST[l.status]}${l.calls?` · ${l.calls} llam.`:""}</span></div>
+    <div class="mut">Potencia (kW)</div><div class="kw">${esc(f.__kw||"—")} <span style="font-size:18px">kW</span></div>
+    <div class="phones">${tel(f.__tel)}${tel(f.__tel2)}</div>
+    ${f.__email?`<div>✉️ ${esc(f.__email)}</div>`:""}
+    ${f.__dir||f.__pob?`<div class="mut">${esc([f.__dir,f.__pob].filter(Boolean).join(", "))}</div>`:""}
+    <dl>${extra.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    <textarea id="note" style="min-height:60px" placeholder="Notas de la llamada...">${esc(l.note)}</textarea>
+    <div class="actions">
+      <button class="b-warn" data-s="no_contesta">📵 No contesta</button>
+      <button class="b-ko" data-s="rechazado">❌ Rechazado</button>
+      <button class="b-ok" data-s="correo">✉️ Correo enviado</button>
+      <button data-s="pendiente">↺ Pendiente</button>
+    </div></div>
+    <div id="mailBox"></div>`;
+  $("#note").onchange=e=>{l.note=e.target.value;save()};
+  box.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{
+    l.note=$("#note").value;
+    if(b.dataset.s==="correo"){openMail(l);return}
+    setStatus(l,b.dataset.s,true);
+  });
+}
+function setStatus(l,s,advance){
+  l.status=s;l.last=new Date().toISOString();
+  if(s!=="pendiente"){l.calls++;log.push({t:l.last,d:day(),id:l.id,name:l.f.__nombre,tel:l.f.__tel,status:s})}
+  save();updateToday();
+  if(advance){ if($("#fSel").value==="todos")idx++; renderCall() }
+}
+
+/* ---------- correo ---------- */
+const TPL={
+ es:{subj:"Facturas para estudio de ahorro energético",
+  body:(n,kw,gas)=>`Hola${n?" "+n:""},\n\nGracias por atendernos por teléfono. Para poder preparar su estudio de ahorro${kw?` (potencia contratada: ${kw} kW)`:""}, necesitamos que nos envíe:\n\n  • Las dos últimas facturas de luz.${gas?"\n  • Las dos últimas facturas de gas.":""}\n\nPuede responder a este correo adjuntando las facturas en PDF o una foto clara de cada una.\n\nQuedamos a su disposición para cualquier duda.\n\nUn saludo,`},
+ ca:{subj:"Factures per a l'estudi d'estalvi energètic",
+  body:(n,kw,gas)=>`Hola${n?" "+n:""},\n\nGràcies per atendre'ns per telèfon. Per poder preparar el seu estudi d'estalvi${kw?` (potència contractada: ${kw} kW)`:""}, necessitem que ens enviï:\n\n  • Les dues últimes factures de llum.${gas?"\n  • Les dues últimes factures de gas.":""}\n\nPot respondre a aquest correu adjuntant les factures en PDF o una foto clara de cadascuna.\n\nQuedem a la seva disposició per a qualsevol dubte.\n\nUna salutació,`}
+};
+let mailLang=load("mailLang","es"), mailGas=load("mailGas",true);
+function openMail(l){
+  const f=l.f;
+  $("#mailBox").innerHTML=`<div class="card">
+    <h3 style="margin-top:0">Correo para ${esc(f.__nombre||"el cliente")}</h3>
+    <div class="row" style="margin-bottom:8px">
+      <button data-l="es">Castellano</button><button data-l="ca">Català</button>
+      <label><input type="checkbox" id="gas"> incluir facturas de gas</label>
+    </div>
+    <input type="email" id="to" placeholder="Email del cliente" value="${esc(f.__email)}" style="margin-bottom:8px">
+    <input type="text" id="subj" style="margin-bottom:8px">
+    <textarea id="body"></textarea>
+    <div class="actions">
+      <button id="cp">📋 Copiar texto</button>
+      <button id="mt">Abrir en mi correo</button>
+      <button class="b-ok" id="done">✅ Confirmar correo enviado</button>
+    </div></div>`;
+  $("#gas").checked=mailGas;
+  const fill=()=>{
+    const t=TPL[mailLang];
+    $("#subj").value=t.subj;$("#body").value=t.body(f.__nombre,f.__kw,$("#gas").checked);
+    document.querySelectorAll("[data-l]").forEach(b=>b.classList.toggle("on",b.dataset.l===mailLang));
+  };
+  document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{mailLang=b.dataset.l;localStorage.setItem("mailLang",JSON.stringify(mailLang));fill()});
+  $("#gas").onchange=()=>{mailGas=$("#gas").checked;localStorage.setItem("mailGas",JSON.stringify(mailGas));fill()};
+  $("#cp").onclick=async()=>{
+    const txt=`Asunto: ${$("#subj").value}\n\n${$("#body").value}`;
+    try{await navigator.clipboard.writeText(txt)}catch(e){$("#body").select();document.execCommand("copy")}
+    $("#cp").textContent="✔ Copiado";
+  };
+  $("#mt").onclick=()=>{
+    const to=$("#to").value.trim(); if(to){f.__email=to;save()}
+    location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent($("#subj").value)}&body=${encodeURIComponent($("#body").value)}`;
+  };
+  $("#done").onclick=()=>{const to=$("#to").value.trim();if(to)f.__email=to;setStatus(l,"correo",true)};
+  fill();
+  $("#mailBox").scrollIntoView({behavior:"smooth"});
+}
+
+/* ---------- lista ---------- */
+$("#q").oninput=renderList;$("#lSel").onchange=renderList;
+function renderList(){
+  const q=norm($("#q").value),s=$("#lSel").value;
+  const rows=leads.filter(l=>(s==="todos"||l.status===s)&&(!q||norm(Object.values(l.f).join(" ")).includes(q)));
+  $("#tbl").innerHTML=`<tr><th>Nombre</th><th>Tel 1</th><th>Tel 2</th><th>kW</th><th>Estado</th><th>Llam.</th></tr>`+
+   rows.slice(0,500).map(l=>`<tr class="click" data-id="${l.id}"><td>${esc(l.f.__nombre)}</td><td>${esc(l.f.__tel)}</td><td>${esc(l.f.__tel2)}</td><td><b>${esc(l.f.__kw)}</b></td><td><span class="tag t-${l.status}">${ST[l.status]}</span></td><td>${l.calls}</td></tr>`).join("");
+  $("#tbl").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>openLead(r.dataset.id));
+}
+
+/* ---------- registro diario ---------- */
+function agg(rows){const o={total:0,no_contesta:0,rechazado:0,correo:0};rows.forEach(r=>{o.total++;o[r.status]++});return o}
+function renderStats(){
+  const t=agg(log.filter(l=>l.d===day()));
+  const tile=(a,b)=>`<div class="stat"><b>${b}</b>${a}</div>`;
+  $("#todayStats").innerHTML=tile("Llamadas",t.total)+tile("No contesta",t.no_contesta)+tile("Rechazados",t.rechazado)+tile("Correos enviados",t.correo);
+  const days=[...new Set(log.map(l=>l.d))].sort().reverse();
+  $("#dayTbl").innerHTML=`<tr><th>Día</th><th>Llamadas</th><th>No contesta</th><th>Rechazado</th><th>Correo enviado</th></tr>`+
+   (days.map(d=>{const a=agg(log.filter(l=>l.d===d));return `<tr><td>${d}</td><td><b>${a.total}</b></td><td>${a.no_contesta}</td><td>${a.rechazado}</td><td>${a.correo}</td></tr>`}).join("")||`<tr><td colspan=5 class="mut">Aún sin registros</td></tr>`);
+}
+
+/* ---------- exportar / borrar ---------- */
+function dl(rows,name){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Hoja1");XLSX.writeFile(wb,name)}
+$("#expLog").onclick=()=>dl(log.map(l=>({Fecha:l.d,Hora:l.t.slice(11,19),Cliente:l.name,Telefono:l.tel,Resultado:ST[l.status]})),`registro-llamadas-${day()}.xlsx`);
+$("#expLeads").onclick=()=>dl(leads.map(l=>({Nombre:l.f.__nombre,"Teléfono 1":l.f.__tel,"Teléfono 2":l.f.__tel2,kW:l.f.__kw,Email:l.f.__email,Estado:ST[l.status],Llamadas:l.calls,Notas:l.note})),`leads-${day()}.xlsx`);
+$("#clearAll").onclick=()=>{if(confirm("¿Borrar TODOS los leads y el registro?")){leads=[];log=[];save();show("load")}};
+
+show(leads.length?"call":"load");
+</script>
+</body>
+</html>
