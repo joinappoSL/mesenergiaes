@@ -92,3 +92,20 @@ No trabajan más horas: automatizan lo repetitivo y se centran en sus clientes. 
 Cuando tu negocio necesita ayuda… llega Appi. WhatsApp, citas y facturas: resuelto. Tu héroe de la IA 🦸
 
 #Superheroe #Pymes #IA #Automatizacion #Mascota #Appi #Appo
+
+---
+
+# Descargas (Higgsfield)
+
+| Vídeo | 9:16 | 4:5 | 3:4 |
+|---|---|---|---|
+| t04_resumir_pdf | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/1ec9388a-f6b2-45bc-9576-d8c12069d298.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/ee92643a-d140-4621-acfd-e9108ff29979.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/4d7c51b4-ff37-49ab-b15c-8c77d2c5b66b.mp4) |
+| w01_pov_3am | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/66de395a-7072-4d44-8079-2e29cc86151b.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/328cdc59-7bd2-4aaf-b0c4-983af236a506.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/7215aa84-a7f4-47f1-9e42-39d64a45a6b1.mp4) |
+| w02_sin_vs_con | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/7e832fb4-76e0-471f-b838-8ce7a44e3d7f.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/7a3cee70-b645-4ecb-bcb9-0e51d2b60b22.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/b3fc1f49-4add-4ce9-b8cd-9b1deb8c43a7.mp4) |
+| w03_3_cosas | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/ef795174-e1ec-4806-b57b-e7b8dc6919b8.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/27599645-7d1c-4215-84a9-0caec01aaae6.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/3603c735-2655-4b83-9675-8b95adc384f4.mp4) |
+| w04_competencia | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/3aee8dcf-8ca7-480b-ba4f-03c8ec766ca7.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/0ebd19ec-7c8b-4e26-b4d4-7e9a0f395751.mp4) | [mp4](https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/d3ed2097-8080-4f48-b9c6-5d815af39a7a.mp4) |
+
+Packs en zip (los 3 formatos de cada vídeo):
+- w05–w08: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/bb0e5c97-d8d4-420d-a023-b833e2a15ce4.zip
+- w09–w11 (+ textos): https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/5f462c1b-70c1-4137-a32f-2c07c01b1fa4.zip
+- w12–w14 (+ textos): https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/d5eeea19-e956-44c3-b80b-2caf435d760e.zip
