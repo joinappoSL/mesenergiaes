@@ -327,6 +327,8 @@ const TPL={
 
 Tal com hem comentat en la nostra conversa telefònica d’${d.when.ca}, li envio les nostres dades de contacte i una breu presentació de la nostra empresa.
 
+Trobarà adjunta la presentació de Mes Energia. També pot consultar-la i descarregar-la aquí: ${d.pres}
+
 En relació amb el subministrament associat al CUPS: ${d.cups||"[CUPS]"}, hem dut a terme una primera revisió del maxímetre i de l’històric de consum corresponent a l’any 2026. Segons les dades analitzades, el consum anual supera els ${d.consumo||"[consum]"} kW, mentre que actualment el subministrament disposa d’una tarifa estàndard.
 Pel nivell de consum registrat, aquest tipus de subministrament sol beneficiar-se més de tarifes específiques per a grans consums, les quals permeten optimitzar tant els costos energètics com l’estructura del contracte.
 
@@ -355,6 +357,8 @@ Mes Energia`},
 
 Tal como hemos comentado en nuestra conversación telefónica de ${d.when.es}, le envío nuestros datos de contacto y una breve presentación de nuestra empresa.
 
+Encontrará adjunta la presentación de Mes Energia. También puede consultarla y descargarla aquí: ${d.pres}
+
 En relación con el suministro asociado al CUPS: ${d.cups||"[CUPS]"}, hemos realizado una primera revisión del maxímetro y del histórico de consumo correspondiente al año 2026. Según los datos analizados, el consumo anual supera los ${d.consumo||"[consumo]"} kW, mientras que actualmente el suministro dispone de una tarifa estándar.
 Por el nivel de consumo registrado, este tipo de suministro suele beneficiarse más de tarifas específicas para grandes consumos, que permiten optimizar tanto los costes energéticos como la estructura del contrato.
 
@@ -379,6 +383,7 @@ Reciba un cordial saludo,
 ${d.from}
 Mes Energia`}
 };
+const PRES_URL=new URL("presentacion-mes-energia-pymes.pdf",location.href).href;
 let mailLang=load("mailLang","ca"), mailFrom=load("mailFrom",SENDERS[0]);
 function openMail(l){
   const f=l.f;
@@ -400,6 +405,7 @@ function openMail(l){
     <textarea id="body" style="min-height:420px"></textarea>
     <div class="actions">
       <button id="cp">📋 Copiar texto</button>
+      <button id="pdf">📎 Presentación (PDF)</button>
       <button id="mt">Abrir en mi correo</button>
       <button class="b-ok" id="done">✅ Confirmar correo enviado</button>
     </div></div>`;
@@ -407,7 +413,7 @@ function openMail(l){
   const keep=()=>{f.__nombre=$("#n").value;f.__cups=$("#cups").value.trim();f.__consumo=$("#consumo").value.trim();f.__p3=$("#p3").value.trim();f.__comer=$("#comer").value.trim();const to=$("#to").value.trim();if(to)f.__email=to;save()};
   const fill=()=>{
     const m=new Date().getHours()<14;
-    const d={n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
+    const d={pres:PRES_URL,n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
       sal:{ca:m?"bon dia":"bona tarda",es:m?"buenos días":"buenas tardes"},when:{ca:m?"aquest matí":"aquesta tarda",es:m?"esta mañana":"esta tarde"}};
     const t=TPL[mailLang];
     $("#subj").value=t.subj;$("#body").value=t.body(d);
@@ -421,6 +427,14 @@ function openMail(l){
     const txt=`Asunto: ${$("#subj").value}\n\n${$("#body").value}`;
     try{await navigator.clipboard.writeText(txt)}catch(e){$("#body").select();document.execCommand("copy")}
     $("#cp").textContent="✔ Copiado";
+  };
+  $("#pdf").onclick=async()=>{
+    keep();
+    try{
+      const blob=await (await fetch(PRES_URL)).blob(), file=new File([blob],"Presentacion-Mes-Energia.pdf",{type:"application/pdf"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:$("#subj").value,text:$("#body").value});return}
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;a.click();
+    }catch(e){if(e.name!=="AbortError")window.open(PRES_URL,"_blank")}
   };
   $("#mt").onclick=()=>{
     keep();
