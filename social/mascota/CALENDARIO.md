@@ -48,3 +48,14 @@ El texto y los hashtags de cada vídeo están en `TEXTOS_PUBLICACION.md`.
 - **No borres** un vídeo aunque arranque flojo: a veces despega a los 2 o 3 días.
 - **A los 7 días**, mira cuáles tienen más visualizaciones y "guardados", y dime de qué tipo son (truco, humor o anuncio) para hacer más de ese tipo.
 - **Enlace en la bio:** joinappo.com. Los vídeos dicen "auditoría gratis" y la gente lo buscará ahí.
+
+## Descargar la carpeta completa (APPO_REDES)
+
+Descarga los 6 zips y descomprímelos en el mismo sitio: se juntan solos en una sola carpeta `APPO_REDES` (50 archivos).
+
+- Reels/TikTok 9:16, días 1–8: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/a6f7a247-5bd3-4093-a3cc-80b2063e1a82.zip
+- Reels/TikTok 9:16, días 9–16: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/5360f5d8-d5b9-4251-9842-d64f9410cb76.zip
+- Feed 4:5, días 1–8: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/4de5039d-409c-44f8-9c8d-7eb0a48976b2.zip
+- Feed 4:5, días 9–16: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/11d2e52a-4353-40f5-a5a3-a10a08de262e.zip
+- Perfil 3:4, días 1–8: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/16f6f7fd-a0c3-4320-b3f6-d012b9595777.zip
+- Perfil 3:4, días 9–16: https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/9369e0b1-6711-4429-9840-c96896384d89.zip
