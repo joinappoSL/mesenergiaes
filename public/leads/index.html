@@ -36,7 +36,7 @@ th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical
 th{font-size:12px;text-transform:uppercase;color:var(--mut)}
 tr.click{cursor:pointer}tr.click:hover{background:var(--bg)}
 .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;color:#fff}
-.t-pendiente{background:#8795a5}.t-no_contesta{background:var(--warn)}.t-rechazado{background:var(--ko)}.t-correo{background:var(--ok)}
+.t-pendiente{background:#8795a5}.t-no_contesta{background:var(--warn)}.t-rechazado{background:var(--ko)}.t-correo{background:var(--ok)}.t-facturas{background:#2f7de1}.t-comparativa{background:#7a4fd6}
 textarea,input[type=text],input[type=email],select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
 textarea{min-height:260px;font-family:inherit}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -67,6 +67,11 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
   #rep input{border:0;background:none;width:auto}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+.who{position:fixed;inset:0;background:rgba(10,20,40,.7);display:none;place-items:center;z-index:30}
+.who>div{background:var(--card);padding:26px;border-radius:14px;text-align:center;min-width:280px}
+.who button{display:block;width:100%;margin:8px 0;padding:14px;font-size:17px;font-weight:700}
+.tl{list-style:none;padding:0;margin:8px 0}.tl li{padding:6px 0 6px 12px;border-left:3px solid var(--bd);margin-left:4px}.tl small{color:var(--mut);display:block}
+.warn{color:var(--warn);font-weight:700}
 </style>
 </head>
 <body>
@@ -75,12 +80,13 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
   <nav>
     <button data-v="call" class="on">Llamar</button>
     <button data-v="list">Lista</button>
-    <button data-v="mx">Maxímetro</button>
+    <button data-v="seg">Seguimiento</button>
     <button data-v="stats">Registro diario</button>
     <button data-v="load">Subir Excel</button>
   </nav>
-  <span id="today" class="mut" style="margin-left:auto"></span>
+  <select id="owner" style="width:auto;margin-left:auto" title="Comercial"></select> <span id="today" class="mut"></span>
 </header>
+<div class="who" id="who"><div><h2 style="margin-top:0">¿Quién eres?</h2><div id="whoBtns"></div></div></div>
 <main>
 
 <section id="v-load" class="hidden">
@@ -102,7 +108,9 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
     <div class="actions" style="margin-top:0">
       <button id="expLog">Exportar registro a Excel</button>
       <button id="expLeads">Exportar leads con estado</button>
-      <button id="clearAll" class="b-ko">Borrar todo</button>
+      <button id="expBak">Copia de seguridad (JSON)</button>
+      <label class="mut">Restaurar: <input type="file" id="impBak" accept=".json" style="width:auto"></label>
+      <button id="clearAll" class="b-ko">Borrar mis datos</button>
     </div>
   </div>
 </section>
@@ -120,7 +128,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
 <section id="v-list" class="hidden">
   <div class="card row">
     <input type="text" id="q" placeholder="Buscar nombre, teléfono..." style="max-width:300px">
-    <select id="lSel" style="width:auto"><option value="todos">Todos</option><option value="pendiente">Pendiente</option><option value="no_contesta">No contesta</option><option value="rechazado">Rechazado</option><option value="correo">Correo enviado</option></select>
+    <select id="lSel" style="width:auto"><option value="todos">Todos</option><option value="pendiente">Pendiente</option><option value="no_contesta">No contesta</option><option value="rechazado">Rechazado</option><option value="correo">Correo enviado</option><option value="facturas">Facturas recibidas</option><option value="comparativa">Comparativa enviada</option></select>
   </div>
   <div class="card" style="overflow:auto"><table id="tbl"></table></div>
 </section>
@@ -130,6 +138,15 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
   <div class="card" style="overflow:auto"><h3 style="margin-top:0">Por día</h3><table id="dayTbl"></table></div>
 </section>
 
+
+<section id="v-seg" class="hidden">
+  <div class="card row">
+    <label>Mostrar: <select id="segF" style="width:auto"><option value="todos">Todo el seguimiento</option><option value="correo">Correo enviado (esperando facturas)</option><option value="facturas">Facturas recibidas</option><option value="comparativa">Comparativa enviada</option></select></label>
+    <span id="segCnt" class="mut"></span>
+  </div>
+  <div id="segDetail"></div>
+  <div class="card" style="overflow:auto"><table id="segTbl"></table></div>
+</section>
 
 <section id="v-mx" class="hidden">
   <div class="card noprint">
@@ -158,12 +175,23 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
-const ST={pendiente:"Pendiente",no_contesta:"No contesta",rechazado:"Rechazado",correo:"Correo enviado"};
+const ST={pendiente:"Pendiente",no_contesta:"No contesta",rechazado:"Rechazado",correo:"Correo enviado",facturas:"Facturas recibidas",comparativa:"Comparativa enviada"};
+const CALLST=["no_contesta","rechazado","correo"];
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
-const save=()=>{localStorage.setItem("leads",JSON.stringify(leads));localStorage.setItem("log",JSON.stringify(log))};
-let leads=load("leads",[]);   // {id,f:{col:val},status,calls,note,last}
-let log=load("log",[]);       // {t:ISO,d:YYYY-MM-DD,id,name,status}
-let idx=0, cur=null, pending=null;
+const OWNERS=["Carlos Del Moral","Mario García","Gabriela Santamaría"];
+let owner=load("owner",null);
+const K=n=>n+":"+owner;
+const save=()=>{if(!owner)return;localStorage.setItem(K("leads"),JSON.stringify(leads));localStorage.setItem(K("log"),JSON.stringify(log))};
+let leads=[], log=[];   // leads: {id,f,status,calls,note,last,mailAt,hist:[{t,x}],files:[{id,name,size,t,kind}]}
+function loadData(){
+  if(!owner){leads=[];log=[];return}
+  if(localStorage.getItem("leads")&&!localStorage.getItem(K("leads"))&&confirm(`Hay leads guardados de antes. ¿Son de ${owner}?`)){
+    localStorage.setItem(K("leads"),localStorage.getItem("leads"));localStorage.setItem(K("log"),localStorage.getItem("log")||"[]");
+    localStorage.removeItem("leads");localStorage.removeItem("log");
+  }
+  leads=load(K("leads"),[]);log=load(K("log"),[]);
+}
+let idx=0, cur=null;
 const day=(d=new Date())=>{const o=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return o.toISOString().slice(0,10)};
 const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -238,10 +266,10 @@ function show(v){
   document.querySelectorAll("main>section").forEach(s=>s.classList.add("hidden"));
   $("#v-"+v).classList.remove("hidden");
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
-  if(v==="call")renderCall(); if(v==="list")renderList(); if(v==="stats")renderStats(); if(v==="mx")initMx(); updateToday();
+  if(v==="call")renderCall(); if(v==="list")renderList(); if(v==="stats")renderStats(); if(v==="seg")renderSeg(); if(v==="mx")initMx(); updateToday();
 }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
-function updateToday(){const n=log.filter(l=>l.d===day()).length;$("#today").textContent=`Hoy: ${n} llamadas · ${leads.filter(l=>l.status==="pendiente").length} pendientes`}
+function updateToday(){const n=log.filter(l=>l.d===day()&&CALLST.includes(l.status)).length;$("#today").textContent=`Hoy: ${n} llamadas · ${leads.filter(l=>l.status==="pendiente").length} pendientes`}
 
 /* ---------- llamar ---------- */
 const filt=()=>{const s=$("#fSel").value;return leads.filter(l=>s==="todos"||l.status===s)};
@@ -271,7 +299,6 @@ function renderCall(){
       <button class="b-ko" data-s="rechazado">❌ Rechazado</button>
       <button class="b-ok" data-s="correo">✉️ Correo enviado</button>
       <button data-s="pendiente">↺ Pendiente</button>
-      <button data-s="mx">📊 Maxímetro</button>
     </div></div>
     <div id="mailBox"></div>`;
   $("#note").onchange=e=>{l.note=e.target.value;save()};
@@ -282,15 +309,18 @@ function renderCall(){
     setStatus(l,b.dataset.s,true);
   });
 }
-function setStatus(l,s,advance){
+const ev=(l,x)=>{(l.hist=l.hist||[]).push({t:new Date().toISOString(),x})};
+function setStatus(l,s,advance,txt){
   l.status=s;l.last=new Date().toISOString();
-  if(s!=="pendiente"){l.calls++;log.push({t:l.last,d:day(),id:l.id,name:l.f.__nombre,tel:l.f.__tel,status:s})}
+  if(CALLST.includes(s))l.calls++;
+  if(s==="correo")l.mailAt=l.last;
+  if(s!=="pendiente"){log.push({t:l.last,d:day(),id:l.id,name:l.f.__nombre,tel:l.f.__tel,status:s});ev(l,txt||ST[s])}
   save();updateToday();
   if(advance){ if($("#fSel").value==="todos")idx++; renderCall() }
 }
 
 /* ---------- correo ---------- */
-const SENDERS=["Carlos Del Moral","Mario García","Gabriela Santamaría"];
+const SENDERS=OWNERS;
 const TPL={
  ca:{subj:"Estudi energètic gratuït - Mes Energia",
   body:(d)=>`Hola${d.n?" "+d.n:""} ${d.sal.ca},
@@ -373,7 +403,7 @@ function openMail(l){
       <button id="mt">Abrir en mi correo</button>
       <button class="b-ok" id="done">✅ Confirmar correo enviado</button>
     </div></div>`;
-  $("#from").value=mailFrom;
+  $("#from").value=owner||mailFrom;
   const keep=()=>{f.__nombre=$("#n").value;f.__cups=$("#cups").value.trim();f.__consumo=$("#consumo").value.trim();f.__p3=$("#p3").value.trim();f.__comer=$("#comer").value.trim();const to=$("#to").value.trim();if(to)f.__email=to;save()};
   const fill=()=>{
     const m=new Date().getHours()<14;
@@ -396,7 +426,7 @@ function openMail(l){
     keep();
     location.href=`mailto:${encodeURIComponent($("#to").value.trim())}?subject=${encodeURIComponent($("#subj").value)}&body=${encodeURIComponent($("#body").value)}`;
   };
-  $("#done").onclick=()=>{keep();setStatus(l,"correo",true)};
+  $("#done").onclick=()=>{keep();setStatus(l,"correo",true,`Correo enviado (${mailLang==="ca"?"català":"castellano"}, firma ${$("#from").value})`)};
   fill();
   $("#mailBox").scrollIntoView({behavior:"smooth"});
 }
@@ -412,14 +442,14 @@ function renderList(){
 }
 
 /* ---------- registro diario ---------- */
-function agg(rows){const o={total:0,no_contesta:0,rechazado:0,correo:0};rows.forEach(r=>{o.total++;o[r.status]++});return o}
+function agg(rows){const o={total:0,no_contesta:0,rechazado:0,correo:0,facturas:0,comparativa:0};rows.forEach(r=>{o[r.status]++;if(CALLST.includes(r.status))o.total++});return o}
 function renderStats(){
   const t=agg(log.filter(l=>l.d===day()));
   const tile=(a,b)=>`<div class="stat"><b>${b}</b>${a}</div>`;
-  $("#todayStats").innerHTML=tile("Llamadas",t.total)+tile("No contesta",t.no_contesta)+tile("Rechazados",t.rechazado)+tile("Correos enviados",t.correo);
+  $("#todayStats").innerHTML=tile("Llamadas",t.total)+tile("No contesta",t.no_contesta)+tile("Rechazados",t.rechazado)+tile("Correos enviados",t.correo)+tile("Facturas recibidas",t.facturas)+tile("Comparativas enviadas",t.comparativa);
   const days=[...new Set(log.map(l=>l.d))].sort().reverse();
-  $("#dayTbl").innerHTML=`<tr><th>Día</th><th>Llamadas</th><th>No contesta</th><th>Rechazado</th><th>Correo enviado</th></tr>`+
-   (days.map(d=>{const a=agg(log.filter(l=>l.d===d));return `<tr><td>${d}</td><td><b>${a.total}</b></td><td>${a.no_contesta}</td><td>${a.rechazado}</td><td>${a.correo}</td></tr>`}).join("")||`<tr><td colspan=5 class="mut">Aún sin registros</td></tr>`);
+  $("#dayTbl").innerHTML=`<tr><th>Día</th><th>Llamadas</th><th>No contesta</th><th>Rechazado</th><th>Correo enviado</th><th>Facturas</th><th>Comparativas</th></tr>`+
+   (days.map(d=>{const a=agg(log.filter(l=>l.d===d));return `<tr><td>${d}</td><td><b>${a.total}</b></td><td>${a.no_contesta}</td><td>${a.rechazado}</td><td>${a.correo}</td><td>${a.facturas}</td><td>${a.comparativa}</td></tr>`}).join("")||`<tr><td colspan=7 class="mut">Aún sin registros</td></tr>`);
 }
 
 /* ---------- exportar / borrar ---------- */
@@ -607,7 +637,91 @@ $("#mxXls").onclick=()=>{
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(a),"Maximetro");XLSX.writeFile(wb,`maximetro-${mx.cups||day()}.xlsx`);
 };
 
-show(leads.length?"call":"load");
+
+/* ---------- archivos (IndexedDB) ---------- */
+const idb=new Promise((res,rej)=>{const r=indexedDB.open("leadsfiles",1);r.onupgradeneeded=()=>r.result.createObjectStore("f",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const idbTx=async(m,fn)=>{const d=await idb;return new Promise((res,rej)=>{const t=d.transaction("f",m),q=fn(t.objectStore("f"));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
+
+/* ---------- seguimiento ---------- */
+const SEG=["correo","facturas","comparativa"];
+let segSel=null;
+const ago=t=>Math.floor((Date.now()-new Date(t))/864e5);
+const fdt=t=>new Date(t).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+const kb=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
+$("#segF").onchange=()=>{segSel=null;renderSeg()};
+function renderSeg(){
+  const f=$("#segF").value, L=leads.filter(l=>SEG.includes(l.status)&&(f==="todos"||l.status===f));
+  const c=s=>leads.filter(l=>l.status===s).length;
+  $("#segCnt").textContent=`${c("correo")} esperando facturas · ${c("facturas")} con facturas · ${c("comparativa")} con comparativa`;
+  L.sort((a,b)=>new Date(a.last)-new Date(b.last));
+  $("#segTbl").innerHTML=`<tr><th>Cliente</th><th>Teléfono</th><th>Estado</th><th>Correo enviado</th><th>Último mov.</th><th>📎</th><th></th></tr>`+
+   (L.map(l=>{const d=ago(l.last),late=l.status==="correo"&&d>=3;return `<tr class="click" data-id="${l.id}"><td><b>${esc(l.f.__nombre)}</b></td><td>${esc(l.f.__tel)}</td><td><span class="tag t-${l.status}">${ST[l.status]}</span></td><td>${l.mailAt?fdt(l.mailAt):"—"}</td><td>hace ${d} d</td><td>${(l.files||[]).length||""}</td><td>${late?`<span class="warn">⏰ reclamar facturas</span>`:""}</td></tr>`}).join("")||`<tr><td colspan=7 class="mut">Aquí aparecen los clientes a los que ya has enviado el correo.</td></tr>`);
+  $("#segTbl").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>{segSel=r.dataset.id;renderSeg();$("#segDetail").scrollIntoView({behavior:"smooth"})});
+  renderSegDetail();
+}
+function renderSegDetail(){
+  const box=$("#segDetail"), l=leads.find(x=>x.id===segSel);
+  if(!l){box.innerHTML="";return}
+  const f=l.f, tel=t=>t?`<a href="tel:${esc(t.replace(/[^\d+]/g,""))}" style="margin-right:12px">📞 ${esc(t)}</a>`:"";
+  const files=l.files||[];
+  box.innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between"><div class="big">${esc(f.__nombre||"(sin nombre)")}</div><span class="tag t-${l.status}">${ST[l.status]}</span></div>
+    <div>${tel(f.__tel)}${tel(f.__tel2)}${f.__email?`✉️ ${esc(f.__email)}`:""}</div>
+    <div class="mut">${[f.__cups&&"CUPS "+f.__cups,f.__kw&&f.__kw+" kW",f.__comer].filter(Boolean).map(esc).join(" · ")}</div>
+    <div class="actions">
+      ${l.status==="correo"?`<button class="b-pri" id="sgFact">📎 Facturas recibidas (adjuntar)</button>`:`<button id="sgFact">📎 Adjuntar más facturas</button>`}
+      <button id="sgComp">📎 Adjuntar comparativa</button>
+      ${l.status!=="comparativa"?`<button class="b-ok" id="sgSent">📤 Comparativa enviada</button>`:""}
+      ${l.status!=="correo"?`<button id="sgBack">↩ Volver a «Correo enviado»</button>`:""}
+      <button id="sgClose">✕ Cerrar</button>
+    </div>
+    <input type="file" id="fFact" multiple class="hidden"><input type="file" id="fComp" multiple class="hidden">
+    <h3>Archivos</h3>
+    <table>${files.map(x=>`<tr><td>${x.kind==="comparativa"?"📊":"🧾"} ${esc(x.name)}</td><td>${kb(x.size)}</td><td>${fdt(x.t)}</td><td><button data-dl="${x.id}">Descargar</button> <button data-rm="${x.id}">🗑</button></td></tr>`).join("")||`<tr><td class="mut">Sin archivos todavía</td></tr>`}</table>
+    <h3>Notas</h3>
+    <textarea id="sgNote" style="min-height:60px">${esc(l.note)}</textarea>
+    <h3>Historial del proceso</h3>
+    <div class="row"><input type="text" id="sgTxt" placeholder="Añadir al historial (ej. «llamado, dice que las manda mañana»)" style="flex:1"><button id="sgAdd">Añadir</button></div>
+    <ul class="tl">${(l.hist||[]).slice().reverse().map(h=>`<li>${esc(h.x)}<small>${fdt(h.t)}</small></li>`).join("")||`<li class="mut">Sin movimientos</li>`}</ul>
+  </div>`;
+  const up=async(inp,kind)=>{
+    const fl=[...inp.files]; if(!fl.length)return;
+    for(const x of fl){const id=owner[0]+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      await idbTx("readwrite",s=>s.put({id,name:x.name,type:x.type,blob:x}));
+      (l.files=l.files||[]).push({id,name:x.name,size:x.size,t:new Date().toISOString(),kind})}
+    const names=fl.map(x=>x.name).join(", ");
+    if(kind==="factura"&&l.status==="correo")setStatus(l,"facturas",false,`Facturas recibidas y adjuntadas: ${names}`);
+    else {ev(l,`${kind==="factura"?"Facturas adjuntadas":"Comparativa adjuntada"}: ${names}`);save()}
+    renderSeg();
+  };
+  $("#sgFact").onclick=()=>$("#fFact").click();$("#sgComp").onclick=()=>$("#fComp").click();
+  $("#fFact").onchange=e=>up(e.target,"factura");$("#fComp").onchange=e=>up(e.target,"comparativa");
+  if($("#sgSent"))$("#sgSent").onclick=()=>{setStatus(l,"comparativa",false);renderSeg()};
+  if($("#sgBack"))$("#sgBack").onclick=()=>{l.status="correo";ev(l,"Vuelto a «Correo enviado»");save();renderSeg()};
+  $("#sgClose").onclick=()=>{segSel=null;renderSeg()};
+  $("#sgNote").onchange=e=>{l.note=e.target.value;save()};
+  $("#sgAdd").onclick=()=>{const t=$("#sgTxt").value.trim();if(!t)return;ev(l,t);save();renderSeg()};
+  box.querySelectorAll("[data-dl]").forEach(b=>b.onclick=async()=>{
+    const r=await idbTx("readonly",s=>s.get(b.dataset.dl)); if(!r)return alert("El archivo no está en este navegador.");
+    const a=document.createElement("a");a.href=URL.createObjectURL(r.blob);a.download=r.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)});
+  box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=async()=>{
+    if(!confirm("¿Borrar este archivo?"))return;
+    await idbTx("readwrite",s=>s.delete(b.dataset.rm));l.files=l.files.filter(x=>x.id!==b.dataset.rm);save();renderSeg()});
+}
+
+/* ---------- comercial / copia de seguridad ---------- */
+$("#owner").innerHTML=OWNERS.map(o=>`<option>${o}</option>`).join("");
+$("#owner").onchange=()=>{owner=$("#owner").value;localStorage.setItem("owner",JSON.stringify(owner));boot()};
+$("#whoBtns").innerHTML=OWNERS.map(o=>`<button>${o}</button>`).join("");
+$("#whoBtns").querySelectorAll("button").forEach(b=>b.onclick=()=>{owner=b.textContent;localStorage.setItem("owner",JSON.stringify(owner));boot()});
+$("#expBak").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({owner,leads,log})],{type:"application/json"}));a.download=`copia-${owner.split(" ")[0]}-${day()}.json`;a.click()};
+$("#impBak").onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.leads))throw 0;if(confirm(`Restaurar ${d.leads.length} leads en ${owner}? Sustituye lo actual.`)){leads=d.leads;log=d.log||[];save();boot()}}catch(x){alert("Archivo no válido")}e.target.value=""};
+function boot(){
+  $("#who").style.display="none"; $("#owner").value=owner; loadData(); segSel=null; idx=0;
+  show(leads.length?"call":"load");
+}
+if(!owner)$("#who").style.display="grid"; else boot();
+
 </script>
 </body>
 </html>
