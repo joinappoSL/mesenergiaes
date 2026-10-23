@@ -411,6 +411,80 @@ ${d.from}
 Mes Energia`}
 };
 const PRES_URL=new URL("presentacion-mes-energia-pymes.pdf",location.href).href;
+
+/* formatos cortos */
+const adj=(d,l)=>l==="ca"?`${d.hasMx?"la presentació de Mes Energia i el maxímetre del seu subministrament":"la presentació de Mes Energia"} (${d.pres})`:`${d.hasMx?"la presentación de Mes Energia y el maxímetro de su suministro":"la presentación de Mes Energia"} (${d.pres})`;
+const ln=(c,x)=>c?x+"\n":"";
+const TPLS={
+ directo:{
+  ca:d=>`Hola${d.n?" "+d.n:""} ${d.sal.ca},
+
+Gràcies per atendre'ns per telèfon. Hem revisat el subministrament${d.cups?` amb CUPS ${d.cups}`:""}: el consum anual supera els ${d.consumo||"[consum]"} kWh i, amb una tarifa estàndard, hi ha marge per optimitzar-lo amb tarifes específiques per a grans consums.
+
+Li oferim un estudi energètic gratuït i sense compromís (estalvi habitual: 15-30 % anual). Només necessitem les dues últimes factures de llum i gas i en 24-48 h li presentem els resultats.
+
+Adjunto ${adj(d,"ca")}.
+
+Rebi una cordial salutació,
+${d.from}
+Mes Energia`,
+  es:d=>`Hola${d.n?" "+d.n:""} ${d.sal.es},
+
+Gracias por atendernos por teléfono. Hemos revisado el suministro${d.cups?` con CUPS ${d.cups}`:""}: el consumo anual supera los ${d.consumo||"[consumo]"} kWh y, con una tarifa estándar, hay margen para optimizarlo con tarifas específicas para grandes consumos.
+
+Le ofrecemos un estudio energético gratuito y sin compromiso (ahorro habitual: 15-30 % anual). Solo necesitamos las dos últimas facturas de luz y gas y en 24-48 h le presentamos los resultados.
+
+Adjunto ${adj(d,"es")}.
+
+Reciba un cordial saludo,
+${d.from}
+Mes Energia`},
+ datos:{
+  ca:d=>`Hola${d.n?" "+d.n:""} ${d.sal.ca},
+
+Gràcies per la conversa. Resum del que hem vist del seu subministrament${d.cups?` (CUPS ${d.cups})`:""}:
+
+${ln(d.consumo,`• Consum anual: ${d.consumo} kWh`)}${ln(d.pp,`• Període amb més consum: P${d.pk} (${d.pp} % del total)`)}${ln(d.comer,`• Contracte amb ${d.comer}, renovat tàcitament`)}• Estalvi habitual amb el nostre estudi: 15-30 % anual
+
+L'estudi és gratuït i sense compromís: només necessitem les dues últimes factures de llum i gas. Resultats en 24-48 h.
+
+Adjunto ${adj(d,"ca")}.
+
+Una salutació,
+${d.from}
+Mes Energia`,
+  es:d=>`Hola${d.n?" "+d.n:""} ${d.sal.es},
+
+Gracias por la conversación. Resumen de lo que hemos visto de su suministro${d.cups?` (CUPS ${d.cups})`:""}:
+
+${ln(d.consumo,`• Consumo anual: ${d.consumo} kWh`)}${ln(d.pp,`• Periodo con más consumo: P${d.pk} (${d.pp} % del total)`)}${ln(d.comer,`• Contrato con ${d.comer}, renovado tácitamente`)}• Ahorro habitual con nuestro estudio: 15-30 % anual
+
+El estudio es gratuito y sin compromiso: solo necesitamos las dos últimas facturas de luz y gas. Resultados en 24-48 h.
+
+Adjunto ${adj(d,"es")}.
+
+Un saludo,
+${d.from}
+Mes Energia`},
+ express:{
+  ca:d=>`Hola${d.n?" "+d.n:""} ${d.sal.ca},
+
+Seguint la nostra trucada: li oferim un estudi energètic gratuït i sense compromís${d.cups?` del subministrament ${d.cups}`:""}, amb un estalvi habitual del 15-30 % anual.
+
+Només necessitem les dues últimes factures de llum i gas; en 24-48 h té els resultats. Adjunto ${adj(d,"ca")}.
+
+Gràcies i salutacions,
+${d.from} · Mes Energia`,
+  es:d=>`Hola${d.n?" "+d.n:""} ${d.sal.es},
+
+Siguiendo nuestra llamada: le ofrecemos un estudio energético gratuito y sin compromiso${d.cups?` del suministro ${d.cups}`:""}, con un ahorro habitual del 15-30 % anual.
+
+Solo necesitamos las dos últimas facturas de luz y gas; en 24-48 h tiene los resultados. Adjunto ${adj(d,"es")}.
+
+Gracias y un saludo,
+${d.from} · Mes Energia`}
+};
+let mailFmt=load("mailFmt","completo");
 let mailLang=load("mailLang","ca"), mailFrom=load("mailFrom",SENDERS[0]);
 function openMail(l){
   const f=l.f;
@@ -418,6 +492,8 @@ function openMail(l){
     <h3 style="margin-top:0">Correo para ${esc(f.__nombre||"el cliente")}</h3>
     <div class="row" style="margin-bottom:8px">
       <button data-l="ca">Català</button><button data-l="es">Castellano</button>
+      <span class="mut">Formato:</span>
+      <button data-f="completo">Completo</button><button data-f="directo">Corto</button><button data-f="datos">Con datos</button><button data-f="express">Express</button>
       <label>Firma: <select id="from" style="width:auto">${SENDERS.map(x=>`<option>${x}</option>`).join("")}</select></label>
     </div>
     <div class="grid" style="margin-bottom:8px">
@@ -449,13 +525,15 @@ function openMail(l){
   const keep=()=>{f.__nombre=$("#n").value;f.__cups=$("#cups").value.trim();f.__consumo=$("#consumo").value.trim();f.__p3=$("#p3").value.trim();f.__pk=$("#pk").value;f.__comer=$("#comer").value.trim();const to=$("#to").value.trim();if(to)f.__email=to;save()};
   const fill=()=>{
     const m=new Date().getHours()<14;
-    const d={pk:$("#pk").value,pp:$("#p3").value.trim(),bal:f.__bal!=="0",pres:PRES_URL,n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
+    const d={hasMx:!!l.mx,pk:$("#pk").value,pp:$("#p3").value.trim(),bal:f.__bal!=="0",pres:PRES_URL,n:$("#n").value.trim(),cups:$("#cups").value.trim(),consumo:$("#consumo").value.trim(),p3:$("#p3").value.trim(),comer:$("#comer").value.trim(),from:$("#from").value,
       sal:{ca:m?"bon dia":"bona tarda",es:m?"buenos días":"buenas tardes"},when:{ca:m?"aquest matí":"aquesta tarda",es:m?"esta mañana":"esta tarde"}};
     const t=TPL[mailLang];
-    $("#subj").value=t.subj;$("#body").value=t.body(d);
+    $("#subj").value=t.subj;$("#body").value=mailFmt==="completo"?t.body(d):TPLS[mailFmt][mailLang](d);
+    document.querySelectorAll("[data-f]").forEach(b=>b.classList.toggle("on",b.dataset.f===mailFmt));
     document.querySelectorAll("[data-l]").forEach(b=>b.classList.toggle("on",b.dataset.l===mailLang));
   };
   document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{mailLang=b.dataset.l;localStorage.setItem("mailLang",JSON.stringify(mailLang));fill()});
+  document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{mailFmt=b.dataset.f;localStorage.setItem("mailFmt",JSON.stringify(mailFmt));fill()});
   $("#from").onchange=()=>{mailFrom=$("#from").value;localStorage.setItem("mailFrom",JSON.stringify(mailFrom));fill()};
   ["n","cups","consumo","p3","comer","pk"].forEach(i=>$("#"+i).oninput=()=>{keep();fill()});
   $("#cp").onclick=async()=>{
