@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   analisis,
+  colaPendientes,
+  colaProgramadas,
+  llamadaVencida,
+  textoHoraLlamada,
   construirCorreo,
   datosDeMaximetro,
   detectarColumnas,
@@ -165,5 +169,47 @@ describe('resumenPorDia', () => {
     ]);
     expect(r).toHaveLength(1);
     expect(r[0]).toMatchObject({ llamadas: 2, correo: 1, facturas: 1, no_contesta: 1 });
+  });
+});
+
+describe('llamar más tarde', () => {
+  const ahora = new Date(2026, 9, 23, 12, 0).getTime();
+  const en = (h: number) => new Date(ahora + h * 36e5).toISOString();
+  const leads = [
+    { id: 'p1', estado: 'pendiente' as const, proxima_llamada_at: null },
+    { id: 'v2', estado: 'volver_a_llamar' as const, proxima_llamada_at: en(-1) },
+    { id: 'f3', estado: 'volver_a_llamar' as const, proxima_llamada_at: en(3) },
+    { id: 'v4', estado: 'volver_a_llamar' as const, proxima_llamada_at: en(-5) },
+    { id: 'n5', estado: 'no_existe' as const, proxima_llamada_at: null },
+  ];
+
+  it('una llamada programada vence cuando llega su hora', () => {
+    expect(llamadaVencida(leads[1], ahora)).toBe(true);
+    expect(llamadaVencida(leads[2], ahora)).toBe(false);
+    expect(llamadaVencida(leads[0], ahora)).toBe(false);
+  });
+
+  it('en Pendientes van primero las programadas que ya tocan (la más antigua antes) y luego los pendientes', () => {
+    expect(colaPendientes(leads, ahora).map((l) => l.id)).toEqual(['v4', 'v2', 'p1']);
+  });
+
+  it('«Llamar más tarde» se ordena por hora y «No existe» no vuelve a la cola', () => {
+    expect(colaProgramadas(leads).map((l) => l.id)).toEqual(['v4', 'v2', 'f3']);
+    expect(colaPendientes(leads, ahora).some((l) => l.id === 'n5')).toBe(false);
+  });
+
+  it('describe la hora en lenguaje natural', () => {
+    const base = new Date(2026, 9, 23, 12, 0);
+    expect(textoHoraLlamada(new Date(2026, 9, 23, 17, 30).toISOString(), base)).toBe('hoy a las 17:30');
+    expect(textoHoraLlamada(new Date(2026, 9, 24, 10, 0).toISOString(), base)).toBe('mañana a las 10:00');
+    expect(textoHoraLlamada(new Date(2026, 9, 28, 9, 5).toISOString(), base)).toBe('28/10 a las 09:05');
+  });
+
+  it('el registro cuenta «No existe» y «Llamar más tarde» como llamadas', () => {
+    const r = resumenPorDia([
+      { estado: 'no_existe', created_at: '2026-10-23T10:00:00' },
+      { estado: 'volver_a_llamar', created_at: '2026-10-23T11:00:00' },
+    ]);
+    expect(r[0]).toMatchObject({ llamadas: 2, no_existe: 1, volver_a_llamar: 1 });
   });
 });

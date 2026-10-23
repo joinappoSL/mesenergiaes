@@ -17,7 +17,7 @@ import {
   useNotaHistorial,
   useSubirArchivosLead,
 } from '@/hooks/leads';
-import { diasDesde, fechaHora, tamanoArchivo } from '@/lib/format';
+import { diasDesde, fechaHora, tamanoArchivo, telefono } from '@/lib/format';
 import { ESTADOS_LEAD, ESTADOS_SEGUIMIENTO, type EstadoLead, type Lead } from '@/lib/leads';
 import { descargarBlob, mensajeError } from '@/lib/utils';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
@@ -78,7 +78,7 @@ export function SeguimientoLeads({ leads, mostrarCartera, nombreCartera, puedeEd
                 return (
                   <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => setAbierto(l.id)}>
                     <td className="px-4 py-2.5 font-semibold text-navy-900">{l.nombre || '—'}</td>
-                    <td className="px-4 py-2.5">{l.telefono || '—'}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono)}</td>
                     {mostrarCartera && <td className="px-4 py-2.5 text-slate-500">{nombreCartera(l.propietario_id) ?? '—'}</td>}
                     <td className="px-4 py-2.5"><EstadoLeadBadge estado={l.estado} /></td>
                     <td className="px-4 py-2.5 text-slate-500">{l.correo_enviado_at ? fechaHora(l.correo_enviado_at) : '—'}</td>
@@ -154,7 +154,7 @@ function FichaSeguimiento({ lead, editable, onClose }: { lead: Lead; editable: b
           <EstadoLeadBadge estado={lead.estado} />
           {[lead.telefono, lead.telefono2].filter(Boolean).map((t) => (
             <a key={t} href={enlaceTel(t)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
-              <Phone className="h-4 w-4" /> {t}
+              <Phone className="h-4 w-4" /> {telefono(t)}
             </a>
           ))}
           {lead.email && <span className="text-sm text-slate-600">✉️ {lead.email}</span>}

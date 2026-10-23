@@ -29,6 +29,8 @@ export function RegistroLeads({ personas }: Props) {
   const tiles: [string, number | undefined, string][] = [
     ['Llamadas', hoy?.llamadas, 'text-navy-900'],
     ['No contesta', hoy?.no_contesta, 'text-sun-700'],
+    ['No existe teléfono', hoy?.no_existe, 'text-orange-700'],
+    ['Llamar más tarde', hoy?.volver_a_llamar, 'text-sky-700'],
     ['Rechazados', hoy?.rechazado, 'text-red-600'],
     ['Correos enviados', hoy?.correo, 'text-brand-700'],
     ['Facturas recibidas', hoy?.facturas, 'text-sky-700'],
@@ -47,7 +49,7 @@ export function RegistroLeads({ personas }: Props) {
       )}
       <Card>
         <CardHeader title="Hoy" icon={<ClipboardList className="h-4 w-4" />} />
-        <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
           {tiles.map(([titulo, valor, clase]) => (
             <div key={titulo} className="rounded-xl bg-slate-50 p-3 text-center">
               <p className={`font-display text-3xl font-bold ${clase}`}>{valor ?? 0}</p>
@@ -67,6 +69,8 @@ export function RegistroLeads({ personas }: Props) {
                 <th className="px-4 py-3">Día</th>
                 <th className="px-4 py-3 text-right">Llamadas</th>
                 <th className="px-4 py-3 text-right">No contesta</th>
+                <th className="px-4 py-3 text-right">No existe</th>
+                <th className="px-4 py-3 text-right">Llamar + tarde</th>
                 <th className="px-4 py-3 text-right">Rechazado</th>
                 <th className="px-4 py-3 text-right">Correo enviado</th>
                 <th className="px-4 py-3 text-right">Facturas</th>
@@ -79,6 +83,8 @@ export function RegistroLeads({ personas }: Props) {
                   <td className="px-4 py-2.5">{fecha(d.dia)}</td>
                   <td className="px-4 py-2.5 text-right font-bold text-navy-900">{d.llamadas}</td>
                   <td className="px-4 py-2.5 text-right">{d.no_contesta}</td>
+                  <td className="px-4 py-2.5 text-right">{d.no_existe}</td>
+                  <td className="px-4 py-2.5 text-right">{d.volver_a_llamar}</td>
                   <td className="px-4 py-2.5 text-right">{d.rechazado}</td>
                   <td className="px-4 py-2.5 text-right">{d.correo}</td>
                   <td className="px-4 py-2.5 text-right">{d.facturas}</td>
