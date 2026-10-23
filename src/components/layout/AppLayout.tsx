@@ -1,4 +1,4 @@
-import { CalendarCheck, FileText, LayoutDashboard, LogOut, PhoneCall, Plus, Users, Zap } from 'lucide-react';
+import { CalendarCheck, FileText, LayoutDashboard, LogOut, PhoneCall, Plus, Target, Users, Zap } from 'lucide-react';
 import { createContext, Suspense, useContext, useState, type ComponentType } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usePerfil, useAuth } from '@/auth/AuthProvider';
@@ -33,6 +33,9 @@ function useNavegacion(): ItemNav[] {
     { to: '/', label: p.esComercial ? 'Mi resumen' : 'Dashboard', corto: 'Inicio', icon: LayoutDashboard, end: true },
     { to: '/contratos', label: p.esComercial ? 'Mis contratos' : 'Contratos', corto: 'Contratos', icon: FileText },
   ];
+  // Comerciales y jefes: la prospección va junto a sus contratos; gestión, al final.
+  const prospeccion: ItemNav = { to: '/prospeccion', label: 'Prospección', corto: 'Leads', icon: Target };
+  if (!p.esGestor) items.push(prospeccion);
   if (p.puedeVerCola) {
     items.push({ to: '/cola', label: 'Cola de llamadas', corto: 'Cola', icon: PhoneCall, contador: cola.data?.length });
   }
@@ -53,6 +56,7 @@ function useNavegacion(): ItemNav[] {
       icon: Users,
     });
   }
+  if (p.esGestor) items.push(prospeccion);
   return items;
 }
 
