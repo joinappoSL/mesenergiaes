@@ -15,6 +15,7 @@ CRM interno para gestionar los contratos de fibra/WiFi del call center: el comer
 | **Ficha del contrato** | Todos | Todos los datos, botón de llamada (`tel:`) en cada teléfono, visor del PDF con versiones, cambio de estado, firma y reasignación (backoffice), registro de llamadas, hilo de observaciones (solo se añaden) e historial de estados. |
 | **Cola de llamadas** | Backoffice, admin | Pendientes ordenados por antigüedad con contador de días; primero los recordatorios de «volver a llamar» vencidos. Modo llamada con **Anterior / Siguiente** sin volver al listado. |
 | **Calendario de verificaciones** | Backoffice, admin | Las llamadas de verificación programadas en orden de hora, en **agenda** (hoy y los próximos 13 días, con las atrasadas arriba y una línea de «ahora») o **semana** (lunes a domingo). Tarjeta con la siguiente llamada y cuenta atrás, avisos en pantalla 5 minutos antes y a la hora, botón **Hecha** (con deshacer), **Reprogramar** y modo llamada con **Anterior / Siguiente**. Se actualiza en tiempo real; el menú muestra cuántas quedan hoy. |
+| **Prospección** | Todos (cada comercial ve su cartera; backoffice y admin, todas; el jefe, la de su equipo en solo lectura) | Importar leads desde Excel (columnas detectadas por cabecera, aunque cambie el orden; kW junto a Teléfono 2), **modo llamada** (kW y teléfonos destacados, No contesta / Rechazado / Correo enviado), **correo en catalán o castellano** en 4 formatos (completo, corto, con datos, express) que elige el periodo con más consumo, **maxímetro** a partir de las 2 tablas de SIPS (informe con diseño +Energía en PDF, con potencia optimizada editable) y botón *Copiar y enviar con todo adjunto* (maxímetro + presentación). **Seguimiento** de los clientes con correo enviado (aviso a los 3 días), facturas y comparativa adjuntas en Storage, historial del proceso y **registro diario** de llamadas. |
 | **Usuarios y equipos** | Admin, backoffice, jefes | Alta, edición, desactivación y reseteo de contraseña (con contraseña temporal). Equipos y jefes (solo admin). |
 
 ### Roles
@@ -200,7 +201,7 @@ Con Sonnet se activa el *fallback* en el servidor de la API (si el modelo declin
 
 ```
 supabase/
-  migrations/      Esquema, triggers, RLS, vistas/RPC, Storage/Realtime y Messy
+  migrations/      Esquema, triggers, RLS, vistas/RPC, Storage/Realtime, Messy y prospección de leads
   functions/       Edge Functions admin-users y messy (Deno)
   seed.sql         Datos de ejemplo
   config.toml      Configuración para `supabase start`
@@ -210,7 +211,7 @@ src/
   components/      UI base, layout, contratos, dashboard y usuarios
   pages/           Una pantalla por ruta
   lib/             Tipos, constantes, validadores, formato y exportación a Excel
-public/            Logo (+ variante para fondo oscuro) e iconos
+public/            Logo (+ variante para fondo oscuro) e iconos; leads/ = presentación y logo del informe (y la primera versión suelta de la app de llamadas)
 ```
 
 ## Personalización
@@ -223,6 +224,6 @@ public/            Logo (+ variante para fondo oscuro) e iconos
 
 ```bash
 npm run typecheck   # TypeScript
-npm test            # validadores (DNI/NIE, teléfonos, CP, precios…)
+npm test            # validadores (DNI/NIE, teléfonos, CP, precios…) y lógica de leads (columnas, SIPS, correos)
 npm run build
 ```

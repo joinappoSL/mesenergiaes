@@ -26,6 +26,7 @@ const VerificacionesPage = lazy(() =>
 const VerificacionTrabajoPage = lazy(() =>
   import('@/pages/VerificacionesPage').then((m) => ({ default: m.VerificacionTrabajoPage })),
 );
+const LeadsPage = lazy(() => import('@/pages/LeadsPage').then((m) => ({ default: m.LeadsPage })));
 const UsuariosPage = lazy(() => import('@/pages/UsuariosPage').then((m) => ({ default: m.UsuariosPage })));
 
 function CargandoApp() {
@@ -158,6 +159,7 @@ export default function App() {
             </SoloSi>
           }
         />
+        <Route path="prospeccion" element={<LeadsPage />} />
         <Route
           path="usuarios"
           element={
