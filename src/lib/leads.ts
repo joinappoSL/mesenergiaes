@@ -1,11 +1,21 @@
 // Lógica pura de la prospección de leads: columnas del Excel, tablas de SIPS,
 // maxímetro y plantillas de correo. Sin React ni Supabase para poder probarla.
 
-export type EstadoLead = 'pendiente' | 'no_contesta' | 'rechazado' | 'correo' | 'facturas' | 'comparativa';
+export type EstadoLead =
+  | 'pendiente'
+  | 'no_contesta'
+  | 'no_existe'
+  | 'volver_a_llamar'
+  | 'rechazado'
+  | 'correo'
+  | 'facturas'
+  | 'comparativa';
 
 export const ESTADOS_LEAD: Record<EstadoLead, { etiqueta: string; clase: string }> = {
   pendiente: { etiqueta: 'Pendiente', clase: 'bg-slate-100 text-slate-700 ring-slate-200' },
   no_contesta: { etiqueta: 'No contesta', clase: 'bg-sun-50 text-sun-700 ring-sun-200' },
+  no_existe: { etiqueta: 'No existe teléfono', clase: 'bg-orange-50 text-orange-700 ring-orange-200' },
+  volver_a_llamar: { etiqueta: 'Llamar más tarde', clase: 'bg-sky-50 text-sky-700 ring-sky-200' },
   rechazado: { etiqueta: 'Rechazado', clase: 'bg-red-50 text-red-700 ring-red-200' },
   correo: { etiqueta: 'Correo enviado', clase: 'bg-brand-50 text-brand-700 ring-brand-200' },
   facturas: { etiqueta: 'Facturas recibidas', clase: 'bg-sky-50 text-sky-700 ring-sky-200' },
@@ -13,7 +23,7 @@ export const ESTADOS_LEAD: Record<EstadoLead, { etiqueta: string; clase: string 
 };
 
 /** Estados que cuentan como una llamada en el registro diario. */
-export const ESTADOS_LLAMADA: EstadoLead[] = ['no_contesta', 'rechazado', 'correo'];
+export const ESTADOS_LLAMADA: EstadoLead[] = ['no_contesta', 'no_existe', 'volver_a_llamar', 'rechazado', 'correo'];
 export const ESTADOS_SEGUIMIENTO: EstadoLead[] = ['correo', 'facturas', 'comparativa'];
 
 export interface Lead {
@@ -35,6 +45,8 @@ export interface Lead {
   nota: string;
   correo_enviado_at: string | null;
   ultimo_movimiento_at: string;
+  /** hora a la que volver a llamar (estado «Llamar más tarde») */
+  proxima_llamada_at: string | null;
   maximetro: Maximetro | null;
   created_at: string;
   updated_at: string;
@@ -599,6 +611,8 @@ export interface ResumenDia {
   dia: string;
   llamadas: number;
   no_contesta: number;
+  no_existe: number;
+  volver_a_llamar: number;
   rechazado: number;
   correo: number;
   facturas: number;
@@ -611,10 +625,45 @@ export function resumenPorDia(eventos: { estado: EstadoLead | null; created_at: 
     if (!e.estado || e.estado === 'pendiente') continue;
     const d = new Date(e.created_at);
     const dia = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const r = mapa.get(dia) ?? { dia, llamadas: 0, no_contesta: 0, rechazado: 0, correo: 0, facturas: 0, comparativa: 0 };
+    const r = mapa.get(dia) ?? { dia, llamadas: 0, no_contesta: 0, no_existe: 0, volver_a_llamar: 0, rechazado: 0, correo: 0, facturas: 0, comparativa: 0 };
     r[e.estado]++;
     if (ESTADOS_LLAMADA.includes(e.estado)) r.llamadas++;
     mapa.set(dia, r);
   }
   return [...mapa.values()].sort((a, b) => b.dia.localeCompare(a.dia));
+}
+
+// -----------------------------------------------------------------------------
+// Llamar más tarde
+// -----------------------------------------------------------------------------
+/** Llamada programada cuya hora ya ha llegado. */
+export function llamadaVencida(l: Pick<Lead, 'estado' | 'proxima_llamada_at'>, ahora = Date.now()): boolean {
+  return l.estado === 'volver_a_llamar' && !!l.proxima_llamada_at && new Date(l.proxima_llamada_at).getTime() <= ahora;
+}
+
+/** Cola de «Pendientes»: primero las llamadas programadas que ya tocan (la más antigua primero), luego los pendientes. */
+export function colaPendientes<T extends Pick<Lead, 'estado' | 'proxima_llamada_at'>>(leads: T[], ahora = Date.now()): T[] {
+  const vencidas = leads
+    .filter((l) => llamadaVencida(l, ahora))
+    .sort((a, b) => new Date(a.proxima_llamada_at!).getTime() - new Date(b.proxima_llamada_at!).getTime());
+  return [...vencidas, ...leads.filter((l) => l.estado === 'pendiente')];
+}
+
+/** Llamadas programadas, por orden de hora. */
+export function colaProgramadas<T extends Pick<Lead, 'estado' | 'proxima_llamada_at'>>(leads: T[]): T[] {
+  return leads
+    .filter((l) => l.estado === 'volver_a_llamar')
+    .sort((a, b) => new Date(a.proxima_llamada_at ?? 0).getTime() - new Date(b.proxima_llamada_at ?? 0).getTime());
+}
+
+/** "hoy 17:30", "mañana 10:00" o "24/10 10:00". */
+export function textoHoraLlamada(iso: string, ahora = new Date()): string {
+  const d = new Date(iso);
+  const hh = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const dia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const dif = Math.round((dia(d) - dia(ahora)) / 864e5);
+  if (dif === 0) return `hoy a las ${hh}`;
+  if (dif === 1) return `mañana a las ${hh}`;
+  if (dif === -1) return `ayer a las ${hh}`;
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} a las ${hh}`;
 }

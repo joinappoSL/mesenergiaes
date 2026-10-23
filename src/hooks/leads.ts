@@ -187,9 +187,14 @@ export function useImportarLeads() {
 export function useCambiarEstadoLead() {
   const refrescar = useRefrescarLeads();
   return useMutation({
-    mutationFn: async ({ lead, estado, texto }: { lead: Lead; estado: EstadoLead; texto?: string }) => {
+    mutationFn: async ({ lead, estado, texto, proxima }: { lead: Lead; estado: EstadoLead; texto?: string; proxima?: string | null }) => {
       const ahora = new Date().toISOString();
-      const patch: Record<string, unknown> = { estado, ultimo_movimiento_at: ahora };
+      // La hora de «volver a llamar» solo vale mientras el lead esté en ese estado.
+      const patch: Record<string, unknown> = {
+        estado,
+        ultimo_movimiento_at: ahora,
+        proxima_llamada_at: estado === 'volver_a_llamar' ? (proxima ?? null) : null,
+      };
       if (ESTADOS_LLAMADA.includes(estado)) patch.llamadas = lead.llamadas + 1;
       if (estado === 'correo') patch.correo_enviado_at = ahora;
       const { error } = await supabase.from('leads').update(patch).eq('id', lead.id);

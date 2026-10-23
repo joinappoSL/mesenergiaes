@@ -14,7 +14,7 @@ import { PageHeader, Tabs } from '@/components/ui/Misc';
 import { usePerfiles } from '@/hooks/datos';
 import { useLeads } from '@/hooks/leads';
 import { nombreCompleto } from '@/lib/format';
-import { ESTADOS_SEGUIMIENTO, type Lead } from '@/lib/leads';
+import { colaPendientes, ESTADOS_SEGUIMIENTO, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
 
 type Vista = 'llamar' | 'lista' | 'seguimiento' | 'registro';
@@ -68,7 +68,7 @@ export function LeadsPage() {
   const migracionPendiente =
     leadsQ.error && /PGRST205|schema cache|does not exist|42P01/i.test(`${(leadsQ.error as { code?: string }).code ?? ''} ${(leadsQ.error as Error).message}`);
 
-  const pendientes = visibles.filter((l) => l.estado === 'pendiente').length;
+  const pendientes = colaPendientes(visibles).length;
   const seguimiento = visibles.filter((l) => ESTADOS_SEGUIMIENTO.includes(l.estado)).length;
 
   return (

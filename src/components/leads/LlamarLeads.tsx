@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileSpreadsheet, Mail, Phone, PhoneOff, RotateCcw, ThumbsDown } from 'lucide-react';
+import { AlarmClock, ChevronLeft, ChevronRight, FileSpreadsheet, Mail, Phone, PhoneOff, RotateCcw, ThumbsDown, Unplug } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -6,13 +6,16 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/Feedback';
 import { Select, Textarea } from '@/components/ui/Field';
 import { useActualizarLead, useCambiarEstadoLead } from '@/hooks/leads';
-import type { Lead } from '@/lib/leads';
+import { useAhora } from '@/hooks/useAhora';
+import { telefono } from '@/lib/format';
+import { colaPendientes, colaProgramadas, llamadaVencida, textoHoraLlamada, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
 import { MaximetroModal } from './MaximetroModal';
 import { PanelCorreo } from './PanelCorreo';
+import { ProgramarLlamada } from './ProgramarLlamada';
 
-type Filtro = 'pendiente' | 'no_contesta' | 'todos';
+type Filtro = 'pendiente' | 'tarde' | 'no_contesta' | 'todos';
 
 interface Props {
   leads: Lead[];
@@ -28,10 +31,18 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
   const [idx, setIdx] = useState(0);
   const [correo, setCorreo] = useState(false);
   const [maximetro, setMaximetro] = useState(false);
+  const [programar, setProgramar] = useState(false);
+  const ahora = useAhora(30_000).getTime();
   const cambiar = useCambiarEstadoLead();
   const actualizar = useActualizarLead();
 
-  const cola = useMemo(() => leads.filter((l) => filtro === 'todos' || l.estado === filtro), [leads, filtro]);
+  const cola = useMemo(() => {
+    if (filtro === 'pendiente') return colaPendientes(leads, ahora);
+    if (filtro === 'tarde') return colaProgramadas(leads);
+    return leads.filter((l) => filtro === 'todos' || l.estado === filtro);
+  }, [leads, filtro, ahora]);
+  const vencidas = useMemo(() => leads.filter((l) => llamadaVencida(l, ahora)).length, [leads, ahora]);
+  const programadas = useMemo(() => leads.filter((l) => l.estado === 'volver_a_llamar').length, [leads]);
 
   useEffect(() => {
     if (!focoId) return;
@@ -59,9 +70,25 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
   const editable = puedeEditar(lead);
   const extra = Object.entries(lead.extra ?? {});
 
-  async function marcar(estado: 'no_contesta' | 'rechazado' | 'pendiente') {
+  async function marcar(estado: 'no_contesta' | 'no_existe' | 'rechazado' | 'pendiente') {
     try {
       await cambiar.mutateAsync({ lead, estado });
+      if (filtro === 'todos') setIdx(pos + 1);
+    } catch (e) {
+      toast.error(mensajeError(e));
+    }
+  }
+
+  async function programarLlamada(cuando: Date) {
+    try {
+      await cambiar.mutateAsync({
+        lead,
+        estado: 'volver_a_llamar',
+        proxima: cuando.toISOString(),
+        texto: `Llamar más tarde: ${textoHoraLlamada(cuando.toISOString())}`,
+      });
+      setProgramar(false);
+      toast.success(`Llamada programada ${textoHoraLlamada(cuando.toISOString())}`);
       if (filtro === 'todos') setIdx(pos + 1);
     } catch (e) {
       toast.error(mensajeError(e));
@@ -72,10 +99,16 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
     <div className="space-y-4">
       <Card className="flex flex-wrap items-center gap-3 p-3">
         <Select className="w-auto" value={filtro} onChange={(e) => { setFiltro(e.target.value as Filtro); setIdx(0); }}>
-          <option value="pendiente">Pendientes</option>
+          <option value="pendiente">Pendientes{vencidas ? ` (${vencidas} para ahora)` : ''}</option>
+          <option value="tarde">Llamar más tarde ({programadas})</option>
           <option value="no_contesta">No contesta</option>
           <option value="todos">Todos</option>
         </Select>
+        {vencidas > 0 && filtro !== 'pendiente' && (
+          <button type="button" onClick={() => { setFiltro('pendiente'); setIdx(0); }} className="text-sm font-semibold text-sky-700 hover:underline">
+            ⏰ {vencidas} llamada{vencidas === 1 ? '' : 's'} programada{vencidas === 1 ? '' : 's'} para ahora
+          </button>
+        )}
         <div className="ml-auto flex items-center gap-2">
           <Button variant="secondary" size="sm" icon={<ChevronLeft className="h-4 w-4" />} onClick={() => setIdx(Math.max(0, pos - 1))} aria-label="Anterior" />
           <span className="min-w-16 text-center text-sm text-slate-500">{pos + 1} / {cola.length}</span>
@@ -95,6 +128,19 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
           </div>
         </div>
 
+        {lead.estado === 'volver_a_llamar' && lead.proxima_llamada_at && (
+          <p
+            className={
+              llamadaVencida(lead, ahora)
+                ? 'mt-4 inline-flex items-center gap-2 rounded-xl bg-sun-50 px-3 py-2 text-sm font-semibold text-sun-700 ring-1 ring-sun-200'
+                : 'mt-4 inline-flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 ring-1 ring-sky-200'
+            }
+          >
+            <AlarmClock className="h-4 w-4" />
+            {llamadaVencida(lead, ahora) ? 'Toca llamar ahora' : 'Llamar'} · programada {textoHoraLlamada(lead.proxima_llamada_at)}
+          </p>
+        )}
+
         <div className="mt-5 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Potencia (kW)</p>
@@ -109,7 +155,7 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
                 href={enlaceTel(t)}
                 className="inline-flex h-12 items-center gap-2 rounded-xl bg-brand-600 px-5 text-lg font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
               >
-                <Phone className="h-5 w-5" /> {t}
+                <Phone className="h-5 w-5" /> {telefono(t)}
               </a>
             ))}
           </div>
@@ -140,6 +186,12 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
             <Button variant="warning" size="lg" icon={<PhoneOff className="h-4 w-4" />} onClick={() => marcar('no_contesta')} loading={cambiar.isPending}>
               No contesta
             </Button>
+            <Button variant="secondary" size="lg" icon={<AlarmClock className="h-4 w-4" />} onClick={() => setProgramar(true)}>
+              Llamar más tarde
+            </Button>
+            <Button variant="secondary" size="lg" icon={<Unplug className="h-4 w-4" />} onClick={() => marcar('no_existe')} loading={cambiar.isPending}>
+              No existe teléfono
+            </Button>
             <Button variant="danger" size="lg" icon={<ThumbsDown className="h-4 w-4" />} onClick={() => marcar('rechazado')} loading={cambiar.isPending}>
               Rechazado
             </Button>
@@ -158,6 +210,7 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
         )}
       </Card>
 
+      <ProgramarLlamada open={programar} nombre={lead.nombre} cargando={cambiar.isPending} onClose={() => setProgramar(false)} onConfirmar={programarLlamada} />
       <PanelCorreo lead={lead} open={correo} onClose={() => setCorreo(false)} onEnviado={() => filtro !== 'todos' || setIdx(pos + 1)} />
       <MaximetroModal lead={lead} open={maximetro} onClose={() => setMaximetro(false)} />
     </div>
