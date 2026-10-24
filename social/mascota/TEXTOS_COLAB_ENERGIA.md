@@ -26,3 +26,8 @@ Hoy es oficial: Appo y +EnergIA se unen para llevar la inteligencia artificial a
 - 3:4 (perfil): https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/5f973a1e-a380-4153-903f-3b1a9bad2ac6.mp4
 
 Diseño de Messy (para que +EnergIA lo use como mascota): https://d8j0ntlcm91z4.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/hf_20261024_140201_e9b1cb2d-c99b-4ba2-9cec-129d40e83102.png
+
+## Carpeta para enviar a MESENERGIA
+
+Zip `Appo_x_EnergIA` (70 MB) con los 3 vídeos, la descripción, la portada y el diseño de Messy:
+https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/c3889520-6a72-4374-a53a-4af02e76082f.zip
