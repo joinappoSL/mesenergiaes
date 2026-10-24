@@ -3,7 +3,8 @@ import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/Feedback';
 import { Input, Select } from '@/components/ui/Field';
-import { ESTADOS_LEAD, norm, type EstadoLead, type Lead } from '@/lib/leads';
+import { telefono } from '@/lib/format';
+import { ESTADOS_LEAD, norm, textoHoraLlamada, type EstadoLead, type Lead } from '@/lib/leads';
 import { EstadoLeadBadge } from './comunes';
 
 interface Props {
@@ -58,11 +59,16 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, onAbrir }: Pr
               {filas.slice(0, 500).map((l) => (
                 <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => onAbrir(l.id)}>
                   <td className="px-4 py-2.5 font-semibold text-navy-900">{l.nombre || '—'}</td>
-                  <td className="px-4 py-2.5">{l.telefono || '—'}</td>
-                  <td className="px-4 py-2.5">{l.telefono2 || '—'}</td>
+                  <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono)}</td>
+                  <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono2)}</td>
                   <td className="px-4 py-2.5 font-bold text-brand-700">{l.kw || '—'}</td>
                   {mostrarCartera && <td className="px-4 py-2.5 text-slate-500">{nombreCartera(l.propietario_id) ?? '—'}</td>}
-                  <td className="px-4 py-2.5"><EstadoLeadBadge estado={l.estado} /></td>
+                  <td className="px-4 py-2.5">
+                    <EstadoLeadBadge estado={l.estado} />
+                    {l.estado === 'volver_a_llamar' && l.proxima_llamada_at && (
+                      <span className="ml-2 text-xs text-slate-500">{textoHoraLlamada(l.proxima_llamada_at)}</span>
+                    )}
+                  </td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{l.llamadas}</td>
                 </tr>
               ))}
