@@ -68,7 +68,7 @@ for i, c in enumerate(clips):
 outro = work / "outro.mp4"
 if not outro.exists():
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"color=c=white:s={W}x{H}:r={FPS}:d={OUTRO + XF}",
-         "-i", str(here / "logo_v.png"), "-filter_complex",
+         "-i", str(spec.get("logo_v", here / "logo_v.png")), "-filter_complex",
          f"[1:v]scale={LAY['logo_v']}:-1[lg];[0:v][lg]overlay=(W-w)/2:(H-h)/2-{LAY['logo_v_dy']},format=yuv420p",
          "-c:v", "libx264", "-preset", "fast", "-crf", "16", str(outro)])
 
@@ -137,7 +137,7 @@ ass = [
     f"Style: Outro2,Montserrat ExtraBold,58,{WHITE},{WHITE},{TURQ},{TURQ},0,0,0,0,100,100,0,0,3,22,0,2,80,80,{LAY['o2']},1",
     "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     f"Dialogue: 1,{ts(end_main + 0.2)},{ts(total)},Outro1,,0,0,0,,{{\\fad(200,0)}}{esc(spec.get('cierre', 'Sígueme para más trucos de IA'))}",
-    f"Dialogue: 1,{ts(end_main + 0.4)},{ts(total)},Outro2,,0,0,0,,{{\\fad(200,0)}}joinappo.com",
+    f"Dialogue: 1,{ts(end_main + 0.4)},{ts(total)},Outro2,,0,0,0,,{{\\fad(200,0)}}{esc(spec.get('web', 'joinappo.com'))}",
 ]
 if TEXTOS:
     st = 0.0
@@ -170,8 +170,8 @@ run(["ffmpeg", "-y", "-loglevel", "error", "-filter_complex", ";".join(fc_a), "-
 # 6. Composición final. El logo en color va sobre una pastilla blanca (guía de marca: nunca sobre foto sin soporte).
 from PIL import Image, ImageDraw, ImageFilter
 pill = work / "logo_pill.png"
-lg = Image.open(here / "logo_h.png").convert("RGBA")
-lw = 280; lg = lg.resize((lw, round(lg.height * lw / lg.width)), Image.LANCZOS)
+lg = Image.open(spec.get("logo_h", here / "logo_h.png")).convert("RGBA")
+lw = spec.get("logo_w", 280); lg = lg.resize((lw, round(lg.height * lw / lg.width)), Image.LANCZOS)
 px, py = 34, 18
 cw, ch = lw + 2 * px, lg.height + 2 * py
 canvas = Image.new("RGBA", (cw + 40, ch + 40), (0, 0, 0, 0))

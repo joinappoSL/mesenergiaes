@@ -1,0 +1,17 @@
+{
+ "id": "x01_appi_messy",
+ "socio": "+EnergIA (MESENERGIA)",
+ "messy_diseno": "e9b1cb2d-c99b-4ba2-9cec-129d40e83102",
+ "appi_base": "1f2f0826-cd9a-4c1a-af26-692afbed46a3",
+ "imagenes": ["32886c7c-a057-47c3-b94c-e5043c9d0491", "e6da3f18-2948-43bf-83ca-e7886c20d914", "8eeb9cd3-f5a4-44b9-8773-35460ae45948", "6596201f-9299-4af7-a6a9-688ca49c5773", "bdace7aa-b3fb-49b8-9bba-d0f50dca479e", "cd871e6c-51c0-4830-9158-a45dba3fe4d2"],
+ "textos": [
+  "Appi recibe|un *mensaje*...",
+  "...de *Messy*,|la IA de +EnergIA",
+  "¿*Rivales*?",
+  "*No.*|Socios.",
+  "WhatsApp, citas, ventas...|*en automático*",
+  "Juntos llevamos la *IA*|a tu negocio"
+ ],
+ "cierre": "Appo × +EnergIA",
+ "web": "joinappo.com"
+}
