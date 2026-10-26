@@ -148,29 +148,34 @@ export function useImportarLeads() {
   const refrescar = useRefrescarLeads();
   return useMutation({
     mutationFn: async ({ propietarioId, leads }: { propietarioId: string; leads: NuevoLead[] }): Promise<ResultadoImportacion> => {
-      // Teléfonos que esa persona ya tiene, para no duplicar.
+      // Lo que esa persona ya tiene, para no duplicar: por CUPS, o por teléfono si el cliente no tiene CUPS.
+      // Un mismo teléfono con varios CUPS son varios puntos de suministro: se cargan todos.
+      const clave = (l: { cups: string; telefono: string }) => (l.cups ? `c:${l.cups}` : l.telefono ? `t:${l.telefono}` : '');
       const existentes = new Set<string>();
       for (let desde = 0; ; desde += PAGINA) {
         const { data, error } = await supabase
           .from('leads')
-          .select('telefono')
+          .select('cups, telefono')
           .eq('propietario_id', propietarioId)
-          .neq('telefono', '')
           .range(desde, desde + PAGINA - 1);
         if (error) throw error;
-        (data ?? []).forEach((r) => existentes.add(r.telefono as string));
+        (data ?? []).forEach((r) => {
+          const k = clave(r as { cups: string; telefono: string });
+          if (k) existentes.add(k);
+        });
         if (!data || data.length < PAGINA) break;
       }
       const filas: Record<string, unknown>[] = [];
       let repetidos = 0;
       for (const l of leads) {
         if (!l.nombre && !l.telefono && !l.telefono2 && !l.cups) continue;
-        if (l.telefono) {
-          if (existentes.has(l.telefono)) {
+        const k = clave(l);
+        if (k) {
+          if (existentes.has(k)) {
             repetidos++;
             continue;
           }
-          existentes.add(l.telefono);
+          existentes.add(k);
         }
         filas.push({ ...l, propietario_id: propietarioId });
       }
@@ -411,6 +416,31 @@ export function useCrearCliente() {
       const { error: e2 } = await supabase.from('leads_eventos').insert(eventos);
       if (e2) throw e2;
       return id;
+    },
+    onSuccess: () => refrescar(),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Borrar un módulo entero (un listado cargado)
+// -----------------------------------------------------------------------------
+export function useEliminarLeads() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      let borrados = 0;
+      for (let i = 0; i < ids.length; i += 200) {
+        const trozo = ids.slice(i, i + 200);
+        const { data: archivos, error: e0 } = await supabase.from('leads_archivos').select('storage_path').in('lead_id', trozo);
+        if (e0) throw e0;
+        const rutas = (archivos ?? []).map((a) => a.storage_path as string);
+        if (rutas.length) await supabase.storage.from(BUCKET_LEADS).remove(rutas);
+        // El historial y los archivos del lead se borran en cascada.
+        const { data, error } = await supabase.from('leads').delete().in('id', trozo).select('id');
+        if (error) throw error;
+        borrados += data?.length ?? 0;
+      }
+      return borrados;
     },
     onSuccess: () => refrescar(),
   });

@@ -134,7 +134,7 @@ const ALIAS: Record<RolColumna, string[]> = {
 
 export type MapaColumnas = Partial<Record<RolColumna, number>>;
 
-export function detectarColumnas(cabeceras: string[]): MapaColumnas {
+export function detectarColumnas(cabeceras: string[], filas?: string[][]): MapaColumnas {
   const nh = cabeceras.map(norm);
   const usadas = new Set<number>();
   const mapa: MapaColumnas = {};
@@ -158,20 +158,145 @@ export function detectarColumnas(cabeceras: string[]): MapaColumnas {
     const j = mapa.tel2 + 1;
     if (j < cabeceras.length && !usadas.has(j)) mapa.kw = j;
   }
-  return mapa;
+  return filas ? completarPorContenido(mapa, filas) : mapa;
 }
 
-/** Primera fila con al menos 3 celdas rellenas = cabecera. */
-export function separarCabecera(aoa: string[][]): { cabeceras: string[]; filas: string[][] } {
-  let h = aoa.findIndex((r) => r.filter((c) => String(c).trim() !== '').length >= 3);
-  if (h < 0) h = 0;
-  const cabeceras = (aoa[h] ?? []).map((c, i) => String(c).trim() || `Col ${i + 1}`);
-  const filas = aoa.slice(h + 1).filter((r) => r.some((c) => String(c).trim() !== ''));
-  return { cabeceras, filas };
+const RE_CUPS = /^ES\d{16}[A-Z]{0,2}\d?[A-Z]{0,2}$/i;
+const RE_MOVIL_FIJO = /^(\+?34|0034)?\s?[6-9]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}$/;
+
+const relleno = (c: unknown) => String(c ?? '').trim() !== '';
+
+/** Cuántas celdas de la fila parecen cabeceras conocidas (nombre, teléfono, CUPS, email…). */
+function puntuarCabecera(fila: string[]): number {
+  let n = 0;
+  for (const celda of fila) {
+    const h = norm(celda);
+    if (!h) continue;
+    const conocida = (Object.values(ALIAS) as string[][]).some((lista) =>
+      lista.some((a) => (a.length <= 3 ? h === a : h === a || h.includes(a))),
+    );
+    if (conocida) n++;
+  }
+  return n;
 }
 
+/** Una fila de datos (no de cabeceras): trae un CUPS o un teléfono completo en alguna celda. */
+function pareceDatos(fila: string[]): boolean {
+  return fila.some((c) => RE_CUPS.test(String(c).trim()) || /^[6-9]\d{8}$/.test(String(c).replace(/\s/g, '')));
+}
+
+/** Pone nombre a las columnas sin cabecera del formato SIPS (tarifa, potencias, municipio, CP…). */
+function nombrarColumnasSinCabecera(cabeceras: string[], filas: string[][]): string[] {
+  const nuevas = [...cabeceras];
+  const vacia = (i: number) => /^Col \d+$/.test(cabeceras[i] ?? '');
+  const muestra = (i: number) => filas.slice(0, 30).map((r) => String(r[i] ?? '').trim()).filter(Boolean);
+  const mayoria = (i: number, re: RegExp) => {
+    const m = muestra(i);
+    return m.length > 0 && m.filter((v) => re.test(v)).length / m.length >= 0.6;
+  };
+  const iTarifa = cabeceras.findIndex((_, i) => vacia(i) && mayoria(i, /^\d\.\dTD/i));
+  if (iTarifa >= 0) {
+    nuevas[iTarifa] = 'Tarifa';
+    for (let k = 0; k < 6; k++) {
+      const i = iTarifa + 1 + k;
+      if (vacia(i) && mayoria(i, /^\d+([.,]\d+)?$/)) nuevas[i] = `Contratada P${k + 1}`;
+    }
+    if (iTarifa >= 3 && vacia(iTarifa - 3) && vacia(iTarifa - 2) && vacia(iTarifa - 1) && mayoria(iTarifa - 2, /^\d{3,5}$/)) {
+      nuevas[iTarifa - 3] = 'Municipio';
+      nuevas[iTarifa - 2] = 'Código postal';
+      nuevas[iTarifa - 1] = 'Provincia';
+    }
+  }
+  let fechas = 0;
+  const NOMBRES_FECHA = ['Fecha de alta', 'Último cambio de comercializadora', 'Fecha límite derechos'];
+  cabeceras.forEach((_, i) => {
+    if (vacia(i) && nuevas[i] === cabeceras[i] && mayoria(i, /^\d{1,2}\/\d{1,2}\/\d{2,4}$/)) {
+      nuevas[i] = NOMBRES_FECHA[fechas] ?? `Fecha ${fechas + 1}`;
+      fechas++;
+    }
+  });
+  cabeceras.forEach((_, i) => {
+    if (vacia(i) && nuevas[i] === cabeceras[i] && mayoria(i, /autoconsumo/i)) nuevas[i] = 'Autoproducción';
+  });
+  return nuevas;
+}
+
+/**
+ * Busca la fila de cabeceras entre las primeras 15 (la que más cabeceras conocidas tiene).
+ * Si el archivo no tiene cabeceras (la primera fila ya es un lead), se usan columnas «Col N»
+ * y la primera fila se conserva como dato.
+ */
+export function separarCabecera(aoa: string[][]): { cabeceras: string[]; filas: string[][]; sinCabecera: boolean } {
+  const limite = Math.min(aoa.length, 15);
+  let mejor = -1;
+  let puntos = 0;
+  for (let i = 0; i < limite; i++) {
+    const p = puntuarCabecera(aoa[i] ?? []);
+    if (p > puntos) {
+      puntos = p;
+      mejor = i;
+    }
+  }
+  let h = mejor;
+  let sinCabecera = false;
+  if (puntos < 2 || pareceDatos(aoa[h] ?? [])) {
+    // sin cabeceras reconocibles: la primera fila con 3 celdas rellenas
+    h = aoa.findIndex((r) => r.filter(relleno).length >= 3);
+    if (h < 0) h = 0;
+    sinCabecera = pareceDatos(aoa[h] ?? []);
+  }
+  const ancho = Math.max(0, ...aoa.slice(h).map((r) => r.length));
+  const cabecerasFila = sinCabecera ? [] : (aoa[h] ?? []);
+  let cabeceras = Array.from({ length: ancho }, (_, i) => String(cabecerasFila[i] ?? '').trim() || `Col ${i + 1}`);
+  const filas = aoa.slice(sinCabecera ? h : h + 1).filter((r) => r.some(relleno));
+  cabeceras = nombrarColumnasSinCabecera(cabeceras, filas);
+  return { cabeceras, filas, sinCabecera };
+}
+
+/** Teléfono solo con dígitos, sin prefijo de España (+34, 0034 o 34 delante de 9 dígitos). */
 export function limpiarTelefono(t: string): string {
-  return t.replace(/[^\d+]/g, '').replace(/^(\+34|0034)/, '');
+  const d = String(t ?? '').replace(/[^\d]/g, '');
+  if (d.length === 13 && d.startsWith('0034')) return d.slice(4);
+  if (d.length === 11 && d.startsWith('34')) return d.slice(2);
+  return d;
+}
+
+/** Los teléfonos del cliente sin repetir ni vacíos (p. ej. si Teléfono 2 es igual que Teléfono 1). */
+export function telefonosDe(l: { telefono: string; telefono2: string }): string[] {
+  return [...new Set([l.telefono, l.telefono2].filter(Boolean))];
+}
+
+/** Rellena los roles que la cabecera no ha encontrado mirando lo que hay dentro de las columnas. */
+function completarPorContenido(mapa: MapaColumnas, filas: string[][]): MapaColumnas {
+  const resultado = { ...mapa };
+  const usadas = new Set(Object.values(resultado));
+  const ancho = Math.max(0, ...filas.slice(0, 50).map((r) => r.length));
+  const muestra = (i: number) => filas.slice(0, 50).map((r) => String(r[i] ?? '').trim()).filter(Boolean);
+  const frac = (i: number, test: (v: string) => boolean) => {
+    const m = muestra(i);
+    return m.length ? m.filter(test).length / m.length : 0;
+  };
+  const libres = Array.from({ length: ancho }, (_, i) => i).filter((i) => !usadas.has(i));
+  const toma = (rol: RolColumna, test: (v: string) => boolean, umbral = 0.6, desde = 0) => {
+    if (resultado[rol] !== undefined) return;
+    const i = libres.find((c) => c >= desde && !Object.values(resultado).includes(c) && frac(c, test) >= umbral);
+    if (i !== undefined) resultado[rol] = i;
+  };
+  toma('cups', (v) => RE_CUPS.test(v));
+  toma('email', (v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), 0.3);
+  toma('tel1', (v) => RE_MOVIL_FIJO.test(v), 0.5);
+  if (resultado.tel2 === undefined && resultado.tel1 !== undefined) {
+    // el segundo teléfono va justo a continuación y tiene bastantes huecos
+    toma('tel2', (v) => RE_MOVIL_FIJO.test(v), 0.5, resultado.tel1 + 1);
+    if (resultado.tel2 !== undefined && resultado.tel2 !== resultado.tel1 + 1) delete resultado.tel2;
+  }
+  if (resultado.nombre === undefined) {
+    const i = libres.find(
+      (c) => !Object.values(resultado).includes(c) && frac(c, (v) => /[A-Za-zÁÉÍÓÚÑ]{3}/.test(v) && !RE_CUPS.test(v) && !v.includes('@')) >= 0.8,
+    );
+    if (i !== undefined) resultado.nombre = i;
+  }
+  return resultado;
 }
 
 /** "08017" en el nombre del archivo ("leads 08017.xlsx") → módulo propuesto. */
@@ -185,15 +310,28 @@ export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaCo
   const get = (r: string[], rol: RolColumna) => (mapa[rol] !== undefined ? String(r[mapa[rol]!] ?? '').trim() : '');
   return filas.map((r) => {
     const extra: Record<string, string> = {};
+    const kwFila = get(r, 'kw');
     cabeceras.forEach((h, i) => {
-      const v = String(r[i] ?? '').trim();
-      if (!usadas.has(i) && v) extra[h] = v;
+      let v = String(r[i] ?? '').trim();
+      if (usadas.has(i) || !v) return;
+      // columnas sin nombre que repiten el valor de kW/consumo: no aportan nada
+      if (/^Col \d+$/.test(h) && kwFila && v === kwFila) return;
+      // el código postal pierde el 0 inicial en Excel (8022 → 08022)
+      if (h === 'Código postal' && /^\d{3,4}$/.test(v)) v = v.padStart(5, '0');
+      extra[h] = v;
     });
-    const consumo = parseFloat(get(r, 'consumo').replace(/\./g, '').replace(',', '.'));
+    let consumo = parseFloat(get(r, 'consumo').replace(/\./g, '').replace(',', '.'));
+    // El número junto a Teléfono 2 (≥ 1.000) es el consumo anual: se guarda también como tal.
+    if (!Number.isFinite(consumo) && mapa.consumo === undefined) {
+      const k = parseFloat(get(r, 'kw').replace(/\./g, '').replace(',', '.'));
+      if (Number.isFinite(k) && k >= 1000) consumo = k;
+    }
+    const tel = limpiarTelefono(get(r, 'tel1'));
+    const tel2 = limpiarTelefono(get(r, 'tel2'));
     return {
       nombre: get(r, 'nombre'),
-      telefono: limpiarTelefono(get(r, 'tel1')),
-      telefono2: limpiarTelefono(get(r, 'tel2')),
+      telefono: tel || tel2,
+      telefono2: tel && tel2 !== tel ? tel2 : '',
       email: get(r, 'email'),
       kw: get(r, 'kw'),
       cups: get(r, 'cups').replace(/\s/g, '').toUpperCase(),

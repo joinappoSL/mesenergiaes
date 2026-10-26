@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   analisis,
+  limpiarTelefono,
+  telefonosDe,
   aInputFecha,
   deInputFecha,
   embudo,
@@ -285,5 +287,74 @@ describe('estadísticas del embudo', () => {
     expect(deInputFecha('2026-10-21T17:30')).toBe(iso);
     expect(aInputFecha(null)).toBe('');
     expect(deInputFecha('')).toBeNull();
+  });
+});
+
+describe('Excel de leads con el formato de SIPS (listados por código postal)', () => {
+  const cab = ['CUPS', 'NOMBRE', 'TELEFONO', 'TELEFONO 2', '', 'CIF', 'COMERCIALIZADORA', 'EMAIL', 'PERSONA DE CONTACTO', 'NOTAS'];
+  const resto = ['Barcelona', '8022', 'Barcelona', '3.0TD', '17.321', '17.321', '17.321', '17.321', '17.321', '17.321', '31/05/2021', '01/01/2000', '01/01/2000', '1', '20932', 'Sin Autoconsumo'];
+  const fila = (cups: string, nombre: string, t1: string, t2: string, kw: string, ...otros: string[]) => [
+    cups, nombre, t1, t2, kw, 'B63663942', 'ENDESA ENERGIA SAU - A81948077', otros[0] ?? '', '', '', ...resto,
+  ];
+  const aoa = [
+    cab,
+    fila('ES0031405959727001PZ', 'BECCARIA GALLOSTRA -', '648867995', '', '20932', 'ana@x.com'),
+    fila('ES0031405995460001JF', 'BRUGCAB SA', '629542012', '932110743', '61980'),
+    fila('ES0031405995465001TQ', 'DUPLICADO SL', '934179127', '934179127', '57556'),
+    fila('ES0031408137896016AY', 'SIN TEL', '', '', ''),
+  ];
+
+  it('coge CUPS, teléfonos, el número junto a Teléfono 2 y la comercializadora', () => {
+    const { cabeceras, filas, sinCabecera } = separarCabecera(aoa);
+    expect(sinCabecera).toBe(false);
+    const mapa = detectarColumnas(cabeceras, filas);
+    expect(mapa).toMatchObject({ cups: 0, nombre: 1, tel1: 2, tel2: 3, kw: 4, comer: 6, email: 7 });
+    const [a, b, c, d] = filasALeads(cabeceras, filas, mapa, '08022');
+    expect(a).toMatchObject({ nombre: 'BECCARIA GALLOSTRA -', telefono: '648867995', telefono2: '', kw: '20932', consumo_anual: 20932, cups: 'ES0031405959727001PZ', modulo: '08022' });
+    expect(b).toMatchObject({ telefono: '629542012', telefono2: '932110743', kw: '61980' });
+    // Teléfono 2 igual que Teléfono 1: no se repite
+    expect(c.telefono2).toBe('');
+    expect(d).toMatchObject({ telefono: '', telefono2: '' });
+  });
+
+  it('da nombre a las columnas sin cabecera (tarifa, potencias, municipio…)', () => {
+    const { cabeceras } = separarCabecera(aoa);
+    expect(cabeceras).toContain('Tarifa');
+    expect(cabeceras).toContain('Contratada P1');
+    expect(cabeceras).toContain('Contratada P6');
+    expect(cabeceras).toContain('Código postal');
+    expect(cabeceras).toContain('Municipio');
+    expect(cabeceras).toContain('Fecha de alta');
+    const { cabeceras: c2, filas } = separarCabecera(aoa);
+    const [l] = filasALeads(c2, filas, detectarColumnas(c2, filas));
+    expect(l.extra['Tarifa']).toBe('3.0TD');
+    expect(l.extra['Código postal']).toBe('08022');
+    expect(Object.keys(l.extra).some((k) => /^Col \d+$/.test(k) && l.extra[k] === '20932')).toBe(false);
+  });
+
+  it('un archivo sin fila de cabeceras se entiende por su contenido y no pierde la primera fila', () => {
+    const sinCab = aoa.slice(1);
+    const { cabeceras, filas, sinCabecera } = separarCabecera(sinCab);
+    expect(sinCabecera).toBe(true);
+    expect(filas).toHaveLength(4);
+    const mapa = detectarColumnas(cabeceras, filas);
+    expect(mapa).toMatchObject({ cups: 0, nombre: 1, tel1: 2, email: 7 });
+    const [a] = filasALeads(cabeceras, filas, mapa);
+    expect(a).toMatchObject({ nombre: 'BECCARIA GALLOSTRA -', telefono: '648867995', cups: 'ES0031405959727001PZ' });
+  });
+
+  it('encuentra la cabecera aunque haya filas de título por encima', () => {
+    const { cabeceras, filas } = separarCabecera([['Listado de leads'], [''], ['Código postal 08022'], ...aoa]);
+    expect(cabeceras[1]).toBe('NOMBRE');
+    expect(filas).toHaveLength(4);
+  });
+
+  it('quita el 34 delante y no repite teléfonos', () => {
+    expect(limpiarTelefono('34 612 345 678')).toBe('612345678');
+    expect(limpiarTelefono('+34612345678')).toBe('612345678');
+    expect(limpiarTelefono('0034 612345678')).toBe('612345678');
+    expect(limpiarTelefono('933 000 111')).toBe('933000111');
+    expect(telefonosDe({ telefono: '612345678', telefono2: '612345678' })).toEqual(['612345678']);
+    expect(telefonosDe({ telefono: '', telefono2: '933000111' })).toEqual(['933000111']);
   });
 });

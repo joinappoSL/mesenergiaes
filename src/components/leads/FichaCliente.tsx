@@ -16,7 +16,7 @@ import {
   useSubirArchivosLead,
 } from '@/hooks/leads';
 import { fechaHora, tamanoArchivo, telefono } from '@/lib/format';
-import { aInputFecha, deInputFecha, ESTADOS_LEAD, limpiarTelefono, type EstadoLead, type Lead } from '@/lib/leads';
+import { aInputFecha, deInputFecha, ESTADOS_LEAD, limpiarTelefono, telefonosDe, type EstadoLead, type Lead } from '@/lib/leads';
 import { descargarBlob, mensajeError } from '@/lib/utils';
 import { CamposCliente, type FormCliente } from './CamposCliente';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
@@ -115,7 +115,7 @@ export function FichaCliente({ lead, editable, modulos, onClose }: Props) {
       toast.success('Ficha guardada');
     } catch (e) {
       const msg = mensajeError(e);
-      toast.error(/duplicate|23505|unique/i.test(msg) ? 'Ya tienes otro cliente con ese teléfono.' : msg);
+      toast.error(msg);
     }
   }
 
@@ -171,8 +171,8 @@ export function FichaCliente({ lead, editable, modulos, onClose }: Props) {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <EstadoLeadBadge estado={lead.estado} />
-          {[lead.telefono, lead.telefono2].filter(Boolean).map((t) => (
-            <a key={t} href={enlaceTel(t)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
+          {telefonosDe(lead).map((t) => (
+            <a key={`${lead.id}-${t}`} href={enlaceTel(t)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
               <Phone className="h-4 w-4" /> {telefono(t)}
             </a>
           ))}

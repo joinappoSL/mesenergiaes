@@ -66,7 +66,7 @@ export function NuevoCliente({ open, onClose, modulos, moduloInicial, propietari
       onClose();
     } catch (e) {
       const msg = mensajeError(e);
-      toast.error(/duplicate|23505|unique/i.test(msg) ? 'Ya tienes un cliente con ese teléfono.' : msg);
+      toast.error(msg);
     }
   }
 

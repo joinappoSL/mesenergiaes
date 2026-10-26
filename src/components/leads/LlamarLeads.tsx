@@ -8,7 +8,7 @@ import { Select, Textarea } from '@/components/ui/Field';
 import { useActualizarLead, useCambiarEstadoLead } from '@/hooks/leads';
 import { useAhora } from '@/hooks/useAhora';
 import { telefono } from '@/lib/format';
-import { colaPendientes, colaProgramadas, llamadaVencida, textoHoraLlamada, type Lead } from '@/lib/leads';
+import { colaPendientes, telefonosDe, colaProgramadas, llamadaVencida, textoHoraLlamada, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
 import { MaximetroModal } from './MaximetroModal';
@@ -152,9 +152,9 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {[lead.telefono, lead.telefono2].filter(Boolean).map((t) => (
+            {telefonosDe(lead).map((t) => (
               <a
-                key={t}
+                key={`${lead.id}-${t}`}
                 href={enlaceTel(t)}
                 className="inline-flex h-12 items-center gap-2 rounded-xl bg-brand-600 px-5 text-lg font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
               >

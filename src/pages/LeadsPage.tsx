@@ -1,8 +1,9 @@
-import { Upload, UserPlus } from 'lucide-react';
+import { Trash2, Upload, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePerfil } from '@/auth/AuthProvider';
 import { usePermisos } from '@/auth/permisos';
+import { BorrarModulo } from '@/components/leads/BorrarModulo';
 import { ImportarLeads } from '@/components/leads/ImportarLeads';
 import { ListaLeads } from '@/components/leads/ListaLeads';
 import { NuevoCliente } from '@/components/leads/NuevoCliente';
@@ -30,6 +31,7 @@ export function LeadsPage() {
   const [cartera, setCartera] = useState<string>('mias');
   const [importar, setImportar] = useState(false);
   const [nuevo, setNuevo] = useState(false);
+  const [borrar, setBorrar] = useState(false);
   const [modulo, setModulo] = useState('');
   const [params, setParams] = useSearchParams();
   const [foco, setFoco] = useState<string | null>(null);
@@ -86,6 +88,8 @@ export function LeadsPage() {
   const migracionPendiente =
     leadsQ.error && /PGRST205|schema cache|does not exist|42P01/i.test(`${(leadsQ.error as { code?: string }).code ?? ''} ${(leadsQ.error as Error).message}`);
 
+  // Lo que se puede borrar del módulo elegido: solo lo que esta persona puede editar.
+  const borrables = useMemo(() => visibles.filter(puedeEditar), [visibles, puedeEditar]);
   const pendientes = colaPendientes(visibles).length;
   const seguimiento = visibles.filter((l) => ESTADOS_SEGUIMIENTO.includes(l.estado)).length;
 
@@ -109,6 +113,11 @@ export function LeadsPage() {
                 {modulos.map((m) => <option key={m} value={m}>Módulo {m}</option>)}
                 {modulos.length > 0 && <option value="__sin">Sin módulo</option>}
               </Select>
+            )}
+            {moduloEfectivo !== '' && moduloEfectivo !== '__sin' && borrables.length > 0 && (
+              <Button variant="ghost" icon={<Trash2 className="h-4 w-4" />} className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setBorrar(true)}>
+                Borrar módulo
+              </Button>
             )}
             <Button variant="secondary" icon={<UserPlus className="h-4 w-4" />} onClick={() => setNuevo(true)}>
               Nuevo cliente
@@ -152,6 +161,7 @@ export function LeadsPage() {
       )}
 
       <ImportarLeads open={importar} onClose={() => setImportar(false)} propietarios={asignables} modulos={modulos} moduloActual={moduloEfectivo === '__sin' ? '' : moduloEfectivo} />
+      <BorrarModulo open={borrar} onClose={() => setBorrar(false)} modulo={moduloEfectivo} leads={borrables} onBorrado={() => setModulo('')} />
       <NuevoCliente open={nuevo} onClose={() => setNuevo(false)} modulos={modulos} moduloInicial={moduloEfectivo === '__sin' ? '' : moduloEfectivo} propietarios={asignables} />
     </div>
   );
