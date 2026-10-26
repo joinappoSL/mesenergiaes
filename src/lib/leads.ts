@@ -9,7 +9,9 @@ export type EstadoLead =
   | 'rechazado'
   | 'correo'
   | 'facturas'
-  | 'comparativa';
+  | 'comparativa'
+  | 'visita'
+  | 'firmado';
 
 export const ESTADOS_LEAD: Record<EstadoLead, { etiqueta: string; clase: string }> = {
   pendiente: { etiqueta: 'Pendiente', clase: 'bg-slate-100 text-slate-700 ring-slate-200' },
@@ -20,11 +22,13 @@ export const ESTADOS_LEAD: Record<EstadoLead, { etiqueta: string; clase: string 
   correo: { etiqueta: 'Correo enviado', clase: 'bg-brand-50 text-brand-700 ring-brand-200' },
   facturas: { etiqueta: 'Facturas recibidas', clase: 'bg-sky-50 text-sky-700 ring-sky-200' },
   comparativa: { etiqueta: 'Comparativa enviada', clase: 'bg-violet-50 text-violet-700 ring-violet-200' },
+  visita: { etiqueta: 'Visita programada', clase: 'bg-amber-50 text-amber-800 ring-amber-200' },
+  firmado: { etiqueta: 'Cliente firmado', clase: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
 };
 
 /** Estados que cuentan como una llamada en el registro diario. */
 export const ESTADOS_LLAMADA: EstadoLead[] = ['no_contesta', 'no_existe', 'volver_a_llamar', 'rechazado', 'correo'];
-export const ESTADOS_SEGUIMIENTO: EstadoLead[] = ['correo', 'facturas', 'comparativa'];
+export const ESTADOS_SEGUIMIENTO: EstadoLead[] = ['correo', 'facturas', 'comparativa', 'visita', 'firmado'];
 
 export interface Lead {
   id: string;
@@ -47,6 +51,14 @@ export interface Lead {
   ultimo_movimiento_at: string;
   /** hora a la que volver a llamar (estado «Llamar más tarde») */
   proxima_llamada_at: string | null;
+  /** lote de carga del listado, p. ej. el código postal 08017 */
+  modulo: string;
+  facturas_recibidas_at: string | null;
+  comparativa_enviada_at: string | null;
+  visita_at: string | null;
+  visita_lugar: string;
+  visita_notas: string;
+  firmado_at: string | null;
   maximetro: Maximetro | null;
   created_at: string;
   updated_at: string;
@@ -73,7 +85,7 @@ export interface LeadArchivo {
 
 export type NuevoLead = Pick<
   Lead,
-  'nombre' | 'telefono' | 'telefono2' | 'email' | 'kw' | 'cups' | 'comercializadora' | 'extra'
+  'nombre' | 'telefono' | 'telefono2' | 'email' | 'kw' | 'cups' | 'comercializadora' | 'extra' | 'modulo'
 > & { consumo_anual: number | null };
 
 // -----------------------------------------------------------------------------
@@ -162,7 +174,13 @@ export function limpiarTelefono(t: string): string {
   return t.replace(/[^\d+]/g, '').replace(/^(\+34|0034)/, '');
 }
 
-export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaColumnas): NuevoLead[] {
+/** "08017" en el nombre del archivo ("leads 08017.xlsx") → módulo propuesto. */
+export function moduloDesdeNombre(nombreArchivo: string): string {
+  const m = nombreArchivo.match(/(?<!\d)(0[1-9]|[1-4]\d|5[0-2])\d{3}(?!\d)/);
+  return m ? m[0] : '';
+}
+
+export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaColumnas, modulo = ''): NuevoLead[] {
   const usadas = new Set(Object.values(mapa));
   const get = (r: string[], rol: RolColumna) => (mapa[rol] !== undefined ? String(r[mapa[rol]!] ?? '').trim() : '');
   return filas.map((r) => {
@@ -181,6 +199,7 @@ export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaCo
       cups: get(r, 'cups').replace(/\s/g, '').toUpperCase(),
       consumo_anual: Number.isFinite(consumo) ? consumo : null,
       comercializadora: get(r, 'comer'),
+      modulo: modulo.trim(),
       extra,
     };
   });
@@ -617,6 +636,8 @@ export interface ResumenDia {
   correo: number;
   facturas: number;
   comparativa: number;
+  visita: number;
+  firmado: number;
 }
 
 export function resumenPorDia(eventos: { estado: EstadoLead | null; created_at: string }[]): ResumenDia[] {
@@ -625,7 +646,7 @@ export function resumenPorDia(eventos: { estado: EstadoLead | null; created_at: 
     if (!e.estado || e.estado === 'pendiente') continue;
     const d = new Date(e.created_at);
     const dia = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const r = mapa.get(dia) ?? { dia, llamadas: 0, no_contesta: 0, no_existe: 0, volver_a_llamar: 0, rechazado: 0, correo: 0, facturas: 0, comparativa: 0 };
+    const r = mapa.get(dia) ?? { dia, llamadas: 0, no_contesta: 0, no_existe: 0, volver_a_llamar: 0, rechazado: 0, correo: 0, facturas: 0, comparativa: 0, visita: 0, firmado: 0 };
     r[e.estado]++;
     if (ESTADOS_LLAMADA.includes(e.estado)) r.llamadas++;
     mapa.set(dia, r);
@@ -666,4 +687,99 @@ export function textoHoraLlamada(iso: string, ahora = new Date()): string {
   if (dif === 1) return `mañana a las ${hh}`;
   if (dif === -1) return `ayer a las ${hh}`;
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} a las ${hh}`;
+}
+
+// -----------------------------------------------------------------------------
+// Estadísticas del embudo (por fechas del proceso, no por llamadas)
+// -----------------------------------------------------------------------------
+export type Periodo = 'hoy' | '7' | '30' | 'mes' | 'todo';
+
+export const PERIODOS_ESTADISTICA: { valor: Periodo; etiqueta: string }[] = [
+  { valor: 'hoy', etiqueta: 'Hoy' },
+  { valor: '7', etiqueta: 'Últimos 7 días' },
+  { valor: '30', etiqueta: 'Últimos 30 días' },
+  { valor: 'mes', etiqueta: 'Este mes' },
+  { valor: 'todo', etiqueta: 'Todo' },
+];
+
+export function rangoPeriodo(p: Periodo, ahora = new Date()): { desde: number; hasta: number } {
+  const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()).getTime();
+  const hasta = inicioDia + 864e5 - 1;
+  if (p === 'hoy') return { desde: inicioDia, hasta };
+  if (p === '7') return { desde: inicioDia - 6 * 864e5, hasta };
+  if (p === '30') return { desde: inicioDia - 29 * 864e5, hasta };
+  if (p === 'mes') return { desde: new Date(ahora.getFullYear(), ahora.getMonth(), 1).getTime(), hasta };
+  return { desde: 0, hasta: Number.MAX_SAFE_INTEGER };
+}
+
+export interface FilaEmbudo {
+  modulo: string;
+  cargados: number;
+  correos: number;
+  facturas: number;
+  comparativas: number;
+  visitas: number;
+  firmados: number;
+  /** facturas recibidas sobre correos enviados, en % (null si no hay correos) */
+  pctFacturas: number | null;
+}
+
+type CamposEmbudo = Pick<
+  Lead,
+  'modulo' | 'created_at' | 'correo_enviado_at' | 'facturas_recibidas_at' | 'comparativa_enviada_at' | 'visita_at' | 'firmado_at'
+>;
+
+const enRango = (iso: string | null, r: { desde: number; hasta: number }) => {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  return t >= r.desde && t <= r.hasta;
+};
+
+function filaVacia(modulo: string): FilaEmbudo {
+  return { modulo, cargados: 0, correos: 0, facturas: 0, comparativas: 0, visitas: 0, firmados: 0, pctFacturas: null };
+}
+
+/** Cuenta cada paso del proceso por su fecha: «facturas recibidas» es la cifra clave. */
+export function embudo(leads: CamposEmbudo[], rango = rangoPeriodo('todo')): { total: FilaEmbudo; porModulo: FilaEmbudo[] } {
+  const total = filaVacia('Total');
+  const mapa = new Map<string, FilaEmbudo>();
+  for (const l of leads) {
+    const clave = l.modulo || '';
+    const f = mapa.get(clave) ?? filaVacia(clave);
+    mapa.set(clave, f);
+    for (const x of [f, total]) {
+      if (enRango(l.created_at, rango)) x.cargados++;
+      if (enRango(l.correo_enviado_at, rango)) x.correos++;
+      if (enRango(l.facturas_recibidas_at, rango)) x.facturas++;
+      if (enRango(l.comparativa_enviada_at, rango)) x.comparativas++;
+      if (enRango(l.visita_at, rango)) x.visitas++;
+      if (enRango(l.firmado_at, rango)) x.firmados++;
+    }
+  }
+  const pct = (f: FilaEmbudo) => {
+    f.pctFacturas = f.correos ? Math.round((f.facturas / f.correos) * 100) : null;
+    return f;
+  };
+  return {
+    total: pct(total),
+    porModulo: [...mapa.values()].map(pct).sort((a, b) => a.modulo.localeCompare(b.modulo)),
+  };
+}
+
+/** Módulos distintos (sin vacío) de una lista de leads. */
+export function modulosDe(leads: Pick<Lead, 'modulo'>[]): string[] {
+  return [...new Set(leads.map((l) => l.modulo).filter(Boolean))].sort();
+}
+
+/** <input type="datetime-local"> ↔ ISO */
+export function aInputFecha(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+export function deInputFecha(valor: string): string | null {
+  if (!valor) return null;
+  const d = new Date(valor);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }

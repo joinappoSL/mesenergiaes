@@ -1,33 +1,33 @@
 # MESENERGIA CRM · +Energía
 
-CRM interno para gestionar los contratos de fibra/WiFi del call center: el comercial sube la venta con la oferta en PDF, backoffice la tramita con la operadora y los jefes de equipo siguen en tiempo real cómo va su equipo.
+CRM interno de MESENERGIA para la prospección energética: cada comercial carga sus listados (por módulos, p. ej. el código postal 08017 o 08022), llama, envía el correo con la presentación y el maxímetro, y sigue a cada cliente hasta las facturas, la comparativa, la visita y la firma.
 
-**Stack:** React 19 + TypeScript + Vite + Tailwind CSS 4 · Supabase (Auth, Postgres con RLS, Storage, Realtime y Edge Functions) · TanStack Query · React Hook Form + Zod · Recharts · dnd-kit · **Messy**, el agente de IA en WhatsApp (Claude + Whapi.cloud).
+> **Antes** el CRM gestionaba contratos de telecomunicaciones (fibra/WiFi). Esa parte se ha quitado de la aplicación, pero **sus datos siguen guardados en Supabase** (tablas `contratos`, `llamadas`, `documentos`…, bucket `contratos-pdf`) y la Edge Function `messy` los sigue leyendo. No se ha borrado nada.
+
+**Stack:** React 19 + TypeScript + Vite + Tailwind CSS 4 · Supabase (Auth, Postgres con RLS, Storage y Edge Functions) · TanStack Query · SheetJS, jsPDF y html2canvas (se cargan solo al usarlos).
 
 ## Qué incluye
 
 | Pantalla | Para quién | Qué hace |
 |---|---|---|
 | **Login** | Todos | Email + contraseña, recuperar contraseña por email, cambio obligatorio de la contraseña temporal en el primer acceso. |
-| **Dashboard** | Admin, backoffice, jefes (el comercial ve un resumen solo con lo suyo) | KPIs por estado, % de activación, pendientes sin firmar, cuota mensual activada, contratos subidos por día (con vista de tabla), citas de instalación de hoy y de los próximos 7 días, ranking de comerciales. Filtros por periodo, equipo y comercial. Se actualiza en tiempo real. |
-| **Contratos** | Todos (cada rol ve lo suyo) | Tabla con búsqueda por nombre, apellidos, DNI/NIE o cualquier teléfono (también los de portabilidad), filtros, orden por columnas y paginación. Vista **Kanban** por estados (arrastrar solo backoffice/admin; pide motivo en Cancelado y Riesgos). **Exportar a Excel** (.xlsx) de lo filtrado. |
-| **Nuevo / editar contrato** | Comercial, backoffice, admin | Formulario por secciones con validación en vivo: letra del DNI/NIE, teléfonos de 9 dígitos, CP que rellena la provincia, lista dinámica de portabilidades, PDF de la oferta (máx. 10 MB), cita de instalación y observación inicial. **Aviso de duplicados** por DNI/NIE o teléfono (no bloquea). Botón de guardar fijo abajo en móvil. |
-| **Ficha del contrato** | Todos | Todos los datos, botón de llamada (`tel:`) en cada teléfono, visor del PDF con versiones, cambio de estado, firma y reasignación (backoffice), registro de llamadas, hilo de observaciones (solo se añaden) e historial de estados. |
-| **Cola de llamadas** | Backoffice, admin | Pendientes ordenados por antigüedad con contador de días; primero los recordatorios de «volver a llamar» vencidos. Modo llamada con **Anterior / Siguiente** sin volver al listado. |
-| **Calendario de verificaciones** | Backoffice, admin | Las llamadas de verificación programadas en orden de hora, en **agenda** (hoy y los próximos 13 días, con las atrasadas arriba y una línea de «ahora») o **semana** (lunes a domingo). Tarjeta con la siguiente llamada y cuenta atrás, avisos en pantalla 5 minutos antes y a la hora, botón **Hecha** (con deshacer), **Reprogramar** y modo llamada con **Anterior / Siguiente**. Se actualiza en tiempo real; el menú muestra cuántas quedan hoy. |
-| **Prospección** | Todos (cada comercial ve su cartera; backoffice y admin, todas; el jefe, la de su equipo en solo lectura) | Importar leads desde Excel (columnas detectadas por cabecera, aunque cambie el orden; kW junto a Teléfono 2), **modo llamada** (kW y teléfonos destacados, No contesta / Rechazado / Correo enviado), **correo en catalán o castellano** en 4 formatos (completo, corto, con datos, express) que elige el periodo con más consumo, **maxímetro** a partir de las 2 tablas de SIPS (informe con diseño +Energía en PDF, con potencia optimizada editable) y botón *Copiar y enviar con todo adjunto* (maxímetro + presentación). **Seguimiento** de los clientes con correo enviado (aviso a los 3 días), facturas y comparativa adjuntas en Storage, historial del proceso y **registro diario** de llamadas. |
+| **Prospección → Llamar** | Todos | Un lead cada vez, con los kW y los teléfonos (`612 345 678`) en grande. Botones **No contesta**, **No existe teléfono**, **Llamar más tarde** (con día y hora; cuando toca sube a «Pendientes»), **Rechazado**, **Correo enviado**, **Maxímetro** y **Ficha**. |
+| **Prospección → Lista** | Todos | Todos los clientes con búsqueda, filtro por estado y módulo; clic para abrir la ficha. |
+| **Ficha de cliente** | Todos (editan el propietario y admin/backoffice) | Datos, módulo, **fechas del proceso** (correo enviado, **facturas recibidas**, comparativa enviada, **visita** con lugar y notas, firma), estado, facturas y comparativas adjuntas (Storage), notas e historial. |
+| **Nuevo cliente** | Todos | Añade a mano un cliente aunque no esté en ningún listado, con sus fechas ya rellenadas (el historial y el registro diario usan esas fechas). |
+| **Importar Excel** | Todos | Columnas detectadas por cabecera aunque cambie el orden (kW junto a Teléfono 2). Cada carga lleva un **módulo** (se propone desde el nombre del archivo, p. ej. `08017.xlsx`); se cargan listados nuevos sin duplicar teléfonos. |
+| **Correo** | Todos | Catalán o castellano, 4 formatos (completo, corto, con datos, express); elige el periodo con más consumo; **Copiar y enviar con todo adjunto** (maxímetro en PDF + presentación). |
+| **Maxímetro** | Todos | A partir de las 2 tablas de SIPS (`.zip` o `.xls`): últimos 12 meses, consumo por periodo, potencia contratada, máximos y **potencia optimizada** editable; PDF con el diseño +Energía. |
+| **Seguimiento** | Todos | Clientes con correo enviado en adelante, con **próximas visitas**, aviso a los 3 días sin facturas y fechas de cada paso. |
+| **Registro diario → Estadísticas** | Todos | Correos, **facturas recibidas** (y % sobre correos), comparativas, visitas y firmas por periodo y **por módulo**; llamadas por día. |
 | **Usuarios y equipos** | Admin, backoffice, jefes | Alta, edición, desactivación y reseteo de contraseña (con contraseña temporal). Equipos y jefes (solo admin). |
 
 ### Roles
 
 | | Admin | Backoffice | Jefe de equipo | Comercial |
 |---|:-:|:-:|:-:|:-:|
-| Ve contratos | Todos | Todos | Los de su equipo | Los suyos |
-| Crea contratos | ✅ | ✅ | — | ✅ |
-| Edita contratos | ✅ | ✅ | — | Los suyos, en Pendiente y sin firmar |
-| Cambia estado / firma / reasigna / registra llamadas | ✅ | ✅ | — | — |
-| Marca verificaciones hechas / reprograma | ✅ | ✅ | — | Solo cambia la hora de los suyos al editarlos |
-| Añade observaciones | ✅ | ✅ | ✅ | ✅ |
+| Ve clientes | Todos | Todos | Los de su equipo (solo lectura) | Los suyos |
+| Edita clientes | Todos | Todos | — | Los suyos |
 | Gestiona usuarios | Todos los roles | Comerciales | Comerciales de su equipo | — |
 | Gestiona equipos | ✅ | — | — | — |
 
@@ -208,7 +208,7 @@ supabase/
 src/
   auth/            Sesión, perfil y permisos por rol
   hooks/           Consultas, mutaciones y tiempo real (TanStack Query)
-  components/      UI base, layout, contratos, dashboard y usuarios
+  components/      UI base, layout, prospección (leads) y usuarios
   pages/           Una pantalla por ruta
   lib/             Tipos, constantes, validadores, formato y exportación a Excel
 public/            Logo (+ variante para fondo oscuro) e iconos; leads/ = presentación y logo del informe (y la primera versión suelta de la app de llamadas)

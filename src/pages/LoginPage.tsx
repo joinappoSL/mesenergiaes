@@ -41,12 +41,12 @@ export function PantallaAuth({ children }: { children: ReactNode }) {
             <Zap className="h-3.5 w-3.5" /> MESENERGIA CRM
           </p>
           <h2 className="mt-4 text-4xl font-semibold leading-tight text-white">
-            Cada contrato,
+            Cada cliente,
             <br />
             <span className="text-brand-400">bajo control.</span>
           </h2>
           <p className="mt-4 text-base leading-relaxed text-navy-200">
-            Sube las ventas, sigue su tramitación con la operadora y consulta en tiempo real cómo va tu equipo.
+            Llama a tus leads, envía el correo con el maxímetro y sigue a cada cliente hasta la comparativa y la visita.
           </p>
         </div>
         <p className="relative flex items-center gap-2 text-xs text-navy-300">

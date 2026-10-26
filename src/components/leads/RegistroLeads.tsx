@@ -4,22 +4,29 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/ui/Feedback';
 import { Select } from '@/components/ui/Field';
 import { useRegistroLeads } from '@/hooks/leads';
 import { fecha, hoyISO } from '@/lib/format';
+import type { Lead } from '@/lib/leads';
 import { resumenPorDia } from '@/lib/leads';
 import { ClipboardList } from 'lucide-react';
 import { mensajeError } from '@/lib/utils';
+import { EstadisticasLeads } from './EstadisticasLeads';
 
 interface Props {
   /** personas cuyo registro se puede elegir (solo gestores y jefes) */
   personas?: { id: string; nombre: string }[];
+  /** leads que se están viendo (cartera y módulo elegidos) */
+  leads: Lead[];
 }
 
-export function RegistroLeads({ personas }: Props) {
+export function RegistroLeads({ personas, leads }: Props) {
   const registro = useRegistroLeads();
   const [persona, setPersona] = useState('');
 
   const dias = useMemo(
-    () => resumenPorDia((registro.data ?? []).filter((e) => !persona || e.usuario_id === persona)),
-    [registro.data, persona],
+    () => {
+      const ids = new Set(leads.map((l) => l.id));
+      return resumenPorDia((registro.data ?? []).filter((e) => ids.has(e.lead_id) && (!persona || e.usuario_id === persona)));
+    },
+    [registro.data, persona, leads],
   );
   const hoy = dias.find((d) => d.dia === hoyISO());
 
@@ -35,10 +42,13 @@ export function RegistroLeads({ personas }: Props) {
     ['Correos enviados', hoy?.correo, 'text-brand-700'],
     ['Facturas recibidas', hoy?.facturas, 'text-sky-700'],
     ['Comparativas enviadas', hoy?.comparativa, 'text-violet-700'],
+    ['Visitas', hoy?.visita, 'text-amber-800'],
+    ['Firmados', hoy?.firmado, 'text-emerald-700'],
   ];
 
   return (
     <div className="space-y-4">
+      <EstadisticasLeads leads={leads} />
       {personas && personas.length > 0 && (
         <Card className="p-3">
           <Select className="w-auto" value={persona} onChange={(e) => setPersona(e.target.value)}>
@@ -75,6 +85,8 @@ export function RegistroLeads({ personas }: Props) {
                 <th className="px-4 py-3 text-right">Correo enviado</th>
                 <th className="px-4 py-3 text-right">Facturas</th>
                 <th className="px-4 py-3 text-right">Comparativas</th>
+                <th className="px-4 py-3 text-right">Visitas</th>
+                <th className="px-4 py-3 text-right">Firmados</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 tabular-nums">
@@ -89,6 +101,8 @@ export function RegistroLeads({ personas }: Props) {
                   <td className="px-4 py-2.5 text-right">{d.correo}</td>
                   <td className="px-4 py-2.5 text-right">{d.facturas}</td>
                   <td className="px-4 py-2.5 text-right">{d.comparativa}</td>
+                  <td className="px-4 py-2.5 text-right">{d.visita}</td>
+                  <td className="px-4 py-2.5 text-right">{d.firmado}</td>
                 </tr>
               ))}
             </tbody>

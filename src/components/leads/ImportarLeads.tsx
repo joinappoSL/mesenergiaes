@@ -4,13 +4,14 @@ import { toast } from 'sonner';
 import { usePerfil } from '@/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Aviso } from '@/components/ui/Feedback';
-import { Field, Select } from '@/components/ui/Field';
+import { Field, Input, Select } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { useImportarLeads } from '@/hooks/leads';
 import {
   detectarColumnas,
   ETIQUETA_COLUMNA,
   filasALeads,
+  moduloDesdeNombre,
   separarCabecera,
   type MapaColumnas,
   type RolColumna,
@@ -23,19 +24,25 @@ interface Props {
   onClose: () => void;
   /** personas a las que se puede asignar la cartera (solo gestores) */
   propietarios?: { id: string; nombre: string }[];
+  /** módulos ya cargados, para sugerirlos */
+  modulos?: string[];
+  /** módulo filtrado ahora, por si se quiere añadir más a ese módulo */
+  moduloActual?: string;
 }
 
-export function ImportarLeads({ open, onClose, propietarios }: Props) {
+export function ImportarLeads({ open, onClose, propietarios, modulos = [], moduloActual }: Props) {
   const perfil = usePerfil();
   const importar = useImportarLeads();
   const [archivo, setArchivo] = useState<{ cabeceras: string[]; filas: string[][]; nombre: string } | null>(null);
   const [mapa, setMapa] = useState<MapaColumnas>({});
   const [propietarioId, setPropietarioId] = useState(perfil.id);
+  const [modulo, setModulo] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   function cerrar() {
     setArchivo(null);
     setMapa({});
+    setModulo('');
     setError(null);
     onClose();
   }
@@ -49,6 +56,8 @@ export function ImportarLeads({ open, onClose, propietarios }: Props) {
       if (!filas.length) throw new Error('El archivo no tiene filas con datos.');
       setArchivo({ cabeceras, filas, nombre: f.name });
       setMapa(detectarColumnas(cabeceras));
+      // «08017.xlsx» o «leads 08017.xlsx» proponen el módulo 08017
+      setModulo((m) => m || moduloDesdeNombre(f.name) || moduloActual || '');
     } catch (e) {
       setArchivo(null);
       setError(mensajeError(e));
@@ -58,9 +67,9 @@ export function ImportarLeads({ open, onClose, propietarios }: Props) {
   async function importarAhora() {
     if (!archivo) return;
     try {
-      const leads = filasALeads(archivo.cabeceras, archivo.filas, mapa);
+      const leads = filasALeads(archivo.cabeceras, archivo.filas, mapa, modulo);
       const r = await importar.mutateAsync({ propietarioId, leads });
-      toast.success(`${r.nuevos} leads importados${r.repetidos ? ` · ${r.repetidos} repetidos (mismo teléfono) omitidos` : ''}`);
+      toast.success(`${r.nuevos} leads importados${modulo.trim() ? ` en el módulo ${modulo.trim()}` : ''}${r.repetidos ? ` · ${r.repetidos} repetidos (mismo teléfono) omitidos` : ''}`);
       cerrar();
     } catch (e) {
       toast.error(mensajeError(e));
@@ -104,6 +113,12 @@ export function ImportarLeads({ open, onClose, propietarios }: Props) {
         )}
         {archivo && (
           <>
+            <Field label="Módulo de este listado" hint="Para distinguir cada carga (por ejemplo el código postal 08017 o 08022). Puedes dejarlo vacío.">
+              <Input value={modulo} placeholder="08017" list="modulos-importar" onChange={(e) => setModulo(e.target.value)} />
+            </Field>
+            <datalist id="modulos-importar">
+              {modulos.map((m) => <option key={m} value={m} />)}
+            </datalist>
             <p className="text-sm text-slate-600">
               <b>{archivo.nombre}</b> · {archivo.filas.length} filas · {archivo.cabeceras.length} columnas
             </p>
