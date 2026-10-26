@@ -6,15 +6,18 @@ import { Input, Select } from '@/components/ui/Field';
 import { telefono } from '@/lib/format';
 import { ESTADOS_LEAD, norm, textoHoraLlamada, type EstadoLead, type Lead } from '@/lib/leads';
 import { EstadoLeadBadge } from './comunes';
+import { FichaCliente } from './FichaCliente';
 
 interface Props {
   leads: Lead[];
   mostrarCartera: boolean;
   nombreCartera: (id: string) => string | null;
-  onAbrir: (id: string) => void;
+  puedeEditar: (l: Lead) => boolean;
+  modulos: string[];
 }
 
-export function ListaLeads({ leads, mostrarCartera, nombreCartera, onAbrir }: Props) {
+export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, modulos }: Props) {
+  const [abierto, setAbierto] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState<'todos' | EstadoLead>('todos');
 
@@ -50,6 +53,7 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, onAbrir }: Pr
                 <th className="px-4 py-3">Teléfono</th>
                 <th className="px-4 py-3">Teléfono 2</th>
                 <th className="px-4 py-3">kW</th>
+                <th className="px-4 py-3">Módulo</th>
                 {mostrarCartera && <th className="px-4 py-3">Cartera</th>}
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3 text-right">Llam.</th>
@@ -57,11 +61,12 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, onAbrir }: Pr
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filas.slice(0, 500).map((l) => (
-                <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => onAbrir(l.id)}>
+                <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => setAbierto(l.id)}>
                   <td className="px-4 py-2.5 font-semibold text-navy-900">{l.nombre || '—'}</td>
                   <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono)}</td>
                   <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono2)}</td>
                   <td className="px-4 py-2.5 font-bold text-brand-700">{l.kw || '—'}</td>
+                  <td className="px-4 py-2.5 text-slate-500">{l.modulo || '—'}</td>
                   {mostrarCartera && <td className="px-4 py-2.5 text-slate-500">{nombreCartera(l.propietario_id) ?? '—'}</td>}
                   <td className="px-4 py-2.5">
                     <EstadoLeadBadge estado={l.estado} />
@@ -77,6 +82,9 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, onAbrir }: Pr
         )}
         {filas.length > 500 && <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">Se muestran 500 de {filas.length}. Afina la búsqueda.</p>}
       </Card>
+      {abierto && leads.find((l) => l.id === abierto) && (
+        <FichaCliente lead={leads.find((l) => l.id === abierto)!} editable={puedeEditar(leads.find((l) => l.id === abierto)!)} modulos={modulos} onClose={() => setAbierto(null)} />
+      )}
     </div>
   );
 }

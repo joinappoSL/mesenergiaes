@@ -1,19 +1,13 @@
-import { CalendarCheck, FileText, LayoutDashboard, LogOut, PhoneCall, Plus, Target, Users, Zap } from 'lucide-react';
-import { createContext, Suspense, useContext, useState, type ComponentType } from 'react';
+import { LogOut, Plus, Target, Users, Zap } from 'lucide-react';
+import { Suspense, useState, type ComponentType } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usePerfil, useAuth } from '@/auth/AuthProvider';
 import { usePermisos } from '@/auth/permisos';
 import { RolBadge } from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/Feedback';
 import { Avatar, Logo } from '@/components/ui/Misc';
-import { useCola, useVerificacionesPorHacer } from '@/hooks/datos';
-import { useHoy } from '@/hooks/useAhora';
-import { useRealtime } from '@/hooks/useRealtime';
 import { nombreCompleto } from '@/lib/format';
 import { cn } from '@/lib/utils';
-
-const RealtimeContext = createContext(false);
-export const useEnDirecto = () => useContext(RealtimeContext);
 
 interface ItemNav {
   to: string;
@@ -26,28 +20,7 @@ interface ItemNav {
 
 function useNavegacion(): ItemNav[] {
   const p = usePermisos();
-  const cola = useCola(false, p.puedeVerCola);
-  const hoy = useHoy();
-  const verificaciones = useVerificacionesPorHacer(hoy.inicio, hoy.fin, p.puedeVerVerificaciones);
-  const items: ItemNav[] = [
-    { to: '/', label: p.esComercial ? 'Mi resumen' : 'Dashboard', corto: 'Inicio', icon: LayoutDashboard, end: true },
-    { to: '/contratos', label: p.esComercial ? 'Mis contratos' : 'Contratos', corto: 'Contratos', icon: FileText },
-  ];
-  // Comerciales y jefes: la prospección va junto a sus contratos; gestión, al final.
-  const prospeccion: ItemNav = { to: '/prospeccion', label: 'Prospección', corto: 'Leads', icon: Target };
-  if (!p.esGestor) items.push(prospeccion);
-  if (p.puedeVerCola) {
-    items.push({ to: '/cola', label: 'Cola de llamadas', corto: 'Cola', icon: PhoneCall, contador: cola.data?.length });
-  }
-  if (p.puedeVerVerificaciones) {
-    items.push({
-      to: '/verificaciones',
-      label: 'Verificaciones',
-      corto: 'Verificar',
-      icon: CalendarCheck,
-      contador: verificaciones.data,
-    });
-  }
+  const items: ItemNav[] = [{ to: '/prospeccion', label: 'Prospección', corto: 'Leads', icon: Target }];
   if (p.puedeVerUsuarios) {
     items.push({
       to: '/usuarios',
@@ -56,13 +29,11 @@ function useNavegacion(): ItemNav[] {
       icon: Users,
     });
   }
-  if (p.esGestor) items.push(prospeccion);
   return items;
 }
 
-function Sidebar({ items, enDirecto }: { items: ItemNav[]; enDirecto: boolean }) {
+function Sidebar({ items }: { items: ItemNav[] }) {
   const perfil = usePerfil();
-  const p = usePermisos();
   const { cerrarSesion } = useAuth();
 
   return (
@@ -73,7 +44,7 @@ function Sidebar({ items, enDirecto }: { items: ItemNav[]; enDirecto: boolean })
       </div>
 
       <div className="relative px-6 pb-4 pt-7">
-        <Link to="/" aria-label="Inicio">
+        <Link to="/prospeccion" aria-label="Inicio">
           <Logo variante="oscuro" className="w-44" />
         </Link>
         <p className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-300">
@@ -81,16 +52,14 @@ function Sidebar({ items, enDirecto }: { items: ItemNav[]; enDirecto: boolean })
         </p>
       </div>
 
-      {p.puedeCrearContrato && (
-        <div className="relative px-4 pb-2 pt-3">
-          <Link
-            to="/contratos/nuevo"
-            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:bg-brand-500 active:scale-[0.98]"
-          >
-            <Plus className="h-4 w-4" /> Nuevo contrato
-          </Link>
-        </div>
-      )}
+      <div className="relative px-4 pb-2 pt-3">
+        <Link
+          to="/prospeccion?nuevo=1"
+          className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:bg-brand-500 active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" /> Nuevo cliente
+        </Link>
+      </div>
 
       <nav className="relative flex-1 space-y-1 overflow-y-auto px-3 py-3">
         {items.map((item) => (
@@ -137,10 +106,6 @@ function Sidebar({ items, enDirecto }: { items: ItemNav[]; enDirecto: boolean })
             <LogOut className="h-4 w-4" />
           </button>
         </div>
-        <p className="mt-3 flex items-center gap-1.5 text-[11px] text-navy-300">
-          <span className={cn('h-1.5 w-1.5 rounded-full', enDirecto ? 'bg-brand-400 animate-pulse-soft' : 'bg-navy-400')} />
-          {enDirecto ? 'Actualización en tiempo real' : 'Conectando…'}
-        </p>
       </div>
     </aside>
   );
@@ -153,7 +118,7 @@ function CabeceraMovil({ extra }: { extra: ItemNav[] }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur lg:hidden">
-      <Link to="/" aria-label="Inicio">
+      <Link to="/prospeccion" aria-label="Inicio">
         <Logo className="h-8 w-auto" />
       </Link>
       <div className="relative">
@@ -199,9 +164,8 @@ function CabeceraMovil({ extra }: { extra: ItemNav[] }) {
 }
 
 function NavegacionMovil({ items }: { items: ItemNav[] }) {
-  const p = usePermisos();
-  const izquierda = items.slice(0, 2);
-  const derecha = items.slice(2, 4);
+  const izquierda = items.slice(0, 1);
+  const derecha = items.slice(1, 2);
 
   const enlace = (item: ItemNav) => (
     <NavLink
@@ -233,17 +197,15 @@ function NavegacionMovil({ items }: { items: ItemNav[] }) {
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur pb-safe lg:hidden">
       <div className="mx-auto flex h-16 max-w-md items-stretch px-2">
         {izquierda.map(enlace)}
-        {p.puedeCrearContrato && (
-          <div className="flex flex-1 items-center justify-center">
-            <Link
-              to="/contratos/nuevo"
-              aria-label="Nuevo contrato"
-              className="-mt-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-700/30 ring-4 ring-white transition active:scale-95"
-            >
-              <Plus className="h-6 w-6" />
-            </Link>
-          </div>
-        )}
+        <div className="flex flex-1 items-center justify-center">
+          <Link
+            to="/prospeccion?nuevo=1"
+            aria-label="Nuevo cliente"
+            className="-mt-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-700/30 ring-4 ring-white transition active:scale-95"
+          >
+            <Plus className="h-6 w-6" />
+          </Link>
+        </div>
         {derecha.map(enlace)}
       </div>
     </nav>
@@ -251,16 +213,14 @@ function NavegacionMovil({ items }: { items: ItemNav[] }) {
 }
 
 export function AppLayout() {
-  const perfil = usePerfil();
   const items = useNavegacion();
-  const enDirecto = useRealtime(perfil.id);
   const location = useLocation();
 
   return (
-    <RealtimeContext.Provider value={enDirecto}>
+    <>
       <div className="min-h-dvh">
-        <Sidebar items={items} enDirecto={enDirecto} />
-        <CabeceraMovil extra={items.slice(4)} />
+        <Sidebar items={items} />
+        <CabeceraMovil extra={[]} />
         <main className="lg:pl-64">
           <div key={location.pathname} className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-5 animate-fade-in sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
             <Suspense fallback={<PageLoader />}>
@@ -270,6 +230,6 @@ export function AppLayout() {
         </main>
         <NavegacionMovil items={items} />
       </div>
-    </RealtimeContext.Provider>
+    </>
   );
 }

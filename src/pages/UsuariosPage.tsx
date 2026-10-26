@@ -65,7 +65,7 @@ function ConfirmarActivacion({ usuario, onClose }: { usuario: Perfil | null; onC
     >
       <p className="text-sm text-slate-600">
         {desactivar
-          ? 'No podrá iniciar sesión, pero se conserva todo su historial: contratos, observaciones y llamadas. Puedes reactivarlo cuando quieras.'
+          ? 'No podrá iniciar sesión, pero se conserva todo su historial. Puedes reactivarlo cuando quieras.'
           : 'Podrá volver a iniciar sesión con su contraseña actual.'}
       </p>
     </Modal>

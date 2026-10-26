@@ -1,9 +1,11 @@
-import { Upload } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Upload, UserPlus } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePerfil } from '@/auth/AuthProvider';
 import { usePermisos } from '@/auth/permisos';
 import { ImportarLeads } from '@/components/leads/ImportarLeads';
 import { ListaLeads } from '@/components/leads/ListaLeads';
+import { NuevoCliente } from '@/components/leads/NuevoCliente';
 import { LlamarLeads } from '@/components/leads/LlamarLeads';
 import { RegistroLeads } from '@/components/leads/RegistroLeads';
 import { SeguimientoLeads } from '@/components/leads/SeguimientoLeads';
@@ -14,7 +16,7 @@ import { PageHeader, Tabs } from '@/components/ui/Misc';
 import { usePerfiles } from '@/hooks/datos';
 import { useLeads } from '@/hooks/leads';
 import { nombreCompleto } from '@/lib/format';
-import { colaPendientes, ESTADOS_SEGUIMIENTO, type Lead } from '@/lib/leads';
+import { colaPendientes, ESTADOS_SEGUIMIENTO, modulosDe, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
 
 type Vista = 'llamar' | 'lista' | 'seguimiento' | 'registro';
@@ -27,8 +29,20 @@ export function LeadsPage() {
   const [vista, setVista] = useState<Vista>('llamar');
   const [cartera, setCartera] = useState<string>('mias');
   const [importar, setImportar] = useState(false);
+  const [nuevo, setNuevo] = useState(false);
+  const [modulo, setModulo] = useState('');
+  const [params, setParams] = useSearchParams();
   const [foco, setFoco] = useState<string | null>(null);
   const verCartera = p.esGestor || p.esJefe;
+
+  // «Nuevo cliente» del menú lateral llega como /prospeccion?nuevo=1
+  useEffect(() => {
+    if (params.get('nuevo')) {
+      setNuevo(true);
+      params.delete('nuevo');
+      setParams(params, { replace: true });
+    }
+  }, [params, setParams]);
 
   const nombres = useMemo(() => {
     const m = new Map<string, string>();
@@ -39,11 +53,19 @@ export function LeadsPage() {
   const puedeEditar = useCallback((l: Lead) => p.esGestor || l.propietario_id === perfil.id, [p.esGestor, perfil.id]);
 
   const todos = leadsQ.data ?? [];
-  const visibles = useMemo(() => {
+  const deLaCartera = useMemo(() => {
     if (!verCartera || cartera === 'todas') return todos;
     const id = cartera === 'mias' ? perfil.id : cartera;
     return todos.filter((l) => l.propietario_id === id);
   }, [todos, cartera, verCartera, perfil.id]);
+  const modulos = useMemo(() => modulosDe(deLaCartera), [deLaCartera]);
+  // Si el módulo elegido ya no existe (otra cartera), se vuelve a «todos».
+  const moduloEfectivo = modulo === '' || modulo === '__sin' || modulos.includes(modulo) ? modulo : '';
+  const visibles = useMemo(() => {
+    if (moduloEfectivo === '') return deLaCartera;
+    if (moduloEfectivo === '__sin') return deLaCartera.filter((l) => !l.modulo);
+    return deLaCartera.filter((l) => l.modulo === moduloEfectivo);
+  }, [deLaCartera, moduloEfectivo]);
 
   const carteras = useMemo(() => [...new Set(todos.map((l) => l.propietario_id))].filter((id) => id !== perfil.id), [todos, perfil.id]);
   const personas = useMemo(
@@ -59,10 +81,6 @@ export function LeadsPage() {
     [verCartera, perfil.id, personas],
   );
 
-  const abrirDesdeLista = useCallback((id: string) => {
-    setFoco(id);
-    setVista('llamar');
-  }, []);
   const focoUsado = useCallback(() => setFoco(null), []);
 
   const migracionPendiente =
@@ -85,6 +103,16 @@ export function LeadsPage() {
                 {carteras.map((id) => <option key={id} value={id}>{nombres.get(id) ?? 'Usuario'}</option>)}
               </Select>
             )}
+            {(modulos.length > 0 || deLaCartera.some((l) => !l.modulo)) && (
+              <Select className="w-auto" value={moduloEfectivo} onChange={(e) => setModulo(e.target.value)} aria-label="Módulo">
+                <option value="">Todos los módulos</option>
+                {modulos.map((m) => <option key={m} value={m}>Módulo {m}</option>)}
+                {modulos.length > 0 && <option value="__sin">Sin módulo</option>}
+              </Select>
+            )}
+            <Button variant="secondary" icon={<UserPlus className="h-4 w-4" />} onClick={() => setNuevo(true)}>
+              Nuevo cliente
+            </Button>
             <Button icon={<Upload className="h-4 w-4" />} onClick={() => setImportar(true)}>
               Importar Excel
             </Button>
@@ -113,17 +141,18 @@ export function LeadsPage() {
             ]}
           />
           {vista === 'llamar' && (
-            <LlamarLeads leads={visibles} focoId={foco} onFocoUsado={focoUsado} nombreCartera={nombreCartera} puedeEditar={puedeEditar} />
+            <LlamarLeads leads={visibles} focoId={foco} onFocoUsado={focoUsado} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}
-          {vista === 'lista' && <ListaLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} onAbrir={abrirDesdeLista} />}
+          {vista === 'lista' && <ListaLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />}
           {vista === 'seguimiento' && (
-            <SeguimientoLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} />
+            <SeguimientoLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}
-          {vista === 'registro' && <RegistroLeads personas={registroPersonas} />}
+          {vista === 'registro' && <RegistroLeads personas={registroPersonas} leads={visibles} />}
         </div>
       )}
 
-      <ImportarLeads open={importar} onClose={() => setImportar(false)} propietarios={asignables} />
+      <ImportarLeads open={importar} onClose={() => setImportar(false)} propietarios={asignables} modulos={modulos} moduloActual={moduloEfectivo === '__sin' ? '' : moduloEfectivo} />
+      <NuevoCliente open={nuevo} onClose={() => setNuevo(false)} modulos={modulos} moduloInicial={moduloEfectivo === '__sin' ? '' : moduloEfectivo} propietarios={asignables} />
     </div>
   );
 }

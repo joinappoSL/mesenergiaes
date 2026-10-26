@@ -1,4 +1,4 @@
-import { AlarmClock, ChevronLeft, ChevronRight, FileSpreadsheet, Mail, Phone, PhoneOff, RotateCcw, ThumbsDown, Unplug } from 'lucide-react';
+import { AlarmClock, ChevronLeft, ChevronRight, FileSpreadsheet, Mail, Phone, PhoneOff, RotateCcw, ThumbsDown, Unplug, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,7 @@ import { mensajeError } from '@/lib/utils';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
 import { MaximetroModal } from './MaximetroModal';
 import { PanelCorreo } from './PanelCorreo';
+import { FichaCliente } from './FichaCliente';
 import { ProgramarLlamada } from './ProgramarLlamada';
 
 type Filtro = 'pendiente' | 'tarde' | 'no_contesta' | 'todos';
@@ -24,14 +25,16 @@ interface Props {
   onFocoUsado: () => void;
   nombreCartera: (id: string) => string | null;
   puedeEditar: (l: Lead) => boolean;
+  modulos: string[];
 }
 
-export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEditar }: Props) {
+export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEditar, modulos }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('pendiente');
   const [idx, setIdx] = useState(0);
   const [correo, setCorreo] = useState(false);
   const [maximetro, setMaximetro] = useState(false);
   const [programar, setProgramar] = useState(false);
+  const [ficha, setFicha] = useState(false);
   const ahora = useAhora(30_000).getTime();
   const cambiar = useCambiarEstadoLead();
   const actualizar = useActualizarLead();
@@ -201,6 +204,9 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
             <Button variant="secondary" size="lg" icon={<FileSpreadsheet className="h-4 w-4" />} onClick={() => setMaximetro(true)}>
               Maxímetro
             </Button>
+            <Button variant="secondary" size="lg" icon={<UserRound className="h-4 w-4" />} onClick={() => setFicha(true)}>
+              Ficha
+            </Button>
             {lead.estado !== 'pendiente' && (
               <Button variant="ghost" size="lg" icon={<RotateCcw className="h-4 w-4" />} onClick={() => marcar('pendiente')}>
                 Pendiente
@@ -212,6 +218,7 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
 
       <ProgramarLlamada open={programar} nombre={lead.nombre} cargando={cambiar.isPending} onClose={() => setProgramar(false)} onConfirmar={programarLlamada} />
       <PanelCorreo lead={lead} open={correo} onClose={() => setCorreo(false)} onEnviado={() => filtro !== 'todos' || setIdx(pos + 1)} />
+      {ficha && <FichaCliente lead={lead} editable={editable} modulos={modulos} onClose={() => setFicha(false)} />}
       <MaximetroModal lead={lead} open={maximetro} onClose={() => setMaximetro(false)} />
     </div>
   );

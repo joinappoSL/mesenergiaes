@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   analisis,
+  aInputFecha,
+  deInputFecha,
+  embudo,
+  moduloDesdeNombre,
+  modulosDe,
+  rangoPeriodo,
   colaPendientes,
   colaProgramadas,
   llamadaVencida,
@@ -211,5 +217,73 @@ describe('llamar más tarde', () => {
       { estado: 'volver_a_llamar', created_at: '2026-10-23T11:00:00' },
     ]);
     expect(r[0]).toMatchObject({ llamadas: 2, no_existe: 1, volver_a_llamar: 1 });
+  });
+});
+
+describe('módulos (listados por código postal)', () => {
+  it('propone el módulo desde el nombre del archivo', () => {
+    expect(moduloDesdeNombre('leads 08017.xlsx')).toBe('08017');
+    expect(moduloDesdeNombre('08022_listado.xls')).toBe('08022');
+    expect(moduloDesdeNombre('listado.xlsx')).toBe('');
+    expect(moduloDesdeNombre('contactos 1234567.xlsx')).toBe('');
+    expect(moduloDesdeNombre('99999.xlsx')).toBe('');
+  });
+
+  it('cada lead lleva el módulo de su carga', () => {
+    const { cabeceras, filas } = separarCabecera([
+      ['Nombre', 'Tel', 'kW'],
+      ['Bar Pep', '611222333', '15'],
+    ]);
+    const [l] = filasALeads(cabeceras, filas, detectarColumnas(cabeceras), ' 08017 ');
+    expect(l.modulo).toBe('08017');
+  });
+
+  it('lista los módulos distintos sin vacíos', () => {
+    expect(modulosDe([{ modulo: '08022' }, { modulo: '' }, { modulo: '08017' }, { modulo: '08022' }])).toEqual(['08017', '08022']);
+  });
+});
+
+describe('estadísticas del embudo', () => {
+  const l = (modulo: string, o: Partial<Record<string, string | null>> = {}) => ({
+    modulo,
+    created_at: '2026-10-01T10:00:00.000Z',
+    correo_enviado_at: null,
+    facturas_recibidas_at: null,
+    comparativa_enviada_at: null,
+    visita_at: null,
+    firmado_at: null,
+    ...o,
+  });
+  const leads = [
+    l('08017', { correo_enviado_at: '2026-10-05T10:00:00.000Z', facturas_recibidas_at: '2026-10-07T10:00:00.000Z', comparativa_enviada_at: '2026-10-08T10:00:00.000Z', visita_at: '2026-10-12T10:00:00.000Z' }),
+    l('08017', { correo_enviado_at: '2026-10-06T10:00:00.000Z' }),
+    l('08022', { correo_enviado_at: '2026-09-20T10:00:00.000Z', facturas_recibidas_at: '2026-09-22T10:00:00.000Z', firmado_at: '2026-10-20T10:00:00.000Z' }),
+    l(''),
+  ];
+
+  it('cuenta cada paso por su fecha y reparte por módulo', () => {
+    const { total, porModulo } = embudo(leads);
+    expect(total).toMatchObject({ cargados: 4, correos: 3, facturas: 2, comparativas: 1, visitas: 1, firmados: 1 });
+    expect(total.pctFacturas).toBe(67);
+    const m17 = porModulo.find((f) => f.modulo === '08017')!;
+    expect(m17).toMatchObject({ cargados: 2, correos: 2, facturas: 1, pctFacturas: 50 });
+    expect(porModulo.find((f) => f.modulo === '08022')).toMatchObject({ correos: 1, facturas: 1, firmados: 1 });
+    expect(porModulo.find((f) => f.modulo === '')!.pctFacturas).toBeNull();
+  });
+
+  it('filtra por periodo', () => {
+    const ahora = new Date(2026, 9, 21, 12, 0); // 21/10/2026
+    const mes = embudo(leads, rangoPeriodo('mes', ahora)).total;
+    expect(mes.correos).toBe(2); // el correo de septiembre queda fuera
+    expect(mes.facturas).toBe(1);
+    expect(embudo(leads, rangoPeriodo('hoy', ahora)).total.correos).toBe(0);
+  });
+
+  it('convierte fechas de/para los campos datetime-local', () => {
+    const iso = new Date(2026, 9, 21, 17, 30).toISOString();
+    expect(aInputFecha(iso)).toBe('2026-10-21T17:30');
+    expect(deInputFecha('2026-10-21T17:30')).toBe(iso);
+    expect(aInputFecha(null)).toBe('');
+    expect(deInputFecha('')).toBeNull();
   });
 });

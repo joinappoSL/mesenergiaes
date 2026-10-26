@@ -11,21 +11,7 @@ import { LoginPage, PantallaAuth } from '@/pages/LoginPage';
 import { NoEncontradoPage } from '@/pages/NoEncontradoPage';
 import { NuevaPasswordPage } from '@/pages/NuevaPasswordPage';
 
-// Cada pantalla se descarga al visitarla (los gráficos y el Kanban pesan).
-const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
-const ContratosPage = lazy(() => import('@/pages/ContratosPage').then((m) => ({ default: m.ContratosPage })));
-const ContratoFormPage = lazy(() => import('@/pages/ContratoFormPage').then((m) => ({ default: m.ContratoFormPage })));
-const ContratoDetallePage = lazy(() =>
-  import('@/pages/ContratoDetallePage').then((m) => ({ default: m.ContratoDetallePage })),
-);
-const ColaPage = lazy(() => import('@/pages/ColaPage').then((m) => ({ default: m.ColaPage })));
-const ColaTrabajoPage = lazy(() => import('@/pages/ColaPage').then((m) => ({ default: m.ColaTrabajoPage })));
-const VerificacionesPage = lazy(() =>
-  import('@/pages/VerificacionesPage').then((m) => ({ default: m.VerificacionesPage })),
-);
-const VerificacionTrabajoPage = lazy(() =>
-  import('@/pages/VerificacionesPage').then((m) => ({ default: m.VerificacionTrabajoPage })),
-);
+// Cada pantalla se descarga al visitarla.
 const LeadsPage = lazy(() => import('@/pages/LeadsPage').then((m) => ({ default: m.LeadsPage })));
 const UsuariosPage = lazy(() => import('@/pages/UsuariosPage').then((m) => ({ default: m.UsuariosPage })));
 
@@ -115,50 +101,7 @@ export default function App() {
       <Route path="/login" element={<RutaLogin />} />
       <Route path="/restablecer" element={<RutaRestablecer />} />
       <Route element={<Protegido />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="contratos" element={<ContratosPage />} />
-        <Route
-          path="contratos/nuevo"
-          element={
-            <SoloSi permiso="puedeCrearContrato">
-              <ContratoFormPage />
-            </SoloSi>
-          }
-        />
-        <Route path="contratos/:id" element={<ContratoDetallePage />} />
-        <Route path="contratos/:id/editar" element={<ContratoFormPage />} />
-        <Route
-          path="cola"
-          element={
-            <SoloSi permiso="puedeVerCola">
-              <ColaPage />
-            </SoloSi>
-          }
-        />
-        <Route
-          path="cola/:id"
-          element={
-            <SoloSi permiso="puedeVerCola">
-              <ColaTrabajoPage />
-            </SoloSi>
-          }
-        />
-        <Route
-          path="verificaciones"
-          element={
-            <SoloSi permiso="puedeVerVerificaciones">
-              <VerificacionesPage />
-            </SoloSi>
-          }
-        />
-        <Route
-          path="verificaciones/:id"
-          element={
-            <SoloSi permiso="puedeVerVerificaciones">
-              <VerificacionTrabajoPage />
-            </SoloSi>
-          }
-        />
+        <Route index element={<Navigate to="/prospeccion" replace />} />
         <Route path="prospeccion" element={<LeadsPage />} />
         <Route
           path="usuarios"

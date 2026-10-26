@@ -1,6 +1,5 @@
 import { differenceInCalendarDays, format, formatDistanceToNowStrict, isToday, isTomorrow, isYesterday, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { Contrato } from './types';
 
 function aFecha(valor: string | Date): Date {
   if (valor instanceof Date) return valor;
@@ -75,18 +74,10 @@ export function porcentaje(parte: number, total: number): string {
   return `${(Math.round((parte / total) * 1000) / 10).toLocaleString('es-ES')} %`;
 }
 
-export function numeroContrato(n: number): string {
-  return `#${String(n).padStart(5, '0')}`;
-}
-
 /** "612345678" → "612 345 678" */
 export function telefono(valor: string | null | undefined): string {
   if (!valor) return '—';
   return valor.length === 9 ? `${valor.slice(0, 3)} ${valor.slice(3, 6)} ${valor.slice(6)}` : valor;
-}
-
-export function nombreCliente(c: Pick<Contrato, 'cliente_nombre' | 'cliente_apellidos'>): string {
-  return `${c.cliente_nombre} ${c.cliente_apellidos}`.trim();
 }
 
 export function nombreCompleto(p: { nombre: string; apellidos: string } | null | undefined): string {
@@ -98,25 +89,6 @@ export function iniciales(nombre: string | null | undefined): string {
   if (!nombre) return '?';
   const partes = nombre.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? '') + (partes[1]?.[0] ?? '')).toUpperCase() || '?';
-}
-
-export function direccionLinea1(c: Contrato): string {
-  const extra = [
-    c.escalera ? `Esc. ${c.escalera}` : null,
-    c.piso ? `${c.piso}º` : null,
-    c.puerta ? c.puerta : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
-  return `${c.via_tipo} ${c.via_nombre}, ${c.via_numero}${extra ? `, ${extra}` : ''}`;
-}
-
-export function direccionLinea2(c: Contrato): string {
-  return `${c.codigo_postal} ${c.poblacion} (${c.provincia})`;
-}
-
-export function direccionCompleta(c: Contrato): string {
-  return `${direccionLinea1(c)} · ${direccionLinea2(c)}`;
 }
 
 export function tamanoArchivo(bytes: number | null | undefined): string {
