@@ -1,4 +1,4 @@
-import { LogOut, Plus, Target, Users, Zap } from 'lucide-react';
+import { BarChart3, LogOut, Plus, Target, Users, Zap } from 'lucide-react';
 import { Suspense, useState, type ComponentType } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usePerfil, useAuth } from '@/auth/AuthProvider';
@@ -20,7 +20,10 @@ interface ItemNav {
 
 function useNavegacion(): ItemNav[] {
   const p = usePermisos();
-  const items: ItemNav[] = [{ to: '/prospeccion', label: 'Prospección', corto: 'Leads', icon: Target }];
+  const items: ItemNav[] = [
+    { to: '/prospeccion', label: 'Prospección', corto: 'Leads', icon: Target },
+    { to: '/datos', label: p.esGestor || p.esJefe ? 'Datos del equipo' : 'Mis datos', corto: 'Datos', icon: BarChart3 },
+  ];
   if (p.puedeVerUsuarios) {
     items.push({
       to: '/usuarios',
@@ -220,7 +223,7 @@ export function AppLayout() {
     <>
       <div className="min-h-dvh">
         <Sidebar items={items} />
-        <CabeceraMovil extra={[]} />
+        <CabeceraMovil extra={items.slice(2)} />
         <main className="lg:pl-64">
           <div key={location.pathname} className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-5 animate-fade-in sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
             <Suspense fallback={<PageLoader />}>

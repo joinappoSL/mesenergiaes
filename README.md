@@ -20,6 +20,7 @@ CRM interno de MESENERGIA para la prospección energética: cada comercial carga
 | **Maxímetro** | Todos | A partir de las 2 tablas de SIPS (`.zip` o `.xls`): últimos 12 meses, consumo por periodo, potencia contratada, máximos y **potencia optimizada** editable; PDF con el diseño +Energía. |
 | **Seguimiento** | Todos | Clientes con correo enviado en adelante, con **próximas visitas**, aviso a los 3 días sin facturas y fechas de cada paso. |
 | **Registro diario → Estadísticas** | Todos | Correos, **facturas recibidas** (y % sobre correos), comparativas, visitas y firmas por periodo y **por módulo**; llamadas por día. |
+| **Datos del equipo** | Todos (cada uno ve lo suyo; admin/backoffice, todo el equipo; el jefe, su equipo en solo lectura) | Registros de actividad con fecha y persona: llamadas, correos enviados, **facturas recibidas**, citas/visitas, ventas, verificaciones y notas. Resumen por periodo, tabla **por persona** y **por día** (el cierre del día), lista de registros con búsqueda y botón *Añadir registro*. Es la pantalla del dueño/CEO para ver el trabajo del equipo. Los datos de clientes no se guardan en el repositorio, solo en Supabase. |
 | **Usuarios y equipos** | Admin, backoffice, jefes | Alta, edición, desactivación y reseteo de contraseña (con contraseña temporal). Equipos y jefes (solo admin). |
 
 ### Roles
