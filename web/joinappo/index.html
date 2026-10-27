@@ -559,7 +559,7 @@ footer nav a:hover{color:var(--azul)}
       <div class="cargando">
         <p><b>Cargando el calendario…</b></p>
         <p style="color:var(--gris);font-size:.9rem">Si no aparece, ábrelo aquí:</p>
-        <a class="btn btn-p" href="https://cal.com/mario-joinappo" target="_blank" rel="noopener" data-cta="calendario-externo">Abrir calendario</a>
+        <a class="btn btn-p" href="https://cal.com/mario-joinappo/consultoria-appo" target="_blank" rel="noopener" data-cta="calendario-externo">Abrir calendario</a>
       </div>
     </div>
   </div>
@@ -623,7 +623,7 @@ document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click'
 function cargarCal() {
   (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
   Cal("init", {origin: "https://cal.com"});
-  Cal("inline", {elementOrSelector: "#cal-inline", calLink: "mario-joinappo", layout: "month_view", config: {theme: "light"}});
+  Cal("inline", {elementOrSelector: "#cal-inline", calLink: "mario-joinappo/consultoria-appo", layout: "month_view", config: {theme: "light"}});
   Cal("ui", {theme: "light", styles: {branding: {brandColor: "#0E4D9D"}}, hideEventTypeDetails: false, layout: "month_view"});
   Cal("on", {action: "linkReady", callback: () => document.querySelector('#cal-inline .cargando')?.remove()});
 }

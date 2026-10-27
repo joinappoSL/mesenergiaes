@@ -15,7 +15,7 @@ Página estática (HTML + CSS + JS sin dependencias) para sustituir la web actua
 | Precios | Los 3 packs con selector por tamaño de empresa (precios del plan de empresa, sin IVA) |
 | Lo que viene | Verifactu, factura electrónica y fichaje digital |
 | Preguntas frecuentes | Resuelve las objeciones antes de la llamada |
-| Reserva | Calendario de Cal.com incrustado (`cal.com/mario-joinappo`) |
+| Reserva | Calendario de Cal.com incrustado, directo al evento `cal.com/mario-joinappo/consultoria-appo` |
 
 En móvil hay un botón fijo abajo de «Reservar auditoría gratis».
 
@@ -30,7 +30,7 @@ En móvil hay un botón fijo abajo de «Reservar auditoría gratis».
 - [ ] Crear las páginas **/aviso-legal**, **/privacidad** y **/cookies** (obligatorias en España por la LSSI y el RGPD). El pie ya enlaza a ellas.
 - [ ] Confirmar que Hairline Pro y +EnergIA han dado permiso para mostrar su logo.
 - [ ] Confirmar que la oferta de lanzamiento (alta al 50 % para los 5 primeros) sigue en pie, o quitar el bloque `.lanzamiento`.
-- [ ] Si en Cal.com hay un evento concreto para la auditoría, cambia `calLink: "mario-joinappo"` por `"mario-joinappo/nombre-del-evento"`.
+- [ ] En Cal.com: cambiar la bio del perfil (todavía dice «Ayudo a clínicas de fisioterapia…»), renombrar «Consultoría gratuita Appo» a «Auditoría gratis de automatización», poner la duración que prometáis (la web dice 30 min y el evento dura 15) y ocultar el evento «CRM Hairline Appo AI».
 - [ ] Si queréis medir conversiones, añadir Meta Pixel o Google Analytics: todos los botones llevan `data-cta` para saber cuál se pulsa.
 
 ## Archivos
