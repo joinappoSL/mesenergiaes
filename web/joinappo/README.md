@@ -25,6 +25,18 @@ En móvil hay un botón fijo abajo de «Reservar auditoría gratis».
 2. Framework: **Other**. Sin comando de build. Directorio de salida: `.` (la raíz).
 3. En **Settings → Domains**, mueve `joinappo.com` y `www.joinappo.com` del proyecto antiguo (el de v0) a este.
 
+## Publicarla en Squarespace (alternativa)
+
+El dominio está registrado en Squarespace, pero hoy sus DNS apuntan a Vercel (la web de v0). Si queréis que la web viva en Squarespace:
+
+1. Necesitáis un **plan de web de Squarespace** que permita código: **Core** o superior.
+2. Crear una página en blanco: **Páginas → + → Página en blanco**. En la configuración de la página, ocultad la cabecera y el pie del tema si lo permite.
+3. Añadir un **Bloque de código** a lo ancho de la página y pegar entero el contenido de `squarespace-bloque.html`. Desmarcad «Mostrar código fuente».
+4. Marcar esa página como **página de inicio**.
+5. En **Dominios → joinappo.com**, conectar el dominio a la web de Squarespace. Esto sustituye los registros que hoy apuntan a Vercel, así que la web antigua dejará de verse.
+
+`squarespace-bloque.html` lleva el CSS aislado dentro de `.appo-lp` para que el tema no lo deforme. Las imágenes se cargan desde este repositorio público; si preferís, subidlas a Squarespace y cambiad las URL. Para regenerarlo después de cambiar `index.html`: `python3 squarespace.py <sha-del-commit>`.
+
 ## Antes de publicar
 
 - [ ] Crear las páginas **/aviso-legal**, **/privacidad** y **/cookies** (obligatorias en España por la LSSI y el RGPD). El pie ya enlaza a ellas.
