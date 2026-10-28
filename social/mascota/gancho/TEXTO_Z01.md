@@ -15,3 +15,8 @@ Estilo Zack D. Films: una pregunta loca, la historia contada con imágenes y, al
 - **Portada:** el fotograma del chico mirando el agujero con el texto «¿Qué pasaría si saltaras aquí?».
 - Comenta tú primero: «¿Saltaríais o no? 👇». Las preguntas en comentarios hacen que el vídeo se mueva más.
 - Si alguien pregunta por el final, contesta con naturalidad: «Jajaja es que la auditoría es gratis de verdad 😅».
+
+## Carpeta completa (zip)
+
+`VIDEO_GANCHO_AGUJERO`: vídeo 9:16, 4:5 y 3:4 y el texto para publicar.
+https://d2ol7oe51mr4n9.cloudfront.net/user_3EdhqC0SHg9gK5HtKH5XSVqAEm0/89abdb30-34e2-443b-a1bb-fe212834deef.zip
