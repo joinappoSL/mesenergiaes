@@ -44,6 +44,13 @@ else:
     vo_dur = probe(vo)
     total = vo_dur + 0.4 + OUTRO
     scene_len = (total - OUTRO + XF * n) / n
+LENS = [scene_len] * n
+if spec.get("cortes"):
+    # Cada escena empieza cuando arranca su frase en la locución (que entra con 0,2 s de retraso).
+    st = [0.0] + [c + 0.2 for c in spec["cortes"][1:]]
+    assert len(st) == n, "un corte por escena"
+    st.append(total - OUTRO)
+    LENS = [st[i + 1] - st[i] + XF for i in range(n)]
 
 # 1. Escenas: 60 fps por interpolación de movimiento y 1080x1920.
 scenes = []
@@ -59,8 +66,11 @@ for i, c in enumerate(clips):
              "-c:v", "libx264", "-preset", "fast", "-crf", "15", "-pix_fmt", "yuv420p", str(full)])
     dst = work / f"s{i}.mp4"
     if not dst.exists():
+        # Si la escena dura más que el clip, se ralentiza (hasta 1,8x) en vez de congelar la imagen.
+        lento = min(max(LENS[i] / (probe(full) - 0.1), 1.0), 1.8)
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(full), "-vf",
-             f"crop={W}:{H}:0:(ih-{H})/2,setsar=1,tpad=stop_mode=clone:stop_duration=3,trim=0:{scene_len:.3f},setpts=PTS-STARTPTS",
+             f"crop={W}:{H}:0:(ih-{H})/2,setsar=1,setpts={lento:.3f}*PTS,fps={FPS},"
+             f"tpad=stop_mode=clone:stop_duration=4,trim=0:{LENS[i]:.3f},setpts=PTS-STARTPTS",
              "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-pix_fmt", "yuv420p", str(dst)])
     scenes.append(dst)
 
@@ -78,7 +88,7 @@ inputs, fc, prev, t = [], [], "0:v", 0.0
 parts = scenes + [outro]
 for p in parts:
     inputs += ["-i", str(p)]
-lens = [scene_len] * n + [OUTRO + XF]
+lens = LENS + [OUTRO + XF]
 for i in range(1, len(parts)):
     t += lens[i - 1] - XF
     tr = "fade" if i == len(parts) - 1 else trans[(i - 1) % len(trans)]
@@ -182,7 +192,7 @@ ImageDraw.Draw(canvas).rounded_rectangle((20, 20, 20 + cw, 20 + ch), radius=ch /
 canvas.alpha_composite(lg, (20 + px, 20 + py))
 canvas.save(pill)
 fc = (
-    f"[0:v][1:v]overlay=(W-w)/2:{LAY['logo']}:enable='lt(t,{end_main:.2f})'[v1];"
+    f"[0:v][1:v]overlay=(W-w)/2:{LAY['logo']}:enable='{0 if spec.get("sin_logo") else f"lt(t,{end_main:.2f})"}'[v1];"
     f"color=c=0x26B9CC:s={W}x14:r={FPS}:d={total}[bar];[v1][bar]overlay=x='-W+W*t/{total}':y=H-14:shortest=1[v2];"
     f"[v2]ass={work / 'subs.ass'}[vo];"
     f"[2:a]adelay=200|200,aresample=48000,volume=1.0[voz];[3:a]aresample=48000[fx];"
