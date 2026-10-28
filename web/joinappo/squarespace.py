@@ -32,7 +32,16 @@ for m in re.finditer(r"(@media[^{]+|@keyframes[^{]+)\{((?:[^{}]*\{[^{}]*\})*)\s*
     res.append(head + "{" + (m.group(2) if head.startswith("@keyframes") else prefix(m.group(2))) + "}")
     pos = m.end()
 res.append(prefix(css[pos:]))
-scoped = "".join(res)
+# Neutraliza lo que el tema de Squarespace aplica a títulos, párrafos, enlaces e imágenes.
+reset = (".appo-lp,.appo-lp *{text-transform:none;letter-spacing:normal;text-shadow:none;box-sizing:border-box}"
+         ".appo-lp h1,.appo-lp h2,.appo-lp h3,.appo-lp p,.appo-lp li,.appo-lp span,.appo-lp label{color:inherit;font-style:normal}"
+         ".appo-lp h1,.appo-lp h2,.appo-lp h3{font-family:Montserrat,Inter,sans-serif}"
+         ".appo-lp p,.appo-lp li,.appo-lp label,.appo-lp summary{font-family:Inter,system-ui,sans-serif;font-size:inherit;line-height:inherit}"
+         ".appo-lp img{border:0;border-radius:0;box-shadow:none;padding:0;margin:0;height:auto}"
+         ".appo-lp a{text-decoration:none;background-image:none}"
+         ".appo-lp .legal a,.appo-lp .contacto a{text-decoration:underline}"
+         ".appo-lp ul{margin:0}")
+scoped = reset + "".join(res)
 # Squarespace ya tiene su cabecera fija: la de la landing deja de ser "sticky" para no taparla.
 scoped += ".appo-lp header{position:relative}.appo-lp{font-size:16px}"
 
