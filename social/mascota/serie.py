@@ -14,7 +14,8 @@ src = here / "src" / eid
 src.mkdir(parents=True, exist_ok=True)
 clips = []
 for i, u in enumerate(ep["clips"]):
-    dst = src / f"c{i}.mp4"
+    ext = Path(u.split("?")[0]).suffix or ".mp4"
+    dst = src / f"c{i}{ext}"
     if not dst.exists():
         subprocess.run(["curl", "-sS", "-f", "-o", str(dst), u], check=True)
     clips.append(str(dst))

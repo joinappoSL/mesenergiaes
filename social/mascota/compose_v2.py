@@ -59,6 +59,13 @@ cache = Path(spec.get("cache", work))
 cache.mkdir(parents=True, exist_ok=True)
 for i, c in enumerate(clips):
     full = cache / f"full{i}.mp4"
+    if not full.exists() and c.lower().endswith((".png", ".jpg", ".jpeg")):
+        # Imagen fija: movimiento de cámara (zoom lento, alternando hacia dentro y hacia fuera) de 8 s.
+        z = "1+0.0004*on" if i % 2 == 0 else "1.2-0.0004*on"
+        run(["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", c, "-vf",
+             f"scale=2160:3840:force_original_aspect_ratio=increase,crop=2160:3840,"
+             f"zoompan=z='{z}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=480:s=1080x1920:fps={FPS},setsar=1",
+             "-frames:v", "480", "-c:v", "libx264", "-preset", "fast", "-crf", "15", "-pix_fmt", "yuv420p", str(full)])
     if not full.exists():
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", c, "-an", "-vf",
              f"scale=720:1280:flags=lanczos,minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,"
