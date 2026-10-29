@@ -1,5 +1,5 @@
 import { Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { usePerfil } from '@/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
@@ -7,6 +7,7 @@ import { Aviso } from '@/components/ui/Feedback';
 import { Field, Input, Select } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { useImportarLeads } from '@/hooks/leads';
+import { telefono } from '@/lib/format';
 import {
   detectarColumnas,
   ETIQUETA_COLUMNA,
@@ -33,11 +34,16 @@ interface Props {
 export function ImportarLeads({ open, onClose, propietarios, modulos = [], moduloActual }: Props) {
   const perfil = usePerfil();
   const importar = useImportarLeads();
-  const [archivo, setArchivo] = useState<{ cabeceras: string[]; filas: string[][]; nombre: string } | null>(null);
+  const [archivo, setArchivo] = useState<{ cabeceras: string[]; filas: string[][]; nombre: string; sinCabecera: boolean } | null>(null);
   const [mapa, setMapa] = useState<MapaColumnas>({});
   const [propietarioId, setPropietarioId] = useState(perfil.id);
   const [modulo, setModulo] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // Las 4 primeras filas tal y como se van a guardar, para comprobar que las columnas están bien.
+  const vista = useMemo(
+    () => (archivo ? filasALeads(archivo.cabeceras, archivo.filas.slice(0, 4), mapa) : []),
+    [archivo, mapa],
+  );
 
   function cerrar() {
     setArchivo(null);
@@ -52,10 +58,10 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], modul
     setError(null);
     try {
       const [hoja] = await leerHojas([f]);
-      const { cabeceras, filas } = separarCabecera(hoja ?? []);
+      const { cabeceras, filas, sinCabecera } = separarCabecera(hoja ?? []);
       if (!filas.length) throw new Error('El archivo no tiene filas con datos.');
-      setArchivo({ cabeceras, filas, nombre: f.name });
-      setMapa(detectarColumnas(cabeceras));
+      setArchivo({ cabeceras, filas, nombre: f.name, sinCabecera });
+      setMapa(detectarColumnas(cabeceras, filas));
       // «08017.xlsx» o «leads 08017.xlsx» proponen el módulo 08017
       setModulo((m) => m || moduloDesdeNombre(f.name) || moduloActual || '');
     } catch (e) {
@@ -69,7 +75,7 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], modul
     try {
       const leads = filasALeads(archivo.cabeceras, archivo.filas, mapa, modulo);
       const r = await importar.mutateAsync({ propietarioId, leads });
-      toast.success(`${r.nuevos} leads importados${modulo.trim() ? ` en el módulo ${modulo.trim()}` : ''}${r.repetidos ? ` · ${r.repetidos} repetidos (mismo teléfono) omitidos` : ''}`);
+      toast.success(`${r.nuevos} leads importados${modulo.trim() ? ` en el módulo ${modulo.trim()}` : ''}${r.repetidos ? ` · ${r.repetidos} ya estaban cargados (mismo CUPS), omitidos` : ''}`);
       cerrar();
     } catch (e) {
       toast.error(mensajeError(e));
@@ -135,8 +141,39 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], modul
                 </Field>
               ))}
             </div>
+            {archivo.sinCabecera && (
+              <Aviso tipo="warning">
+                El archivo no tiene fila de cabeceras: he deducido las columnas por su contenido (CUPS, teléfonos, email…). Revisa que sean correctas.
+              </Aviso>
+            )}
+            <div className="overflow-x-auto rounded-xl ring-1 ring-slate-200">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-3 py-2">Nombre</th>
+                    <th className="px-3 py-2">Teléfono</th>
+                    <th className="px-3 py-2">Teléfono 2</th>
+                    <th className="px-3 py-2">kW / consumo</th>
+                    <th className="px-3 py-2">CUPS</th>
+                    <th className="px-3 py-2">Comercializadora</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {vista.map((l, i) => (
+                    <tr key={i}>
+                      <td className="px-3 py-1.5 font-semibold text-navy-900">{l.nombre || '—'}</td>
+                      <td className="px-3 py-1.5 tabular-nums">{l.telefono ? telefono(l.telefono) : '—'}</td>
+                      <td className="px-3 py-1.5 tabular-nums">{l.telefono2 ? telefono(l.telefono2) : '—'}</td>
+                      <td className="px-3 py-1.5 font-bold text-brand-700">{l.kw || '—'}</td>
+                      <td className="px-3 py-1.5">{l.cups || '—'}</td>
+                      <td className="px-3 py-1.5">{l.comercializadora || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <Aviso tipo="info">
-              Los teléfonos que ya estén en la cartera no se duplican. El resto de columnas del Excel se guardan como datos extra del lead.
+              Los clientes que ya estén en la cartera (mismo CUPS) no se duplican; si un teléfono tiene varios CUPS, se cargan todos. El resto de columnas del Excel se guardan como datos extra del lead.
             </Aviso>
           </>
         )}
