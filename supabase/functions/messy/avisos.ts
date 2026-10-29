@@ -9,9 +9,10 @@ import { enviarTexto } from './whapi.ts';
 
 interface Evento {
   id: number;
-  tipo: 'venta' | 'buenos_dias' | 'cierre';
+  tipo: 'venta' | 'buenos_dias' | 'cierre' | 'lead';
   clave: string;
   contrato_id: string | null;
+  lead_evento_id: string | null;
   intentos: number;
   created_at: string;
 }
@@ -221,10 +222,116 @@ async function lineaVerificaciones(): Promise<string | null> {
   }
 }
 
+
+// -----------------------------------------------------------------------------
+// Prospección (leads): avisos de avance y desglose diario
+// Se nombra la empresa/cliente (decisión del equipo); nunca teléfonos ni correos.
+// -----------------------------------------------------------------------------
+interface DatosLead {
+  estado: 'correo' | 'facturas' | 'comparativa' | 'visita' | 'firmado';
+  persona: string;
+  cliente: string | null;
+  modulo: string | null;
+}
+
+async function textoLead(leadEventoId: string | null): Promise<string | null> {
+  if (!leadEventoId) return null;
+  const { data, error } = await admin.rpc('messy_datos_lead', { p_lead_evento_id: leadEventoId });
+  if (error) throw error;
+  const d = data as DatosLead | null;
+  if (!d) return null;
+  const quien = d.persona || 'Alguien del equipo';
+  const cliente = d.cliente ? `*${d.cliente}*` : 'un cliente';
+  switch (d.estado) {
+    case 'correo':
+      return `📧 *${quien}* ha enviado el correo a ${cliente}`;
+    case 'facturas':
+      return `📄 *${quien}* ha recibido las facturas de ${cliente} 👏`;
+    case 'comparativa':
+      return `📊 *${quien}* ha mandado la comparativa a ${cliente} 🤞`;
+    case 'visita':
+      return `📍 *${quien}* tiene visita cerrada con ${cliente} 🚀`;
+    case 'firmado':
+      return `✍️ *¡FIRMADO!* 🎉 *${quien}* ha cerrado a ${cliente}. ¡Enhorabuena! 💚`;
+    default:
+      return null;
+  }
+}
+
+interface ResumenLeadsPersona {
+  persona: string;
+  llamadas: number;
+  no_contesta: number;
+  no_existe: number;
+  volver_a_llamar: number;
+  rechazados: number;
+  visitas: number;
+  correos: string[];
+  n_correos: number;
+  facturas: string[];
+  n_facturas: number;
+  comparativas: string[];
+  n_comparativas: number;
+  firmados: string[];
+  n_firmados: number;
+}
+
+const MAX_NOMBRES = 15;
+
+function listaNombres(nombres: string[]): string {
+  const visibles = nombres.slice(0, MAX_NOMBRES).join(', ');
+  return nombres.length > MAX_NOMBRES ? `${visibles} y ${nombres.length - MAX_NOMBRES} más` : visibles;
+}
+
+/** Desglose de prospección del día para el cierre: llamadas, correos (y a quién), facturas, comparativas y firmados. */
+export function formatearResumenLeads(personas: ResumenLeadsPersona[]): string | null {
+  if (!personas.length) return null;
+  const suma = (k: 'llamadas' | 'n_correos' | 'n_facturas' | 'n_comparativas' | 'n_firmados' | 'visitas') =>
+    personas.reduce((t, p) => t + p[k], 0);
+  const lineas = ['📞 *Prospección de hoy*'];
+  for (const p of personas) {
+    const partes = [
+      `*${p.llamadas}* ${p.llamadas === 1 ? 'llamada' : 'llamadas'}`,
+      p.no_contesta ? `${p.no_contesta} no contesta` : '',
+      p.no_existe ? `${p.no_existe} sin teléfono` : '',
+      p.rechazados ? `${p.rechazados} rechazan` : '',
+      p.volver_a_llamar ? `${p.volver_a_llamar} para más tarde` : '',
+    ].filter(Boolean);
+    lineas.push('', `👤 *${p.persona}* · ${partes[0]}${partes.length > 1 ? ` (${partes.slice(1).join(' · ')})` : ''}`);
+    if (p.n_correos) lineas.push(`   📧 ${plural(p.n_correos, 'correo', 'correos')}: ${listaNombres(p.correos)}`);
+    if (p.n_facturas) lineas.push(`   📄 ${plural(p.n_facturas, 'factura recibida', 'facturas recibidas')}: ${listaNombres(p.facturas)}`);
+    if (p.n_comparativas) lineas.push(`   📊 ${plural(p.n_comparativas, 'comparativa', 'comparativas')}: ${listaNombres(p.comparativas)}`);
+    if (p.visitas) lineas.push(`   📍 ${plural(p.visitas, 'visita', 'visitas')}`);
+    if (p.n_firmados) lineas.push(`   ✍️ ${plural(p.n_firmados, 'firmado', 'firmados')}: ${listaNombres(p.firmados)} 🎉`);
+  }
+  lineas.push(
+    '',
+    `*Total equipo:* ${suma('llamadas')} llamadas · ${suma('n_correos')} correos · ${suma('n_facturas')} facturas · ` +
+      `${suma('n_comparativas')} comparativas · ${suma('n_firmados')} firmados`,
+  );
+  return lineas.join('\n');
+}
+
+async function lineaLeads(fecha: string): Promise<string | null> {
+  try {
+    const { data, error } = await admin.rpc('messy_resumen_leads_dia', { p_fecha: fecha });
+    if (error) throw error;
+    return formatearResumenLeads((data ?? []) as ResumenLeadsPersona[]);
+  } catch (e) {
+    console.error('Messy: no se ha podido leer la prospección del día', mensajeDeError(e));
+    return null;
+  }
+}
+
 async function textoCierre(): Promise<string> {
-  const [texto, verificaciones, manana] = await Promise.all([textoCierreBase(), lineaVerificaciones(), pendientesGrupo('noche')]);
+  const [texto, verificaciones, manana, leads] = await Promise.all([
+    textoCierreBase(),
+    lineaVerificaciones(),
+    pendientesGrupo('noche'),
+    lineaLeads(ahoraMadrid().hoy),
+  ]);
   const bloque = [verificaciones, manana].filter(Boolean).join('\n');
-  return bloque ? `${texto}\n\n${bloque}` : texto;
+  return [texto, leads, bloque].filter(Boolean).join('\n\n');
 }
 
 async function textoCierreBase(): Promise<string> {
@@ -296,9 +403,15 @@ export async function procesarEventos(): Promise<{ procesados: number }> {
         continue;
       }
       const texto =
-        ev.tipo === 'venta' ? await textoVenta(ev.contrato_id) : ev.tipo === 'buenos_dias' ? await textoBuenosDias() : await textoCierre();
+        ev.tipo === 'venta'
+          ? await textoVenta(ev.contrato_id)
+          : ev.tipo === 'lead'
+            ? await textoLead(ev.lead_evento_id)
+            : ev.tipo === 'buenos_dias'
+              ? await textoBuenosDias()
+              : await textoCierre();
       if (!texto) {
-        await cerrarEvento(ev.id, { estado: 'descartado', error: 'El contrato ya no existe' });
+        await cerrarEvento(ev.id, { estado: 'descartado', error: 'El contrato o el lead ya no existe' });
         continue;
       }
       await enviarTexto(cfg.grupo_chat_id, texto);

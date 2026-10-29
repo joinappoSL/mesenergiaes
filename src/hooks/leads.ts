@@ -335,6 +335,14 @@ export function useSubirArchivosLead() {
           .eq('id', lead.id);
         if (error) throw error;
         await registrarEvento(lead.id, 'facturas', `Facturas recibidas y adjuntadas: ${nombres}`);
+      } else if (tipo === 'comparativa' && ['pendiente', 'correo', 'facturas'].includes(lead.estado)) {
+        const ahora = new Date().toISOString();
+        const { error } = await supabase
+          .from('leads')
+          .update({ estado: 'comparativa', ultimo_movimiento_at: ahora, comparativa_enviada_at: lead.comparativa_enviada_at ?? ahora })
+          .eq('id', lead.id);
+        if (error) throw error;
+        await registrarEvento(lead.id, 'comparativa', `Comparativa adjuntada: ${nombres}`);
       } else {
         await registrarEvento(lead.id, null, `${tipo === 'factura' ? 'Facturas adjuntadas' : 'Comparativa adjuntada'}: ${nombres}`);
         await supabase.from('leads').update({ ultimo_movimiento_at: new Date().toISOString() }).eq('id', lead.id);
