@@ -8,7 +8,7 @@ import { Select, Textarea } from '@/components/ui/Field';
 import { useActualizarLead, useCambiarEstadoLead } from '@/hooks/leads';
 import { useAhora } from '@/hooks/useAhora';
 import { telefono } from '@/lib/format';
-import { colaPendientes, telefonosDe, colaProgramadas, llamadaVencida, textoHoraLlamada, type Lead } from '@/lib/leads';
+import { telefonosDe, colaProgramadas, llamadaVencida, textoHoraLlamada, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
 import { MaximetroModal } from './MaximetroModal';
@@ -40,7 +40,9 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
   const actualizar = useActualizarLead();
 
   const cola = useMemo(() => {
-    if (filtro === 'pendiente') return colaPendientes(leads, ahora);
+    // Las llamadas programadas que llegan a su hora no se cuelan en esta cola (harían saltar el lead
+    // en pantalla): se avisan arriba y se abren desde «Llamar más tarde».
+    if (filtro === 'pendiente') return leads.filter((l) => l.estado === 'pendiente');
     if (filtro === 'tarde') return colaProgramadas(leads);
     return leads.filter((l) => filtro === 'todos' || l.estado === filtro);
   }, [leads, filtro, ahora]);
@@ -102,13 +104,13 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
     <div className="space-y-4">
       <Card className="flex flex-wrap items-center gap-3 p-3">
         <Select className="w-auto" value={filtro} onChange={(e) => { setFiltro(e.target.value as Filtro); setIdx(0); }}>
-          <option value="pendiente">Pendientes{vencidas ? ` (${vencidas} para ahora)` : ''}</option>
-          <option value="tarde">Llamar más tarde ({programadas})</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="tarde">Llamar más tarde ({programadas}{vencidas ? `, ${vencidas} para ahora` : ''})</option>
           <option value="no_contesta">No contesta</option>
           <option value="todos">Todos</option>
         </Select>
-        {vencidas > 0 && filtro !== 'pendiente' && (
-          <button type="button" onClick={() => { setFiltro('pendiente'); setIdx(0); }} className="text-sm font-semibold text-sky-700 hover:underline">
+        {vencidas > 0 && filtro !== 'tarde' && (
+          <button type="button" onClick={() => { setFiltro('tarde'); setIdx(0); }} className="text-sm font-semibold text-sky-700 hover:underline">
             ⏰ {vencidas} llamada{vencidas === 1 ? '' : 's'} programada{vencidas === 1 ? '' : 's'} para ahora
           </button>
         )}
