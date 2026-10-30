@@ -152,7 +152,7 @@ export function LeadsPage() {
           {vista === 'llamar' && (
             <LlamarLeads leads={visibles} focoId={foco} onFocoUsado={focoUsado} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}
-          {vista === 'lista' && <ListaLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />}
+          {vista === 'lista' && <ListaLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} onLlamar={(id) => { setFoco(id); setVista('llamar'); }} />}
           {vista === 'seguimiento' && (
             <SeguimientoLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}

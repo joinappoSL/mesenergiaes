@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { Search, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/Feedback';
@@ -14,9 +14,11 @@ interface Props {
   nombreCartera: (id: string) => string | null;
   puedeEditar: (l: Lead) => boolean;
   modulos: string[];
+  /** abre el lead en la pestaña «Llamar» */
+  onLlamar: (id: string) => void;
 }
 
-export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, modulos }: Props) {
+export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, modulos, onLlamar }: Props) {
   const [abierto, setAbierto] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState<'todos' | EstadoLead>('todos');
@@ -57,11 +59,12 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, 
                 {mostrarCartera && <th className="px-4 py-3">Cartera</th>}
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3 text-right">Llam.</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filas.slice(0, 500).map((l) => (
-                <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => setAbierto(l.id)}>
+                <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => onLlamar(l.id)}>
                   <td className="px-4 py-2.5 font-semibold text-navy-900">{l.nombre || '—'}</td>
                   <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono)}</td>
                   <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono2)}</td>
@@ -75,6 +78,15 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, 
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{l.llamadas}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setAbierto(l.id); }}
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+                    >
+                      <UserRound className="h-3.5 w-3.5" /> Ficha
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
