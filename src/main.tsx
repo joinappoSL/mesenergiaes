@@ -11,6 +11,12 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { recargarSiVersionVieja } from './lib/utils';
+
+// Versión nueva publicada mientras la pestaña seguía abierta: se recarga para coger los archivos nuevos.
+window.addEventListener('vite:preloadError', (ev) => {
+  if (recargarSiVersionVieja(new Error('Unable to preload'))) ev.preventDefault();
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {

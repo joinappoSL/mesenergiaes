@@ -18,7 +18,7 @@ import {
 } from '@/lib/leads';
 import { leerHojas } from '@/lib/leadsExcel';
 import { maximetroAPdf, urlLogoInforme } from '@/lib/leadsPdf';
-import { descargarBlob, mensajeError } from '@/lib/utils';
+import { descargarBlob, mensajeError, recargarSiVersionVieja } from '@/lib/utils';
 import { InformeMaximetro } from './InformeMaximetro';
 
 interface Props {
@@ -90,6 +90,10 @@ export function MaximetroModal({ lead, open, onClose }: Props) {
       const f = await maximetroAPdf(m);
       descargarBlob(f, f.name);
     } catch (e) {
+      if (recargarSiVersionVieja(e)) {
+        toast.info('Hay una versión nueva: recargando…');
+        return;
+      }
       toast.error(`No se pudo generar el PDF: ${mensajeError(e)}`);
     } finally {
       setGenerando(false);
