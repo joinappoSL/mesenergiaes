@@ -137,6 +137,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0}
   <div class="card row">
     <input type="text" id="q" placeholder="Buscar nombre, teléfono..." style="max-width:300px">
     <select id="lSel" style="width:auto"><option value="todos">Todos</option><option value="pendiente">Pendiente</option><option value="no_contesta">No contesta</option><option value="rechazado">Rechazado</option><option value="correo">Correo enviado</option><option value="facturas">Facturas recibidas</option><option value="comparativa">Comparativa enviada</option></select>
+    <button id="expTip">📊 Excel tipificado</button>
   </div>
   <div class="card" style="overflow:auto"><table id="tbl"></table></div>
 </section>
@@ -591,6 +592,16 @@ function renderStats(){
 /* ---------- exportar / borrar ---------- */
 function dl(rows,name){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Hoja1");XLSX.writeFile(wb,name)}
 $("#expLog").onclick=()=>dl(log.map(l=>({Fecha:l.d,Hora:l.t.slice(11,19),Cliente:l.name,Telefono:l.tel,Resultado:ST[l.status]})),`registro-llamadas-${day()}.xlsx`);
+/* Excel tipificado: hoja «Todos» + una hoja por tipificación (estado), con notas */
+$("#expTip").onclick=()=>{
+  if(!leads.length){alert("Todavía no hay leads.");return}
+  const fila=l=>({Nombre:l.f.__nombre,"Teléfono 1":l.f.__tel,"Teléfono 2":l.f.__tel2,kW:l.f.__kw,Email:l.f.__email,"Tipificación":ST[l.status],Llamadas:l.calls,Notas:l.note||""});
+  const wb=XLSX.utils.book_new();
+  const add=(rows,name)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{Nombre:""}]),name);
+  add(leads.map(fila),"Todos");
+  Object.keys(ST).forEach(k=>{const r=leads.filter(l=>l.status===k);if(r.length)add(r.map(fila),`${ST[k]} (${r.length})`.slice(0,31))});
+  XLSX.writeFile(wb,`leads-tipificado-${day()}.xlsx`);
+};
 $("#expLeads").onclick=()=>dl(leads.map(l=>({Nombre:l.f.__nombre,"Teléfono 1":l.f.__tel,"Teléfono 2":l.f.__tel2,kW:l.f.__kw,Email:l.f.__email,Estado:ST[l.status],Llamadas:l.calls,Notas:l.note})),`leads-${day()}.xlsx`);
 $("#clearAll").onclick=()=>{if(confirm("¿Borrar TODOS los leads y el registro?")){leads=[];log=[];save();show("load")}};
 
