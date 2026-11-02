@@ -32,6 +32,7 @@ main{max-width:1100px;margin:0 auto;padding:16px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .actions button{padding:12px 16px;font-weight:600}
 table{border-collapse:collapse;width:100%}
+td.nt{max-width:220px;font-size:11px;color:#6b7785;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
 th{font-size:12px;text-transform:uppercase;color:var(--mut)}
 tr.click{cursor:pointer}tr.click:hover{background:var(--bg)}
@@ -570,9 +571,9 @@ function openMail(l){
 $("#q").oninput=renderList;$("#lSel").onchange=renderList;
 function renderList(){
   const q=norm($("#q").value),s=$("#lSel").value;
-  const rows=leads.filter(l=>(s==="todos"||l.status===s)&&(!q||norm(Object.values(l.f).join(" ")).includes(q)));
-  $("#tbl").innerHTML=`<tr><th>Nombre</th><th>Tel 1</th><th>Tel 2</th><th>kW</th><th>Estado</th><th>Llam.</th></tr>`+
-   rows.slice(0,500).map(l=>`<tr class="click" data-id="${l.id}"><td>${esc(l.f.__nombre)}</td><td>${esc(l.f.__tel)}</td><td>${esc(l.f.__tel2)}</td><td><b>${esc(l.f.__kw)}</b></td><td><span class="tag t-${l.status}">${ST[l.status]}</span></td><td>${l.calls}</td></tr>`).join("");
+  const rows=leads.filter(l=>(s==="todos"||l.status===s)&&(!q||norm(Object.values(l.f).join(" ")+" "+(l.note||"")).includes(q)));
+  $("#tbl").innerHTML=`<tr><th>Nombre</th><th>Tel 1</th><th>Tel 2</th><th>kW</th><th>Estado</th><th>Llam.</th><th>Notas</th></tr>`+
+   rows.slice(0,500).map(l=>`<tr class="click" data-id="${l.id}"><td>${esc(l.f.__nombre)}</td><td>${esc(l.f.__tel)}</td><td>${esc(l.f.__tel2)}</td><td><b>${esc(l.f.__kw)}</b></td><td><span class="tag t-${l.status}">${ST[l.status]}</span></td><td>${l.calls}</td><td class="nt" title="${esc(l.note||"")}">${esc(l.note||"")}</td></tr>`).join("");
   $("#tbl").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>openLead(r.dataset.id));
 }
 
