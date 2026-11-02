@@ -75,3 +75,22 @@ export async function copiarAlPortapapeles(texto: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Tras publicar una versión nueva, una pestaña abierta con la versión vieja pide archivos que ya no
+ * existen en el servidor («Failed to fetch dynamically imported module»). Se recarga una vez para coger
+ * la versión nueva; devuelve true si ha lanzado la recarga.
+ */
+export function recargarSiVersionVieja(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  if (!/dynamically imported module|importing a module script|module script failed|MIME type|ChunkLoadError|Unable to preload/i.test(msg)) return false;
+  try {
+    const ultima = Number(sessionStorage.getItem('recarga-version') ?? 0);
+    if (Date.now() - ultima < 60_000) return false;
+    sessionStorage.setItem('recarga-version', String(Date.now()));
+  } catch {
+    /* sin sessionStorage: se recarga igualmente una vez por error */
+  }
+  window.location.reload();
+  return true;
+}
