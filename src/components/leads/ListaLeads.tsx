@@ -1,9 +1,12 @@
-import { Search, UserRound } from 'lucide-react';
+import { FileSpreadsheet, Search, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/Feedback';
 import { Input, Select } from '@/components/ui/Field';
 import { telefono } from '@/lib/format';
+import { exportarTipificado } from '@/lib/leadsExcel';
 import { ESTADOS_LEAD, norm, textoHoraLlamada, type EstadoLead, type Lead } from '@/lib/leads';
 import { EstadoLeadBadge } from './comunes';
 import { FichaCliente } from './FichaCliente';
@@ -43,6 +46,15 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, 
           {(Object.keys(ESTADOS_LEAD) as EstadoLead[]).map((e) => <option key={e} value={e}>{ESTADOS_LEAD[e].etiqueta}</option>)}
         </Select>
         <span className="text-sm text-slate-500">{filas.length} leads</span>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="ml-auto"
+          icon={<FileSpreadsheet className="h-4 w-4" />}
+          onClick={() => exportarTipificado(filas).catch(() => toast.error('No se ha podido generar el Excel.'))}
+        >
+          Excel tipificado
+        </Button>
       </Card>
       <Card className="overflow-x-auto">
         {filas.length === 0 ? (
