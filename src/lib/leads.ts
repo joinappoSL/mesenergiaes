@@ -59,6 +59,9 @@ export interface Lead {
   visita_lugar: string;
   visita_notas: string;
   firmado_at: string | null;
+  /** fecha (AAAA-MM-DD) en la que acaba su contrato actual de luz / gas */
+  contrato_luz_fin: string | null;
+  contrato_gas_fin: string | null;
   maximetro: Maximetro | null;
   created_at: string;
   updated_at: string;
@@ -76,10 +79,28 @@ export interface LeadEvento {
 export interface LeadArchivo {
   id: string;
   lead_id: string;
-  tipo: 'factura' | 'comparativa' | 'otro';
+  tipo: 'factura' | 'comparativa' | 'otro' | 'reunion';
+  /** reunión a la que pertenece (lo preparado para ella) */
+  reunion_id: string | null;
   nombre: string;
   storage_path: string;
   tamano_bytes: number;
+  created_at: string;
+}
+
+export type ModalidadReunion = 'videollamada' | 'presencial';
+export type EstadoReunion = 'programada' | 'hecha' | 'cancelada';
+
+export interface Reunion {
+  id: string;
+  lead_id: string;
+  usuario_id: string;
+  fecha: string;
+  modalidad: ModalidadReunion;
+  /** dirección (presencial) o enlace de la videollamada */
+  lugar: string;
+  notas: string;
+  estado: EstadoReunion;
   created_at: string;
 }
 
@@ -920,4 +941,21 @@ export function deInputFecha(valor: string): string | null {
   if (!valor) return null;
   const d = new Date(valor);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+// -----------------------------------------------------------------------------
+// WhatsApp
+// -----------------------------------------------------------------------------
+/** Mensaje corto de WhatsApp para un lead al que se acaba de llamar (sin datos de consumo). */
+export function construirWhatsapp(l: Idioma, d: DatosCorreo): string {
+  return l === 'ca'
+    ? `${hola(d, l)} soc ${d.firma} de Mes Energia. Li escric per l'estudi energètic gratuït i sense compromís del seu subministrament (estalvi habitual: 15-30 % anual). Només necessitaríem les dues últimes factures de llum i gas i en 24-48 h li presentem els resultats. Aquí té la nostra presentació: ${d.presentacionUrl}\nGràcies!`
+    : `${hola(d, l)} soy ${d.firma} de Mes Energia. Le escribo por el estudio energético gratuito y sin compromiso de su suministro (ahorro habitual: 15-30 % anual). Solo necesitaríamos las dos últimas facturas de luz y gas y en 24-48 h le presentamos los resultados. Aquí tiene nuestra presentación: ${d.presentacionUrl}\n¡Gracias!`;
+}
+
+/** Enlace wa.me con el número en formato internacional (España por defecto) y el texto ya escrito. */
+export function enlaceWhatsapp(tel: string, texto: string): string {
+  const d = tel.replace(/\D/g, '').replace(/^00/, '');
+  const internacional = d.length === 9 ? `34${d}` : d;
+  return `https://wa.me/${internacional}?text=${encodeURIComponent(texto)}`;
 }

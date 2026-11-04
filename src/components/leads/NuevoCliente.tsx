@@ -60,6 +60,8 @@ export function NuevoCliente({ open, onClose, modulos, moduloInicial, propietari
           visita_lugar: form.visita_lugar.trim(),
           visita_notas: form.visita_notas,
           firmado_at: deInputFecha(form.firmado_at),
+          contrato_luz_fin: form.contrato_luz_fin || null,
+          contrato_gas_fin: form.contrato_gas_fin || null,
         },
       });
       toast.success('Cliente añadido');

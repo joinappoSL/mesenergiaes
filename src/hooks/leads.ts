@@ -8,7 +8,10 @@ import {
   type LeadArchivo,
   type LeadEvento,
   type Maximetro,
+  type ModalidadReunion,
   type NuevoLead,
+  type Reunion,
+  type EstadoReunion,
 } from '@/lib/leads';
 
 export const BUCKET_LEADS = 'leads-archivos';
@@ -19,6 +22,7 @@ export const qkLeads = {
   eventos: (id: string) => ['leads', id, 'eventos'] as const,
   archivos: (id: string) => ['leads', id, 'archivos'] as const,
   registro: ['leads', 'registro'] as const,
+  reuniones: ['leads', 'reuniones'] as const,
 };
 
 const PAGINA = 1000;
@@ -110,6 +114,7 @@ function useRefrescarLeads() {
   return (id?: string) => {
     qc.invalidateQueries({ queryKey: qkLeads.lista });
     qc.invalidateQueries({ queryKey: qkLeads.registro });
+    qc.invalidateQueries({ queryKey: qkLeads.reuniones });
     if (id) {
       qc.invalidateQueries({ queryKey: qkLeads.eventos(id) });
       qc.invalidateQueries({ queryKey: qkLeads.archivos(id) });
@@ -307,7 +312,7 @@ function nombreSeguro(nombre: string): string {
 export function useSubirArchivosLead() {
   const refrescar = useRefrescarLeads();
   return useMutation({
-    mutationFn: async ({ lead, archivos, tipo }: { lead: Lead; archivos: File[]; tipo: 'factura' | 'comparativa' }) => {
+    mutationFn: async ({ lead, archivos, tipo, reunionId }: { lead: Lead; archivos: File[]; tipo: 'factura' | 'comparativa' | 'reunion'; reunionId?: string }) => {
       for (const f of archivos) {
         if (f.size > LEADS_ARCHIVO_MAX) throw new Error(`${f.name} supera el máximo de 15 MB.`);
       }
@@ -320,6 +325,7 @@ export function useSubirArchivosLead() {
         const { error: e2 } = await supabase.from('leads_archivos').insert({
           lead_id: lead.id,
           tipo,
+          reunion_id: reunionId ?? null,
           nombre: f.name,
           storage_path: path,
           tamano_bytes: f.size,
@@ -327,7 +333,9 @@ export function useSubirArchivosLead() {
         if (e2) throw e2;
       }
       const nombres = archivos.map((f) => f.name).join(', ');
-      if (tipo === 'factura' && lead.estado === 'correo') {
+      if (tipo === 'reunion') {
+        await registrarEvento(lead.id, null, `Material de la reunión adjuntado: ${nombres}`);
+      } else if (tipo === 'factura' && lead.estado === 'correo') {
         const ahora = new Date().toISOString();
         const { error } = await supabase
           .from('leads')
@@ -383,6 +391,8 @@ export interface NuevoCliente extends NuevoLead {
   visita_lugar: string;
   visita_notas: string;
   firmado_at: string | null;
+  contrato_luz_fin: string | null;
+  contrato_gas_fin: string | null;
 }
 
 export function useCrearCliente() {
@@ -451,5 +461,102 @@ export function useEliminarLeads() {
       return borrados;
     },
     onSuccess: () => refrescar(),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Reuniones (videollamada o presencial) y calendario
+// -----------------------------------------------------------------------------
+export function useReuniones() {
+  return useQuery({
+    queryKey: qkLeads.reuniones,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('leads_reuniones').select('*').order('fecha', { ascending: true }).limit(5000);
+      if (error) throw error;
+      return (data ?? []) as Reunion[];
+    },
+  });
+}
+
+export interface NuevaReunion {
+  lead: Lead;
+  fecha: string;
+  modalidad: ModalidadReunion;
+  lugar: string;
+  notas: string;
+}
+
+export function useCrearReunion() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async ({ lead, fecha, modalidad, lugar, notas }: NuevaReunion) => {
+      const { data, error } = await supabase
+        .from('leads_reuniones')
+        .insert({ lead_id: lead.id, fecha, modalidad, lugar, notas })
+        .select('id')
+        .single();
+      if (error) throw error;
+      const cuando = new Date(fecha).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+      const texto = `Reunión ${modalidad === 'videollamada' ? 'por videollamada' : 'presencial'} programada: ${cuando}`;
+      if (lead.estado === 'firmado' || lead.estado === 'visita') {
+        // Ya está en «Visita» o cerrado: solo se anota en el historial.
+        await registrarEvento(lead.id, null, texto);
+        if (lead.estado === 'visita') {
+          await supabase.from('leads').update({ visita_at: fecha, visita_lugar: lugar }).eq('id', lead.id);
+        }
+      } else {
+        const { error: e2 } = await supabase
+          .from('leads')
+          .update({ estado: 'visita', visita_at: fecha, visita_lugar: lugar, ultimo_movimiento_at: new Date().toISOString(), proxima_llamada_at: null })
+          .eq('id', lead.id);
+        if (e2) throw e2;
+        await registrarEvento(lead.id, 'visita', texto);
+      }
+      return data.id as string;
+    },
+    onSuccess: (_d, v) => refrescar(v.lead.id),
+  });
+}
+
+export function useActualizarReunion() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async ({ reunion, patch }: { reunion: Reunion; patch: Partial<Pick<Reunion, 'fecha' | 'modalidad' | 'lugar' | 'notas' | 'estado'>> }) => {
+      const { error } = await supabase.from('leads_reuniones').update(patch).eq('id', reunion.id);
+      if (error) throw error;
+      if (patch.estado && patch.estado !== reunion.estado) {
+        const t: Record<EstadoReunion, string> = { programada: 'reabierta', hecha: 'hecha', cancelada: 'cancelada' };
+        await registrarEvento(reunion.lead_id, null, `Reunión ${t[patch.estado]}`);
+      }
+    },
+    onSuccess: (_d, v) => refrescar(v.reunion.lead_id),
+  });
+}
+
+export function useBorrarReunion() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async (reunion: Reunion) => {
+      // Los archivos de la reunión se borran en cascada en la tabla; el contenido, del almacenamiento.
+      const { data: archivos } = await supabase.from('leads_archivos').select('storage_path').eq('reunion_id', reunion.id);
+      const { error } = await supabase.from('leads_reuniones').delete().eq('id', reunion.id);
+      if (error) throw error;
+      const rutas = (archivos ?? []).map((a) => a.storage_path as string);
+      if (rutas.length) await supabase.storage.from(BUCKET_LEADS).remove(rutas);
+    },
+    onSuccess: (_d, r) => refrescar(r.lead_id),
+  });
+}
+
+/** Anota en el historial que se ha escrito por WhatsApp (no cuenta como llamada). */
+export function useWhatsappEnviado() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async ({ lead, telefono }: { lead: Lead; telefono: string }) => {
+      await registrarEvento(lead.id, null, `WhatsApp enviado al ${telefono}`);
+      await supabase.from('leads').update({ ultimo_movimiento_at: new Date().toISOString() }).eq('id', lead.id);
+    },
+    onSuccess: (_d, v) => refrescar(v.lead.id),
   });
 }

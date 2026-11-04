@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePerfil } from '@/auth/AuthProvider';
 import { usePermisos } from '@/auth/permisos';
+import { CalendarioLeads } from '@/components/leads/CalendarioLeads';
 import { BorrarModulo } from '@/components/leads/BorrarModulo';
 import { ImportarLeads } from '@/components/leads/ImportarLeads';
 import { ListaLeads } from '@/components/leads/ListaLeads';
@@ -20,7 +21,7 @@ import { nombreCompleto } from '@/lib/format';
 import { colaPendientes, ESTADOS_SEGUIMIENTO, modulosDe, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
 
-type Vista = 'llamar' | 'lista' | 'seguimiento' | 'registro';
+type Vista = 'llamar' | 'lista' | 'seguimiento' | 'calendario' | 'registro';
 
 export function LeadsPage() {
   const perfil = usePerfil();
@@ -146,6 +147,7 @@ export function LeadsPage() {
               { value: 'llamar', label: 'Llamar', count: pendientes },
               { value: 'lista', label: 'Lista', count: visibles.length },
               { value: 'seguimiento', label: 'Seguimiento', count: seguimiento },
+              { value: 'calendario', label: 'Calendario' },
               { value: 'registro', label: 'Registro diario' },
             ]}
           />
@@ -156,6 +158,7 @@ export function LeadsPage() {
           {vista === 'seguimiento' && (
             <SeguimientoLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}
+          {vista === 'calendario' && <CalendarioLeads leads={visibles} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />}
           {vista === 'registro' && <RegistroLeads personas={registroPersonas} leads={visibles} />}
         </div>
       )}
