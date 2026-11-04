@@ -23,6 +23,7 @@ export const qkLeads = {
   archivos: (id: string) => ['leads', id, 'archivos'] as const,
   registro: ['leads', 'registro'] as const,
   reuniones: ['leads', 'reuniones'] as const,
+  listas: ['leads', 'listas'] as const,
 };
 
 const PAGINA = 1000;
@@ -115,6 +116,7 @@ function useRefrescarLeads() {
     qc.invalidateQueries({ queryKey: qkLeads.lista });
     qc.invalidateQueries({ queryKey: qkLeads.registro });
     qc.invalidateQueries({ queryKey: qkLeads.reuniones });
+    qc.invalidateQueries({ queryKey: qkLeads.listas });
     if (id) {
       qc.invalidateQueries({ queryKey: qkLeads.eventos(id) });
       qc.invalidateQueries({ queryKey: qkLeads.archivos(id) });
@@ -558,5 +560,63 @@ export function useWhatsappEnviado() {
       await supabase.from('leads').update({ ultimo_movimiento_at: new Date().toISOString() }).eq('id', lead.id);
     },
     onSuccess: (_d, v) => refrescar(v.lead.id),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Listas (módulos) que existen aunque estén vacías
+// -----------------------------------------------------------------------------
+export interface ListaLeads {
+  id: string;
+  nombre: string;
+  propietario_id: string;
+}
+
+export function useListas() {
+  return useQuery({
+    queryKey: qkLeads.listas,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('leads_listas').select('id, nombre, propietario_id').order('nombre');
+      if (error) throw error;
+      return (data ?? []) as ListaLeads[];
+    },
+  });
+}
+
+export function useCrearLista() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async ({ nombre, propietarioId }: { nombre: string; propietarioId: string }) => {
+      const { error } = await supabase.from('leads_listas').insert({ nombre: nombre.trim(), propietario_id: propietarioId });
+      if (error) throw error.code === '23505' ? new Error('Ya existe una lista con ese nombre en esa cartera.') : error;
+    },
+    onSuccess: () => refrescar(),
+  });
+}
+
+export function useBorrarLista() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!ids.length) return;
+      const { error } = await supabase.from('leads_listas').delete().in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => refrescar(),
+  });
+}
+
+/** Mueve leads a una lista (módulo); '' los deja sin lista. */
+export function useMoverLeads() {
+  const refrescar = useRefrescarLeads();
+  return useMutation({
+    mutationFn: async ({ ids, modulo }: { ids: string[]; modulo: string }) => {
+      for (let i = 0; i < ids.length; i += 200) {
+        const { error } = await supabase.from('leads').update({ modulo: modulo.trim() }).in('id', ids.slice(i, i + 200));
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => refrescar(),
   });
 }
