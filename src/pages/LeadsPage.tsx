@@ -1,4 +1,4 @@
-import { Trash2, Upload, UserPlus } from 'lucide-react';
+import { FolderPlus, Trash2, Upload, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePerfil } from '@/auth/AuthProvider';
@@ -7,6 +7,7 @@ import { CalendarioLeads } from '@/components/leads/CalendarioLeads';
 import { BorrarModulo } from '@/components/leads/BorrarModulo';
 import { ImportarLeads } from '@/components/leads/ImportarLeads';
 import { ListaLeads } from '@/components/leads/ListaLeads';
+import { NuevaLista } from '@/components/leads/NuevaLista';
 import { NuevoCliente } from '@/components/leads/NuevoCliente';
 import { LlamarLeads } from '@/components/leads/LlamarLeads';
 import { RegistroLeads } from '@/components/leads/RegistroLeads';
@@ -16,7 +17,7 @@ import { Aviso, ErrorState, Skeleton } from '@/components/ui/Feedback';
 import { Select } from '@/components/ui/Field';
 import { PageHeader, Tabs } from '@/components/ui/Misc';
 import { usePerfiles } from '@/hooks/datos';
-import { useLeads } from '@/hooks/leads';
+import { useBorrarLista, useLeads, useListas } from '@/hooks/leads';
 import { nombreCompleto } from '@/lib/format';
 import { colaPendientes, ESTADOS_SEGUIMIENTO, modulosDe, type Lead } from '@/lib/leads';
 import { mensajeError } from '@/lib/utils';
@@ -33,6 +34,9 @@ export function LeadsPage() {
   const [importar, setImportar] = useState(false);
   const [nuevo, setNuevo] = useState(false);
   const [borrar, setBorrar] = useState(false);
+  const [nuevaLista, setNuevaLista] = useState(false);
+  const listasQ = useListas();
+  const borrarLista = useBorrarLista();
   const [modulo, setModulo] = useState('');
   const [params, setParams] = useSearchParams();
   const [foco, setFoco] = useState<string | null>(null);
@@ -61,7 +65,15 @@ export function LeadsPage() {
     const id = cartera === 'mias' ? perfil.id : cartera;
     return todos.filter((l) => l.propietario_id === id);
   }, [todos, cartera, verCartera, perfil.id]);
-  const modulos = useMemo(() => modulosDe(deLaCartera), [deLaCartera]);
+  // Listas creadas a mano de la cartera que se está viendo (existen aunque estén vacías)
+  const listasDeCartera = useMemo(() => {
+    const id = !verCartera ? perfil.id : cartera === 'mias' ? perfil.id : cartera;
+    return (listasQ.data ?? []).filter((l) => cartera === 'todas' && verCartera ? true : l.propietario_id === id);
+  }, [listasQ.data, cartera, verCartera, perfil.id]);
+  const modulos = useMemo(
+    () => [...new Set([...modulosDe(deLaCartera), ...listasDeCartera.map((l) => l.nombre)])].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })),
+    [deLaCartera, listasDeCartera],
+  );
   // Si el módulo elegido ya no existe (otra cartera), se vuelve a «todos».
   const moduloEfectivo = modulo === '' || modulo === '__sin' || modulos.includes(modulo) ? modulo : '';
   const visibles = useMemo(() => {
@@ -120,6 +132,23 @@ export function LeadsPage() {
                 Borrar módulo
               </Button>
             )}
+            {moduloEfectivo !== '' && moduloEfectivo !== '__sin' && visibles.length === 0 && listasDeCartera.some((l) => l.nombre === moduloEfectivo) && (
+              <Button
+                variant="ghost"
+                icon={<Trash2 className="h-4 w-4" />}
+                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                loading={borrarLista.isPending}
+                onClick={() => {
+                  if (!confirm(`¿Quitar la lista vacía «${moduloEfectivo}»?`)) return;
+                  borrarLista.mutate(listasDeCartera.filter((l) => l.nombre === moduloEfectivo).map((l) => l.id), { onSuccess: () => setModulo('') });
+                }}
+              >
+                Quitar lista
+              </Button>
+            )}
+            <Button variant="secondary" icon={<FolderPlus className="h-4 w-4" />} onClick={() => setNuevaLista(true)}>
+              Nueva lista
+            </Button>
             <Button variant="secondary" icon={<UserPlus className="h-4 w-4" />} onClick={() => setNuevo(true)}>
               Nuevo cliente
             </Button>
@@ -154,7 +183,7 @@ export function LeadsPage() {
           {vista === 'llamar' && (
             <LlamarLeads leads={visibles} focoId={foco} onFocoUsado={focoUsado} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}
-          {vista === 'lista' && <ListaLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} onLlamar={(id) => { setFoco(id); setVista('llamar'); }} />}
+          {vista === 'lista' && <ListaLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} listas={modulos} onLlamar={(id) => { setFoco(id); setVista('llamar'); }} />}
           {vista === 'seguimiento' && (
             <SeguimientoLeads leads={visibles} mostrarCartera={verCartera && cartera === 'todas'} nombreCartera={nombreCartera} puedeEditar={puedeEditar} modulos={modulos} />
           )}
@@ -163,8 +192,25 @@ export function LeadsPage() {
         </div>
       )}
 
-      <ImportarLeads open={importar} onClose={() => setImportar(false)} propietarios={asignables} modulos={modulos} moduloActual={moduloEfectivo === '__sin' ? '' : moduloEfectivo} />
-      <BorrarModulo open={borrar} onClose={() => setBorrar(false)} modulo={moduloEfectivo} leads={borrables} onBorrado={() => setModulo('')} />
+      <ImportarLeads open={importar} onClose={() => setImportar(false)} propietarios={asignables} modulos={modulos} listas={listasDeCartera.map((l) => l.nombre)} moduloActual={moduloEfectivo === '__sin' ? '' : moduloEfectivo} />
+      <BorrarModulo
+        open={borrar}
+        onClose={() => setBorrar(false)}
+        modulo={moduloEfectivo}
+        leads={borrables}
+        onBorrado={() => {
+          const ids = listasDeCartera.filter((l) => l.nombre === moduloEfectivo).map((l) => l.id);
+          if (ids.length) borrarLista.mutate(ids);
+          setModulo('');
+        }}
+      />
+      <NuevaLista
+        open={nuevaLista}
+        onClose={() => setNuevaLista(false)}
+        propietarioInicial={cartera === 'mias' || cartera === 'todas' || !verCartera ? perfil.id : cartera}
+        propietarios={asignables}
+        onCreada={setModulo}
+      />
       <NuevoCliente open={nuevo} onClose={() => setNuevo(false)} modulos={modulos} moduloInicial={moduloEfectivo === '__sin' ? '' : moduloEfectivo} propietarios={asignables} />
     </div>
   );

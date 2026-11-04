@@ -13,7 +13,6 @@ import {
   ETIQUETA_COLUMNA,
   filasALeads,
   moduloDesdeNombre,
-  MODULOS_PREDEFINIDOS,
   separarCabecera,
   type MapaColumnas,
   type RolColumna,
@@ -28,11 +27,13 @@ interface Props {
   propietarios?: { id: string; nombre: string }[];
   /** módulos ya cargados, para sugerirlos */
   modulos?: string[];
+  /** listas creadas (aunque estén vacías) para elegir con un toque */
+  listas?: string[];
   /** módulo filtrado ahora, por si se quiere añadir más a ese módulo */
   moduloActual?: string;
 }
 
-export function ImportarLeads({ open, onClose, propietarios, modulos = [], moduloActual }: Props) {
+export function ImportarLeads({ open, onClose, propietarios, modulos = [], listas = [], moduloActual }: Props) {
   const perfil = usePerfil();
   const importar = useImportarLeads();
   const [archivo, setArchivo] = useState<{ cabeceras: string[]; filas: string[][]; nombre: string; sinCabecera: boolean } | null>(null);
@@ -124,8 +125,8 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], modul
               <Input value={modulo} placeholder="08017" list="modulos-importar" onChange={(e) => setModulo(e.target.value)} />
             </Field>
             <div className="-mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-500">Módulos:</span>
-              {MODULOS_PREDEFINIDOS.map((m) => (
+              {listas.length > 0 && <span className="text-xs text-slate-500">Listas:</span>}
+              {listas.map((m) => (
                 <button
                   key={m}
                   type="button"
@@ -139,7 +140,7 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], modul
               ))}
             </div>
             <datalist id="modulos-importar">
-              {[...new Set([...MODULOS_PREDEFINIDOS, ...modulos])].map((m) => <option key={m} value={m} />)}
+              {[...new Set([...listas, ...modulos])].map((m) => <option key={m} value={m} />)}
             </datalist>
             <p className="text-sm text-slate-600">
               <b>{archivo.nombre}</b> · {archivo.filas.length} filas · {archivo.cabeceras.length} columnas

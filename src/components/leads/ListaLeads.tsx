@@ -1,4 +1,4 @@
-import { FileSpreadsheet, Search, UserRound } from 'lucide-react';
+import { FileSpreadsheet, FolderInput, Search, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -6,7 +6,9 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/Feedback';
 import { Input, Select } from '@/components/ui/Field';
 import { telefono } from '@/lib/format';
+import { useMoverLeads } from '@/hooks/leads';
 import { exportarTipificado } from '@/lib/leadsExcel';
+import { mensajeError } from '@/lib/utils';
 import { ESTADOS_LEAD, norm, textoHoraLlamada, type EstadoLead, type Lead } from '@/lib/leads';
 import { EstadoLeadBadge } from './comunes';
 import { FichaCliente } from './FichaCliente';
@@ -17,14 +19,19 @@ interface Props {
   nombreCartera: (id: string) => string | null;
   puedeEditar: (l: Lead) => boolean;
   modulos: string[];
+  /** listas (módulos) a las que se pueden mover leads */
+  listas: string[];
   /** abre el lead en la pestaña «Llamar» */
   onLlamar: (id: string) => void;
 }
 
-export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, modulos, onLlamar }: Props) {
+export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, modulos, listas, onLlamar }: Props) {
   const [abierto, setAbierto] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState<'todos' | EstadoLead>('todos');
+  const [marcados, setMarcados] = useState<Set<string>>(new Set());
+  const [destino, setDestino] = useState('');
+  const mover = useMoverLeads();
 
   const filas = useMemo(() => {
     const nq = norm(q);
@@ -35,8 +42,38 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, 
     );
   }, [leads, q, estado]);
 
+  const editables = filas.slice(0, 500).filter(puedeEditar);
+  const todosMarcados = editables.length > 0 && editables.every((l) => marcados.has(l.id));
+  const seleccion = [...marcados].filter((id) => leads.some((l) => l.id === id));
+
+  async function moverSeleccion() {
+    if (!seleccion.length || destino === '') return;
+    const modulo = destino === '__sin' ? '' : destino;
+    try {
+      await mover.mutateAsync({ ids: seleccion, modulo });
+      toast.success(`${seleccion.length} lead${seleccion.length === 1 ? '' : 's'} movido${seleccion.length === 1 ? '' : 's'} ${modulo ? `a «${modulo}»` : 'fuera de las listas'}`);
+      setMarcados(new Set());
+    } catch (e) {
+      toast.error(mensajeError(e));
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {seleccion.length > 0 && (
+        <Card className="flex flex-wrap items-center gap-3 border-l-4 border-brand-500 p-3">
+          <span className="text-sm font-semibold text-navy-900">{seleccion.length} seleccionado{seleccion.length === 1 ? '' : 's'}</span>
+          <Select className="w-auto" value={destino} onChange={(e) => setDestino(e.target.value)} aria-label="Lista de destino">
+            <option value="">Mover a la lista…</option>
+            {listas.map((m) => <option key={m} value={m}>{m}</option>)}
+            <option value="__sin">Sin lista</option>
+          </Select>
+          <Button icon={<FolderInput className="h-4 w-4" />} onClick={moverSeleccion} loading={mover.isPending} disabled={destino === ''}>
+            Mover
+          </Button>
+          <Button variant="ghost" onClick={() => setMarcados(new Set())}>Quitar selección</Button>
+        </Card>
+      )}
       <Card className="flex flex-wrap items-center gap-3 p-3">
         <div className="min-w-[220px] flex-1">
           <Input icon={<Search className="h-4 w-4" />} placeholder="Buscar nombre, teléfono, CUPS…" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -63,6 +100,15 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, 
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-100 text-[11px] uppercase tracking-wide text-slate-400">
               <tr>
+                <th className="w-8 px-3 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label="Seleccionar todos"
+                    checked={todosMarcados}
+                    disabled={!editables.length}
+                    onChange={() => setMarcados(todosMarcados ? new Set() : new Set(editables.map((l) => l.id)))}
+                  />
+                </th>
                 <th className="px-4 py-3">Cliente</th>
                 <th className="px-4 py-3">Teléfono</th>
                 <th className="px-4 py-3">Teléfono 2</th>
@@ -77,6 +123,16 @@ export function ListaLeads({ leads, mostrarCartera, nombreCartera, puedeEditar, 
             <tbody className="divide-y divide-slate-100">
               {filas.slice(0, 500).map((l) => (
                 <tr key={l.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => onLlamar(l.id)}>
+                  <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    {puedeEditar(l) && (
+                      <input
+                        type="checkbox"
+                        aria-label={`Seleccionar ${l.nombre}`}
+                        checked={marcados.has(l.id)}
+                        onChange={() => setMarcados((m) => { const n = new Set(m); if (n.has(l.id)) n.delete(l.id); else n.add(l.id); return n; })}
+                      />
+                    )}
+                  </td>
                   <td className="px-4 py-2.5 font-semibold text-navy-900">{l.nombre || '—'}</td>
                   <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono)}</td>
                   <td className="px-4 py-2.5 tabular-nums">{telefono(l.telefono2)}</td>
