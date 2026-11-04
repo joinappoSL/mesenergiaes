@@ -19,6 +19,9 @@ export interface FormCliente {
   comparativa_enviada_at: string;
   visita_at: string;
   firmado_at: string;
+  /** fecha fin de contrato actual (<input type="date">) */
+  contrato_luz_fin: string;
+  contrato_gas_fin: string;
   visita_lugar: string;
   visita_notas: string;
   nota: string;
@@ -40,6 +43,8 @@ export const FORM_VACIO: FormCliente = {
   comparativa_enviada_at: '',
   visita_at: '',
   firmado_at: '',
+  contrato_luz_fin: '',
+  contrato_gas_fin: '',
   visita_lugar: '',
   visita_notas: '',
   nota: '',
@@ -88,6 +93,15 @@ export function CamposCliente({ valor, onChange, modulos, conNota, deshabilitado
         <datalist id="modulos-leads">
           {modulos.map((m) => <option key={m} value={m} />)}
         </datalist>
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-navy-900">Contrato actual</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {campo('contrato_luz_fin', 'Fin del contrato de luz', { type: 'date' })}
+          {campo('contrato_gas_fin', 'Fin del contrato de gas', { type: 'date' })}
+        </div>
+        <p className="mt-1.5 text-xs text-slate-500">Sale en la factura. El calendario te avisa para llamarle antes de que acabe.</p>
       </section>
 
       <section>

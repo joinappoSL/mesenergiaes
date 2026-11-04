@@ -1,4 +1,4 @@
-import { AlarmClock, ChevronLeft, ChevronRight, FileSpreadsheet, Mail, Phone, PhoneOff, RotateCcw, ThumbsDown, Unplug, UserRound } from 'lucide-react';
+import { AlarmClock, ChevronLeft, ChevronRight, FileSpreadsheet, Mail, MessageCircle, Phone, PhoneOff, RotateCcw, ThumbsDown, Unplug, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,7 @@ import { mensajeError } from '@/lib/utils';
 import { EstadoLeadBadge, enlaceTel } from './comunes';
 import { MaximetroModal } from './MaximetroModal';
 import { PanelCorreo } from './PanelCorreo';
+import { PanelWhatsapp } from './PanelWhatsapp';
 import { FichaCliente } from './FichaCliente';
 import { ProgramarLlamada } from './ProgramarLlamada';
 
@@ -32,6 +33,7 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
   const [filtro, setFiltro] = useState<Filtro>('pendiente');
   const [idx, setIdx] = useState(0);
   const [correo, setCorreo] = useState(false);
+  const [whatsapp, setWhatsapp] = useState(false);
   const [maximetro, setMaximetro] = useState(false);
   const [programar, setProgramar] = useState(false);
   const [ficha, setFicha] = useState(false);
@@ -203,6 +205,9 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
             <Button size="lg" icon={<Mail className="h-4 w-4" />} onClick={() => setCorreo(true)}>
               Correo enviado
             </Button>
+            <Button variant="secondary" size="lg" icon={<MessageCircle className="h-4 w-4" />} onClick={() => setWhatsapp(true)} disabled={!telefonosDe(lead).length}>
+              WhatsApp
+            </Button>
             <Button variant="secondary" size="lg" icon={<FileSpreadsheet className="h-4 w-4" />} onClick={() => setMaximetro(true)}>
               Maxímetro
             </Button>
@@ -219,6 +224,7 @@ export function LlamarLeads({ leads, focoId, onFocoUsado, nombreCartera, puedeEd
       </Card>
 
       <ProgramarLlamada open={programar} nombre={lead.nombre} cargando={cambiar.isPending} onClose={() => setProgramar(false)} onConfirmar={programarLlamada} />
+      <PanelWhatsapp lead={lead} open={whatsapp} onClose={() => setWhatsapp(false)} />
       <PanelCorreo lead={lead} open={correo} onClose={() => setCorreo(false)} onEnviado={() => filtro !== 'todos' || setIdx(pos + 1)} />
       {ficha && <FichaCliente lead={lead} editable={editable} modulos={modulos} onClose={() => setFicha(false)} />}
       <MaximetroModal lead={lead} open={maximetro} onClose={() => setMaximetro(false)} />
