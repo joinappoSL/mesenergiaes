@@ -83,6 +83,9 @@ export interface LeadArchivo {
   created_at: string;
 }
 
+/** Módulos de importación que siempre se ofrecen, aunque todavía no tengan leads. */
+export const MODULOS_PREDEFINIDOS = ['Carlitos sin utilizar Mario', 'Carlitos sin utilizar Gabriela'];
+
 export type NuevoLead = Pick<
   Lead,
   'nombre' | 'telefono' | 'telefono2' | 'email' | 'kw' | 'cups' | 'comercializadora' | 'extra' | 'modulo'

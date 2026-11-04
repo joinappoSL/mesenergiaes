@@ -13,6 +13,7 @@ import {
   ETIQUETA_COLUMNA,
   filasALeads,
   moduloDesdeNombre,
+  MODULOS_PREDEFINIDOS,
   separarCabecera,
   type MapaColumnas,
   type RolColumna,
@@ -122,8 +123,23 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], modul
             <Field label="Módulo de este listado" hint="Para distinguir cada carga (por ejemplo el código postal 08017 o 08022). Puedes dejarlo vacío.">
               <Input value={modulo} placeholder="08017" list="modulos-importar" onChange={(e) => setModulo(e.target.value)} />
             </Field>
+            <div className="-mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-500">Módulos:</span>
+              {MODULOS_PREDEFINIDOS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setModulo(m)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 transition ${
+                    modulo === m ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
             <datalist id="modulos-importar">
-              {modulos.map((m) => <option key={m} value={m} />)}
+              {[...new Set([...MODULOS_PREDEFINIDOS, ...modulos])].map((m) => <option key={m} value={m} />)}
             </datalist>
             <p className="text-sm text-slate-600">
               <b>{archivo.nombre}</b> · {archivo.filas.length} filas · {archivo.cabeceras.length} columnas
