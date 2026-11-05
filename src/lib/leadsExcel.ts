@@ -1,10 +1,27 @@
 // Lectura de Excel/CSV/ZIP en el navegador (las librerías se cargan bajo demanda).
 import { ESTADOS_LEAD, type EstadoLead, type Lead } from './leads';
 
+/**
+ * Algunos Excel declaran un millón de filas vacías (p. ej. A1:AB1046175) y colgarían el navegador:
+ * se recorta el rango a la última celda con contenido.
+ */
+export function recortarHoja(XLSX: typeof import('xlsx'), hoja: import('xlsx').WorkSheet): void {
+  let maxR = 0;
+  let maxC = 0;
+  for (const k of Object.keys(hoja)) {
+    if (k[0] === '!') continue;
+    const c = XLSX.utils.decode_cell(k);
+    if (c.r > maxR) maxR = c.r;
+    if (c.c > maxC) maxC = c.c;
+  }
+  hoja['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxR, c: maxC } });
+}
+
 async function aHojas(buf: ArrayBuffer): Promise<string[][]> {
   const XLSX = await import('xlsx');
   const wb = XLSX.read(buf, { type: 'array' });
   const hoja = wb.Sheets[wb.SheetNames[0]];
+  recortarHoja(XLSX, hoja);
   return XLSX.utils.sheet_to_json<string[]>(hoja, { header: 1, defval: '', raw: false });
 }
 

@@ -161,7 +161,8 @@ export function detectarColumnas(cabeceras: string[], filas?: string[][]): MapaC
   const mapa: MapaColumnas = {};
   const buscar = (rol: RolColumna, exacto: boolean) => {
     for (const a of ALIAS[rol]) {
-      const i = nh.findIndex((h, j) => !usadas.has(j) && (exacto ? h === a : h.includes(a)));
+      // «kWh anual» es el consumo, no la potencia: no vale para kW
+      const i = nh.findIndex((h, j) => !usadas.has(j) && (exacto ? h === a : h.includes(a)) && !(rol === 'kw' && /kwh/.test(h)));
       if (i >= 0) return i;
     }
     return -1;
@@ -266,7 +267,7 @@ export function separarCabecera(aoa: string[][]): { cabeceras: string[]; filas: 
     if (h < 0) h = 0;
     sinCabecera = pareceDatos(aoa[h] ?? []);
   }
-  const ancho = Math.max(0, ...aoa.slice(h).map((r) => r.length));
+  const ancho = aoa.slice(h).reduce((m, r) => Math.max(m, r.length), 0);
   const cabecerasFila = sinCabecera ? [] : (aoa[h] ?? []);
   let cabeceras = Array.from({ length: ancho }, (_, i) => String(cabecerasFila[i] ?? '').trim() || `Col ${i + 1}`);
   const filas = aoa.slice(sinCabecera ? h : h + 1).filter((r) => r.some(relleno));
@@ -291,7 +292,7 @@ export function telefonosDe(l: { telefono: string; telefono2: string }): string[
 function completarPorContenido(mapa: MapaColumnas, filas: string[][]): MapaColumnas {
   const resultado = { ...mapa };
   const usadas = new Set(Object.values(resultado));
-  const ancho = Math.max(0, ...filas.slice(0, 50).map((r) => r.length));
+  const ancho = filas.slice(0, 50).reduce((m, r) => Math.max(m, r.length), 0);
   const muestra = (i: number) => filas.slice(0, 50).map((r) => String(r[i] ?? '').trim()).filter(Boolean);
   const frac = (i: number, test: (v: string) => boolean) => {
     const m = muestra(i);
@@ -329,9 +330,25 @@ export function moduloDesdeNombre(nombreArchivo: string): string {
 export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaColumnas, modulo = ''): NuevoLead[] {
   const usadas = new Set(Object.values(mapa));
   const get = (r: string[], rol: RolColumna) => (mapa[rol] !== undefined ? String(r[mapa[rol]!] ?? '').trim() : '');
+  // Varias «Potencia contratada P1…P6»: la potencia del cliente es la mayor de todas.
+  const colsPotencia = cabeceras.map((h, i) => (/^potencia contratada p\d$/.test(norm(h)) ? i : -1)).filter((i) => i >= 0);
+  const kwDeFila = (r: string[]) => {
+    if (mapa.kw === undefined || !colsPotencia.includes(mapa.kw)) return get(r, 'kw');
+    let mejor = '';
+    let max = -1;
+    for (const i of colsPotencia) {
+      const v = String(r[i] ?? '').trim();
+      const n = parseFloat(v.replace(',', '.'));
+      if (Number.isFinite(n) && n > max) {
+        max = n;
+        mejor = v;
+      }
+    }
+    return mejor;
+  };
   return filas.map((r) => {
     const extra: Record<string, string> = {};
-    const kwFila = get(r, 'kw');
+    const kwFila = kwDeFila(r);
     cabeceras.forEach((h, i) => {
       let v = String(r[i] ?? '').trim();
       if (usadas.has(i) || !v) return;
@@ -344,7 +361,7 @@ export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaCo
     let consumo = parseFloat(get(r, 'consumo').replace(/\./g, '').replace(',', '.'));
     // El número junto a Teléfono 2 (≥ 1.000) es el consumo anual: se guarda también como tal.
     if (!Number.isFinite(consumo) && mapa.consumo === undefined) {
-      const k = parseFloat(get(r, 'kw').replace(/\./g, '').replace(',', '.'));
+      const k = parseFloat(kwFila.replace(/\./g, '').replace(',', '.'));
       if (Number.isFinite(k) && k >= 1000) consumo = k;
     }
     const tel = limpiarTelefono(get(r, 'tel1'));
@@ -354,14 +371,14 @@ export function filasALeads(cabeceras: string[], filas: string[][], mapa: MapaCo
       telefono: tel || tel2,
       telefono2: tel && tel2 !== tel ? tel2 : '',
       email: get(r, 'email'),
-      kw: get(r, 'kw'),
+      kw: kwFila,
       cups: get(r, 'cups').replace(/\s/g, '').toUpperCase(),
       consumo_anual: Number.isFinite(consumo) ? consumo : null,
       comercializadora: get(r, 'comer'),
       modulo: modulo.trim(),
       extra,
     };
-  });
+  }).filter((l) => l.nombre || l.cups || l.telefono || l.email);
 }
 
 // -----------------------------------------------------------------------------
