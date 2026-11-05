@@ -358,3 +358,20 @@ describe('Excel de leads con el formato de SIPS (listados por código postal)', 
     expect(telefonosDe({ telefono: '', telefono2: '933000111' })).toEqual(['933000111']);
   });
 });
+
+describe('Excel con kWh anual y varias potencias contratadas (formato 08034)', () => {
+  const cabeceras = ['CUPS', 'NOMBRE', 'COMERCIALIZADORA', 'TELEFONO 1', 'TELEFONO 2', 'EMAIL', 'Potencia Contratada P1', 'Potencia Contratada P2', 'Potencia Contratada P6', 'kWh Anual'];
+  const filas = [
+    ['ES0000000000000001AA', 'EMPRESA DE PRUEBA SL', 'COMERCIALIZADORA PRUEBA', '600000001', '900000002', 'a@x.com', '20.785', '20.785', '30', '23931'],
+    ['', '', '', '', '', '', '', '', '', ';;;;prev 6/21'],
+  ];
+
+  it('kWh anual es el consumo y la potencia es la mayor de las contratadas', () => {
+    const mapa = detectarColumnas(cabeceras, filas);
+    const leads = filasALeads(cabeceras, filas, mapa, 'M');
+    expect(leads).toHaveLength(1); // la fila sin datos identificables se descarta
+    expect(leads[0].kw).toBe('30');
+    expect(leads[0].consumo_anual).toBe(23931);
+    expect(leads[0].cups).toBe('ES0000000000000001AA');
+  });
+});
