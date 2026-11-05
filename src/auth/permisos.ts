@@ -10,10 +10,15 @@ export interface Permisos {
   /** admin o backoffice: ven y gestionan todas las carteras */
   esGestor: boolean;
   puedeVerUsuarios: boolean;
+  /** sección «Residenciales»: Mario, Gabriela y los gestores */
+  puedeResidenciales: boolean;
   puedeGestionarEquipos: boolean;
   rolesCreables: Rol[];
   puedeGestionarUsuario: (u: Pick<Perfil, 'id' | 'rol' | 'equipo_id'>) => boolean;
 }
+
+/** Quienes llevan el conteo de residenciales (la base de datos aplica la misma regla). */
+const EMAILS_RESIDENCIALES = ['mario.garcia@mesenergia.es', 'gabriela.santamaria@mesenergia.es'];
 
 export function calcularPermisos(perfil: Perfil): Permisos {
   const rol = perfil.rol;
@@ -31,6 +36,7 @@ export function calcularPermisos(perfil: Perfil): Permisos {
     esComercial,
     esGestor,
     puedeVerUsuarios: esGestor || esJefe,
+    puedeResidenciales: esGestor || EMAILS_RESIDENCIALES.includes(perfil.email.toLowerCase()),
     puedeGestionarEquipos: esAdmin,
     rolesCreables: esAdmin ? ['admin', 'backoffice', 'jefe_equipo', 'comercial'] : esGestor || esJefe ? ['comercial'] : [],
     puedeGestionarUsuario: (u) => {
