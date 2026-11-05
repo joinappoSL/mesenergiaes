@@ -1,4 +1,4 @@
-import { FolderPlus } from 'lucide-react';
+import { FolderPlus, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +14,8 @@ interface Props {
   propietarioInicial: string;
   /** personas a las que se puede asignar (solo gestores) */
   propietarios?: { id: string; nombre: string }[];
-  onCreada?: (nombre: string) => void;
+  /** conExcel: se ha pedido añadir un Excel justo después de crearlo */
+  onCreada?: (nombre: string, propietarioId: string, conExcel: boolean) => void;
 }
 
 /** Crea una lista (módulo) vacía para ir llenándola después. */
@@ -30,13 +31,13 @@ export function NuevaLista({ open, onClose, propietarioInicial, propietarios, on
     }
   }, [open, propietarioInicial]);
 
-  async function guardar() {
+  async function guardar(conExcel: boolean) {
     const n = nombre.trim();
     if (!n) return;
     try {
       await crear.mutateAsync({ nombre: n, propietarioId: propietario });
-      toast.success(`Lista «${n}» creada`);
-      onCreada?.(n);
+      toast.success(`Módulo «${n}» creado`);
+      onCreada?.(n, propietario, conExcel);
       onClose();
     } catch (e) {
       toast.error(mensajeError(e));
@@ -47,21 +48,24 @@ export function NuevaLista({ open, onClose, propietarioInicial, propietarios, on
     <Modal
       open={open}
       onClose={onClose}
-      title="Nueva lista"
-      description="Una lista (módulo) vacía; luego la llenas importando un Excel, añadiendo clientes o moviendo leads."
+      title="Nuevo módulo"
+      description="Crea el módulo (lista) y, si quieres, añade ya su Excel con los leads."
       icon={<FolderPlus className="h-5 w-5" />}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button icon={<FolderPlus className="h-4 w-4" />} onClick={guardar} loading={crear.isPending} disabled={!nombre.trim()}>
-            Crear lista
+          <Button variant="secondary" icon={<FolderPlus className="h-4 w-4" />} onClick={() => guardar(false)} loading={crear.isPending} disabled={!nombre.trim()}>
+            Crear módulo vacío
+          </Button>
+          <Button icon={<Upload className="h-4 w-4" />} onClick={() => guardar(true)} loading={crear.isPending} disabled={!nombre.trim()}>
+            Crear y añadir Excel
           </Button>
         </>
       }
     >
-      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); guardar(); }}>
-        <Field label="Nombre de la lista">
-          <Input autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Carlitos sin utilizar Mario" />
+      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); guardar(true); }}>
+        <Field label="Nombre del módulo">
+          <Input autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Carlitos sin utilizar Mario o 08017" />
         </Field>
         {propietarios && propietarios.length > 1 && (
           <Field label="Cartera">

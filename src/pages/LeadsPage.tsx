@@ -35,6 +35,8 @@ export function LeadsPage() {
   const [nuevo, setNuevo] = useState(false);
   const [borrar, setBorrar] = useState(false);
   const [nuevaLista, setNuevaLista] = useState(false);
+  // módulo y cartera recién creados, para añadirles un Excel enseguida
+  const [paraImportar, setParaImportar] = useState<{ modulo: string; propietarioId: string } | null>(null);
   const listasQ = useListas();
   const borrarLista = useBorrarLista();
   const [modulo, setModulo] = useState('');
@@ -147,12 +149,12 @@ export function LeadsPage() {
               </Button>
             )}
             <Button variant="secondary" icon={<FolderPlus className="h-4 w-4" />} onClick={() => setNuevaLista(true)}>
-              Nueva lista
+              Nuevo módulo
             </Button>
             <Button variant="secondary" icon={<UserPlus className="h-4 w-4" />} onClick={() => setNuevo(true)}>
               Nuevo cliente
             </Button>
-            <Button icon={<Upload className="h-4 w-4" />} onClick={() => setImportar(true)}>
+            <Button icon={<Upload className="h-4 w-4" />} onClick={() => { setParaImportar(null); setImportar(true); }}>
               Importar Excel
             </Button>
           </div>
@@ -192,7 +194,7 @@ export function LeadsPage() {
         </div>
       )}
 
-      <ImportarLeads open={importar} onClose={() => setImportar(false)} propietarios={asignables} modulos={modulos} listas={listasDeCartera.map((l) => l.nombre)} moduloActual={moduloEfectivo === '__sin' ? '' : moduloEfectivo} />
+      <ImportarLeads open={importar} onClose={() => { setImportar(false); setParaImportar(null); }} propietarios={asignables} modulos={modulos} listas={listasDeCartera.map((l) => l.nombre)} moduloActual={paraImportar?.modulo ?? (moduloEfectivo === '__sin' ? '' : moduloEfectivo)} propietarioInicial={paraImportar?.propietarioId} />
       <BorrarModulo
         open={borrar}
         onClose={() => setBorrar(false)}
@@ -209,7 +211,13 @@ export function LeadsPage() {
         onClose={() => setNuevaLista(false)}
         propietarioInicial={cartera === 'mias' || cartera === 'todas' || !verCartera ? perfil.id : cartera}
         propietarios={asignables}
-        onCreada={setModulo}
+        onCreada={(n, propietarioId, conExcel) => {
+          setModulo(n);
+          if (conExcel) {
+            setParaImportar({ modulo: n, propietarioId });
+            setImportar(true);
+          }
+        }}
       />
       <NuevoCliente open={nuevo} onClose={() => setNuevo(false)} modulos={modulos} moduloInicial={moduloEfectivo === '__sin' ? '' : moduloEfectivo} propietarios={asignables} />
     </div>

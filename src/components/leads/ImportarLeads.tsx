@@ -1,5 +1,5 @@
 import { Upload } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { usePerfil } from '@/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
@@ -31,9 +31,11 @@ interface Props {
   listas?: string[];
   /** módulo filtrado ahora, por si se quiere añadir más a ese módulo */
   moduloActual?: string;
+  /** cartera a la que se importa por defecto (gestores) */
+  propietarioInicial?: string;
 }
 
-export function ImportarLeads({ open, onClose, propietarios, modulos = [], listas = [], moduloActual }: Props) {
+export function ImportarLeads({ open, onClose, propietarios, modulos = [], listas = [], moduloActual, propietarioInicial }: Props) {
   const perfil = usePerfil();
   const importar = useImportarLeads();
   const [archivo, setArchivo] = useState<{ cabeceras: string[]; filas: string[][]; nombre: string; sinCabecera: boolean } | null>(null);
@@ -46,6 +48,10 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], lista
     () => (archivo ? filasALeads(archivo.cabeceras, archivo.filas.slice(0, 4), mapa) : []),
     [archivo, mapa],
   );
+
+  useEffect(() => {
+    if (open) setPropietarioId(propietarioInicial ?? perfil.id);
+  }, [open, propietarioInicial, perfil.id]);
 
   function cerrar() {
     setArchivo(null);
@@ -65,7 +71,7 @@ export function ImportarLeads({ open, onClose, propietarios, modulos = [], lista
       setArchivo({ cabeceras, filas, nombre: f.name, sinCabecera });
       setMapa(detectarColumnas(cabeceras, filas));
       // «08017.xlsx» o «leads 08017.xlsx» proponen el módulo 08017
-      setModulo((m) => m || moduloDesdeNombre(f.name) || moduloActual || '');
+      setModulo((m) => m || moduloActual || moduloDesdeNombre(f.name) || '');
     } catch (e) {
       setArchivo(null);
       setError(mensajeError(e));
