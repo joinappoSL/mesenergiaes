@@ -1,4 +1,4 @@
-import { BarChart3, Home, LogOut, Plus, Target, Users, Zap } from 'lucide-react';
+import { BarChart3, BadgeCheck, Home, LogOut, Plus, Target, Users, Zap } from 'lucide-react';
 import { Suspense, useState, type ComponentType } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usePerfil, useAuth } from '@/auth/AuthProvider';
@@ -25,6 +25,7 @@ function useNavegacion(): ItemNav[] {
     { to: '/datos', label: p.esGestor || p.esJefe ? 'Datos del equipo' : 'Mis datos', corto: 'Datos', icon: BarChart3 },
   ];
   if (p.puedeResidenciales) items.push({ to: '/residenciales', label: 'Residenciales', corto: 'Resid.', icon: Home });
+  items.push({ to: '/appo', label: 'Appo · auditorías', corto: 'Appo', icon: BadgeCheck });
   if (p.puedeVerUsuarios) {
     items.push({
       to: '/usuarios',
