@@ -256,7 +256,7 @@ export function InformeMaximetro({ m, onCambiarOpt, logoUrl }: Props) {
         Propuesta = máximo registrado en los últimos 12 meses, respetando que cada periodo no sea inferior al anterior.
       </div>
       <div style={{ fontSize: 11, color: GRIS, marginTop: 14, borderTop: `1px solid ${LINEA}`, paddingTop: 8 }}>
-        MESENERGIA · +Energía — Nos importa tu ahorro · Estudio preliminar con datos de la distribuidora, sin compromiso.
+        APPO · Nos importa tu ahorro · Estudio preliminar con datos de la distribuidora, sin compromiso.
       </div>
     </div>
   );
