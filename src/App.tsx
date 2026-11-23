@@ -14,14 +14,13 @@ import { NuevaPasswordPage } from '@/pages/NuevaPasswordPage';
 // Cada pantalla se descarga al visitarla.
 const LeadsPage = lazy(() => import('@/pages/LeadsPage').then((m) => ({ default: m.LeadsPage })));
 const DatosPage = lazy(() => import('@/pages/DatosPage').then((m) => ({ default: m.DatosPage })));
-const ResidencialesPage = lazy(() => import('@/pages/ResidencialesPage').then((m) => ({ default: m.ResidencialesPage })));
 const AppoPage = lazy(() => import('@/pages/AppoPage').then((m) => ({ default: m.AppoPage })));
 const UsuariosPage = lazy(() => import('@/pages/UsuariosPage').then((m) => ({ default: m.UsuariosPage })));
 
 function CargandoApp() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-surface">
-      <PageLoader texto="Preparando MESENERGIA CRM…" />
+      <PageLoader texto="Preparando APPO CRM…" />
     </div>
   );
 }
@@ -108,14 +107,6 @@ export default function App() {
         <Route path="prospeccion" element={<LeadsPage />} />
         <Route path="datos" element={<DatosPage />} />
         <Route path="appo" element={<AppoPage />} />
-        <Route
-          path="residenciales"
-          element={
-            <SoloSi permiso="puedeResidenciales">
-              <ResidencialesPage />
-            </SoloSi>
-          }
-        />
         <Route
           path="usuarios"
           element={

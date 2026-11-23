@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* Paleta corporativa MESENERGIA (+Energía), muestreada del logo */
+/* Paleta corporativa APPO, muestreada del logo */
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Poppins', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;

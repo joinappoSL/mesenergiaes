@@ -1,4 +1,4 @@
-import { BarChart3, BadgeCheck, Home, LogOut, Plus, Target, Users, Zap } from 'lucide-react';
+import { BarChart3, BadgeCheck, LogOut, Plus, Target, Users, Zap } from 'lucide-react';
 import { Suspense, useState, type ComponentType } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usePerfil, useAuth } from '@/auth/AuthProvider';
@@ -24,7 +24,6 @@ function useNavegacion(): ItemNav[] {
     { to: '/prospeccion', label: 'Prospección', corto: 'Leads', icon: Target },
     { to: '/datos', label: p.esGestor || p.esJefe ? 'Datos del equipo' : 'Mis datos', corto: 'Datos', icon: BarChart3 },
   ];
-  if (p.puedeResidenciales) items.push({ to: '/residenciales', label: 'Residenciales', corto: 'Resid.', icon: Home });
   items.push({ to: '/appo', label: 'Appo · auditorías', corto: 'Appo', icon: BadgeCheck });
   if (p.puedeVerUsuarios) {
     items.push({
@@ -53,7 +52,7 @@ function Sidebar({ items }: { items: ItemNav[] }) {
           <Logo variante="oscuro" className="w-44" />
         </Link>
         <p className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-300">
-          <Zap className="h-3 w-3 text-sun-400" /> MESENERGIA CRM
+          <Zap className="h-3 w-3 text-sun-400" /> APPO CRM
         </p>
       </div>
 

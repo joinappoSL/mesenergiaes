@@ -38,7 +38,7 @@ export function PantallaAuth({ children }: { children: ReactNode }) {
         </div>
         <div className="relative max-w-md">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sun-400">
-            <Zap className="h-3.5 w-3.5" /> MESENERGIA CRM
+            <Zap className="h-3.5 w-3.5" /> APPO CRM
           </p>
           <h2 className="mt-4 text-4xl font-semibold leading-tight text-white">
             Cada cliente,
@@ -50,7 +50,7 @@ export function PantallaAuth({ children }: { children: ReactNode }) {
           </p>
         </div>
         <p className="relative flex items-center gap-2 text-xs text-navy-300">
-          <ShieldCheck className="h-4 w-4" /> Acceso restringido al personal de MESENERGIA
+          <ShieldCheck className="h-4 w-4" /> Acceso restringido al personal de APPO
         </p>
       </div>
 
@@ -176,7 +176,7 @@ export function LoginPage() {
             </p>
             {enviado ? (
               <Aviso tipo="success" className="mt-6" titulo="Revisa tu correo">
-                Si el email existe en MESENERGIA CRM, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.
+                Si el email existe en APPO CRM, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.
               </Aviso>
             ) : (
               <form onSubmit={recuperar} className="mt-7 space-y-4" noValidate>

@@ -281,7 +281,7 @@ export function ResetPasswordModal({
 // -----------------------------------------------------------------------------
 export function CredencialesModal({ credenciales, onClose }: { credenciales: Credenciales | null; onClose: () => void }) {
   if (!credenciales) return null;
-  const texto = `Acceso a MESENERGIA CRM\n${urlApp()}\nUsuario: ${credenciales.email}\nContraseña temporal: ${credenciales.password}`;
+  const texto = `Acceso a APPO CRM\n${urlApp()}\nUsuario: ${credenciales.email}\nContraseña temporal: ${credenciales.password}`;
 
   return (
     <Modal
